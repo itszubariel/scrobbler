@@ -1,0 +1,33 @@
+{
+  "name": "scrobbler",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "id": "tsx src/id.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.20.0",
+    "prisma": "^7.7.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.97",
+    "@prisma/adapter-pg": "^7.7.0",
+    "@prisma/client": "^7.7.0",
+    "discord.js": "^14.15.0",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.20.0"
+  }
+}

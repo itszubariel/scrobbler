@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  discordId      String   @unique
+  username       String
+  lastfmUsername String?
+  sessionKey     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  servers        ServerMember[]
+  plays          Play[] 
+}
+
+model Server {
+  id        String   @id @default(uuid())
+  guildId   String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  members   ServerMember[]
+  plays     Play[] 
+}
+
+model ServerMember {
+  id        String   @id @default(uuid())
+  userId    String
+  serverId  String
+  joinedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  server    Server   @relation(fields: [serverId], references: [id])
+  @@unique([userId, serverId])
+}
+
+model Play {
+  id         String   @id @default(uuid())
+  userId     String
+  serverId   String
+  trackName  String
+  artistName String
+  albumName  String?
+  playedAt   DateTime
+  mbid       String?  // MusicBrainz ID from Last.fm, useful for deduplication
+  createdAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  server Server @relation(fields: [serverId], references: [id])
+
+  @@unique([userId, playedAt]) // prevents duplicate imports
+  @@index([userId])
+  @@index([serverId])
+  @@index([playedAt])
+}
+
+model PendingLink {
+  id               String   @id @default(uuid())
+  discordId        String   @unique
+  token            String
+  interactionToken String?
+  createdAt        DateTime @default(now())
+}
