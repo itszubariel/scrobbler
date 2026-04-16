@@ -80,6 +80,27 @@ async function deployCommands() {
 client.once("ready", async (readyClient) => {
   console.log(`🎵 scrobbler is online as ${readyClient.user.tag}`);
 
+  const statuses = [
+    { name: '/link to start scrobbling', type: 0 },
+    { name: 'through your music history', type: 3 },
+    { name: 'your taste in music 👀', type: 3 },
+    // { name: `music in ${readyClient.guilds.cache.size} servers`, type: 0 },
+    // { name: `${readyClient.users.cache.size} music lovers`, type: 0 },
+  ];
+
+  let statusIndex = 0;
+  const setNextStatus = () => {
+    const s = statuses[statusIndex % statuses.length]!;
+    readyClient.user.setPresence({
+      activities: [{ name: s.name, type: s.type as any }],
+      status: 'online',
+    });
+    statusIndex++;
+  };
+
+  setNextStatus();
+  setInterval(setNextStatus, 15_000);
+
   try {
     await deployCommands();
   } catch (err) {
