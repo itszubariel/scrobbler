@@ -1,16 +1,11 @@
 import "dotenv/config";
 import pkg from "discord.js";
-import pkgPrisma from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "../db.js";
 import { AttachmentBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, ActionRowBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder } from "discord.js";
 import { E } from "../emojis.js";
 import { fetchStatsData, buildStatsImage } from "../commands/stats/stats.js";
 import { fetchRecentTracks, buildRecentContainer } from "../commands/recent.js";
 import { fetchTasteData, buildTasteCanvas, buildTasteContainer, PERIOD_LABELS_TASTE } from "../commands/taste.js";
-
-const { PrismaClient } = pkgPrisma;
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
 
 export async function handleButtonInteraction(interaction: any): Promise<void> {
   const { customId, guildId, guild } = interaction;

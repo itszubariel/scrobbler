@@ -1,7 +1,6 @@
 import "dotenv/config";
 import pkg from "discord.js";
-import pkgPrisma from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { fileURLToPath } from "url";
@@ -20,10 +19,7 @@ const {
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
 } = pkg;
-const { PrismaClient } = pkgPrisma;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
 
 async function buildAlbumsImage(
   members: { username: string; count: number }[],

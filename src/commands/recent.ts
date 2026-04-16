@@ -1,7 +1,6 @@
 import "dotenv/config";
 import pkg from "discord.js";
-import pkgPrisma from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "../db.js";
 import { E } from "../emojis.js";
 
 const {
@@ -15,10 +14,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = pkg;
-const { PrismaClient } = pkgPrisma;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
 
 import type { Command } from "../index.ts";
 

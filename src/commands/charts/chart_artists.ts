@@ -1,7 +1,6 @@
 import "dotenv/config";
 import pkg from "discord.js";
-import pkgPrisma from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 
@@ -15,10 +14,7 @@ const {
   MediaGalleryItemBuilder,
   AttachmentBuilder,
 } = pkg;
-const { PrismaClient } = pkgPrisma;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
 
 export const PERIOD_LABELS: Record<string, string> = {
   "7day":    "Last 7 days",
