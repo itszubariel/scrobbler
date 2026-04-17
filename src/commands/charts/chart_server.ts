@@ -135,10 +135,10 @@ export async function executeChartServer(interaction: any): Promise<void> {
 
     if (item) {
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 16px sans-serif";
+      ctx.font = "bold 16px Inter";
       ctx.fillText(item.name, x + 10, y + CELL - 20, 190);
       ctx.fillStyle = "#cccccc";
-      ctx.font = "12px sans-serif";
+      ctx.font = "12px Inter";
       ctx.fillText(`${item.plays.toLocaleString('en-US')} plays`, x + 10, y + CELL - 6, 190);
     }
 

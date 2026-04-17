@@ -10,6 +10,7 @@ const {
 import type { ChatInputCommandInteraction, Interaction } from "discord.js";
 import * as dotenv from "dotenv";
 import { handleButtonInteraction } from "./handlers/buttons.js";
+import "./fonts.js";
 import { E } from "./emojis.js";
 
 dotenv.config();

@@ -64,7 +64,7 @@ async function buildCompatCanvas(
     ctx.fillRect(0, y + ROW_H - 1, WIDTH, 1);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px sans-serif';
+    ctx.font = 'bold 16px Inter';
     ctx.textAlign = 'left';
     ctx.fillText(row.label, 20, MID_Y + 6);
 
@@ -84,7 +84,7 @@ async function buildCompatCanvas(
     }
 
     ctx.fillStyle = row.color;
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = 'bold 14px Inter';
     ctx.textAlign = 'right';
     ctx.fillText(`${row.score}%`, WIDTH - 20, MID_Y + 5);
     ctx.textAlign = 'left';

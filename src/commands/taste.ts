@@ -132,11 +132,11 @@ export async function buildTasteCanvas(
   ctx.fillRect(0, 0, WIDTH, HEADER_H);
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 26px sans-serif';
+  ctx.font = 'bold 26px Inter';
   ctx.fillText(`${username}'s Taste Profile`, 30, 44);
 
   ctx.fillStyle = '#888888';
-  ctx.font = '15px sans-serif';
+  ctx.font = '15px Inter';
   const pageIndicator = totalPages > 1 ? ` • Page ${page + 1} of ${totalPages}` : '';
   ctx.fillText(`${periodLabel}${pageIndicator}`, 30, 72);
 
@@ -157,7 +157,7 @@ export async function buildTasteCanvas(
     ctx.fillRect(0, y + ROW_H - 1, WIDTH, 1);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px sans-serif';
+    ctx.font = 'bold 16px Inter';
     ctx.textAlign = 'left';
     let label = capitalizeTag(genre.tag);
     if (ctx.measureText(label).width > LABEL_W - 20) {
@@ -182,7 +182,7 @@ export async function buildTasteCanvas(
     ctx.globalAlpha = 1;
 
     ctx.fillStyle = color;
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = 'bold 14px Inter';
     ctx.textAlign = 'right';
     ctx.fillText(`${genre.pct}%`, WIDTH - 20, MID_Y + 5);
     ctx.textAlign = 'left';
@@ -193,7 +193,7 @@ export async function buildTasteCanvas(
   ctx.fillRect(0, footerY, WIDTH, FOOTER_H);
 
   ctx.fillStyle = '#555555';
-  ctx.font = '13px sans-serif';
+  ctx.font = '13px Inter';
   ctx.textAlign = 'center';
   ctx.fillText(`Based on top 50 artists • ${periodLabel}`, WIDTH / 2, footerY + 32);
   ctx.textAlign = 'left';

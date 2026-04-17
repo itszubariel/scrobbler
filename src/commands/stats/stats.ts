@@ -88,11 +88,11 @@ export async function buildStatsImage(
   ctx.fillRect(0, 0, WIDTH, HEADER_H);
 
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 28px sans-serif';
+  ctx.font = 'bold 28px Inter';
   ctx.fillText(displayName, 30, 52);
 
   ctx.fillStyle = '#888888';
-  ctx.font = '16px sans-serif';
+  ctx.font = '16px Inter';
   const pageIndicator = totalPages > 1 ? ` • Page ${page + 1} of ${totalPages}` : '';
   ctx.fillText(`${members.length} members linked${pageIndicator}`, 30, 82);
 
@@ -128,18 +128,18 @@ export async function buildStatsImage(
     const BAR_H = 3;
 
     ctx.fillStyle = rankColor;
-    ctx.font = 'bold 22px sans-serif';
+    ctx.font = 'bold 22px Inter';
     ctx.textAlign = 'left';
     ctx.fillText(`${rank}`, 20, TEXT_Y);
 
     ctx.fillStyle = '#888888';
-    ctx.font = '15px sans-serif';
+    ctx.font = '15px Inter';
     ctx.textAlign = 'right';
     ctx.fillText(`${member.scrobbles.toLocaleString('en-US')} scrobbles`, WIDTH - 30, TEXT_Y);
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px sans-serif';
+    ctx.font = 'bold 20px Inter';
     ctx.fillText(member.username, CONTENT_X, TEXT_Y);
 
     if (rank === 1) {
@@ -177,7 +177,7 @@ export async function buildStatsImage(
   ctx.fillRect(0, footerY, WIDTH, FOOTER_H);
 
   ctx.fillStyle = '#555555';
-  ctx.font = '14px sans-serif';
+  ctx.font = '14px Inter';
   ctx.textAlign = 'center';
   ctx.fillText(`Total server scrobbles: ${totalScrobbles}`, WIDTH / 2, footerY + 36);
   ctx.textAlign = 'left';
