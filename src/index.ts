@@ -51,6 +51,8 @@ commands.set(statsCommand.data.name, statsCommand);
 import { chartCommand } from "./commands/charts/chart.js";
 commands.set(chartCommand.data.name, chartCommand);
 
+export const commandIds = new Map<string, string>();
+
 async function deployCommands() {
   const token = process.env.DISCORD_TOKEN;
   const clientId = process.env.DISCORD_CLIENT_ID;
@@ -69,11 +71,17 @@ async function deployCommands() {
       body: commandData,
     });
     console.log(`✅Registered ${commandData.length} guild command(s) to dev server`);
+
+    const registered = await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[];
+    for (const cmd of registered) commandIds.set(cmd.name, cmd.id);
   } else {
     await rest.put(Routes.applicationCommands(clientId), {
       body: commandData,
     });
     console.log(`✅Registered ${commandData.length} global command(s)`);
+
+    const registered = await rest.get(Routes.applicationCommands(clientId)) as any[];
+    for (const cmd of registered) commandIds.set(cmd.name, cmd.id);
   }
 }
 

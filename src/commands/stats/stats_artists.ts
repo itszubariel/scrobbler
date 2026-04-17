@@ -6,6 +6,7 @@ import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { AttachmentBuilder } from "discord.js";
+import { cmdMention } from "../../utils.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOGO_PATH = join(__dirname, '../../assests/images/scrobbler_logo.png');
@@ -27,7 +28,10 @@ async function buildArtistsImage(
 ): Promise<Buffer> {
   const displayName = guildName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   const maxCount = members[0]?.count ?? 1;
-  const totalArtists = members.reduce((sum, m) => sum + m.count, 0).toLocaleString('en-US');
+  const hasCapHit = members.some(m => m.count >= 1000);
+  const totalArtists = hasCapHit
+    ? members.reduce((sum, m) => sum + m.count, 0).toLocaleString('en-US') + '+'
+    : members.reduce((sum, m) => sum + m.count, 0).toLocaleString('en-US');
 
   const HEADER_H = 120;
   const ROW_H = 72;
@@ -105,7 +109,7 @@ async function buildArtistsImage(
     ctx.fillStyle = '#888888';
     ctx.font = '15px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(`${member.count.toLocaleString('en-US')} artists`, WIDTH - 30, TEXT_Y);
+    ctx.fillText(`${member.displayCount} artists`, WIDTH - 30, TEXT_Y);
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#ffffff';
@@ -193,7 +197,7 @@ export async function executeStatsArtists(interaction: any): Promise<void> {
   if (linkedMembers.length < 2) {
     const container = new ContainerBuilder().addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use </link:1493336821818720409> to get started.`
+        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use ${cmdMention('link')} to get started.`
       )
     );
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
@@ -209,10 +213,14 @@ export async function executeStatsArtists(interaction: any): Promise<void> {
   ) as any[];
 
   const members = linkedMembers
-    .map((m, i) => ({
-      username: m.user.lastfmUsername!,
-      count: (artistResults[i]?.topartists?.artist ?? []).length as number,
-    }))
+    .map((m, i) => {
+      const raw = (artistResults[i]?.topartists?.artist ?? []).length as number;
+      return {
+        username: m.user.lastfmUsername!,
+        count: raw,
+        displayCount: raw >= 1000 ? '1,000+' : raw.toLocaleString('en-US'),
+      };
+    })
     .sort((a, b) => b.count - a.count);
 
   const imageBuffer = await buildArtistsImage(members, interaction.guild.name);

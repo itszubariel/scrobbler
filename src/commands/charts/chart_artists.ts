@@ -3,6 +3,7 @@ import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { cmdMention } from "../../utils.js";
 
 const {
   MessageFlags,
@@ -48,7 +49,7 @@ export async function executeTopArtists(interaction: any): Promise<void> {
     const container = new ContainerBuilder().addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         isOwnProfile
-          ? `${E.reject} You haven't linked your Last.fm account yet! Use </link:1493336821818720409> to get started.`
+          ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
           : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
       )
     );

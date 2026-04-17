@@ -5,6 +5,7 @@ import { E } from "../../emojis.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { AttachmentBuilder } from "discord.js";
 import { fileURLToPath } from "url";
+import { cmdMention } from "../../utils.js";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -189,7 +190,7 @@ export async function executeStatsGenres(interaction: any): Promise<void> {
   if (linkedMembers.length < 2) {
     const container = new ContainerBuilder().addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use </link:1493336821818720409> to get started.`
+        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use ${cmdMention('link')} to get started.`
       )
     );
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });

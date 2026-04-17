@@ -3,6 +3,7 @@ import pkg from "discord.js";
 import { E } from "../../emojis.js";
 import { AttachmentBuilder } from "discord.js";
 import { fetchStatsData, buildStatsImage } from "./stats.js";
+import { cmdMention } from "../../utils.js";
 
 const {
   MessageFlags,
@@ -35,7 +36,7 @@ export async function executeStatsScrobbles(interaction: any): Promise<void> {
   if (!result || result.members.length < 2) {
     const container = new ContainerBuilder().addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use </link:1493336821818720409> to get started.`
+        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use ${cmdMention('link')} to get started.`
       )
     );
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });

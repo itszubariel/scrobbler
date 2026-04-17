@@ -19,6 +19,7 @@ const {
 
 
 import type { Command } from "../index.ts";
+import { cmdMention } from "../utils.js";
 
 const POLL_INTERVAL_MS = 3000;   // 3 seconds
 const POLL_MAX_ATTEMPTS = 40;    // 40 × 3s = 2 minutes
@@ -121,7 +122,7 @@ async function pollForSession(
   const timeoutContainer = new ContainerBuilder()
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(`${E.reject} **Link timed out.**`),
-      new TextDisplayBuilder().setContent("You didn't authorize within 2 minutes. Run </link:1493336821818720409> again to try."),
+      new TextDisplayBuilder().setContent(`You didn't authorize within 2 minutes. Run ${cmdMention('link')} again to try.`),
     );
 
   await interaction.editReply({

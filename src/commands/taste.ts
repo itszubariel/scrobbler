@@ -21,6 +21,7 @@ const {
 
 
 import type { Command } from "../index.ts";
+import { cmdMention } from "../utils.js";
 
 export const TASTE_PAGE_SIZE = 10;
 
@@ -288,7 +289,7 @@ export const tasteCommand: Command = {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           isOwnProfile
-            ? `${E.reject} You haven't linked your Last.fm account yet! Use </link:1493336821818720409> to get started.`
+            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
             : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
         )
       );

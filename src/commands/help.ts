@@ -1,6 +1,7 @@
 import "dotenv/config";
 import pkg from "discord.js";
 import { E } from "../emojis.js";
+import { commandIds } from "../index.js";
 
 const {
   SlashCommandBuilder,
@@ -13,21 +14,9 @@ const {
 
 import type { Command } from "../index.ts";
 
-const CMD_IDS: Record<string, string> = {
-  link:    '1493336821818720409',
-  unlink:  '1493604715609722931',
-  profile: '1493486609029664951',
-  np:      '1493341791905382561',
-  recent:  '1493508576617173042',
-  chart:   '1493526789400559677',
-  taste:   '1493491841105006715',
-  compat:  '1493490117971808320',
-  stats:   '1493515916099584100',
-  help:    '1493604970153644052',
-};
-
 function cmd(name: string): string {
-  const id = CMD_IDS[name.split(' ')[0] ?? name];
+  const baseName = name.split(' ')[0] ?? name;
+  const id = commandIds.get(baseName);
   return id ? `</${name}:${id}>` : `**/${name}**`;
 }
 

@@ -1,4 +1,26 @@
-export const E = {
+const devEmojis = {
+  reject:       '<:scrobbler_reject:1494627267375136788>',
+  accept:       '<:scrobbler_accept:1494627269606510602>',
+  prev:         '<:scrobbler_prev:1494627265277857903>',
+  next:         '<:scrobbler_next:1494627263323443220>',
+  commands:     '<:scrobbler_commands:1494627232566480987>',
+  music:        '<:scrobbler_music:1494627259347239004>',
+  musicalNote:  '<:scrobbler_musicalnote:1494627261448458341>',
+  musicLast:    '<:scrobbler_musiclast:1494627235079000174>',
+  lastfm:       '<:scrobbler_lastfm:1494627237163700224>',
+  heart:        '<:scrobbler_heart:1494627241903263796>',
+  location:     '<:scrobbler_location:1494627245937918043>',
+  top:          '<:scrobbler_top:1494627247737536553>',
+  crown:        '<:scrobbler_crown:1494627249645948968>',
+  artists:      '<:scrobbler_artists:1494627257371725955>',
+  tracks:       '<:scrobbler_tracks:1494627253642985542>',
+  albums:       '<:scrobbler_albums:1494627255547068496>',
+  listening:    '<:scrobbler_listening:1494627251680051364>',
+  graph:        '<:scrobbler_graph:1494627239906770984>',
+  chart:        '<:scrobbler_chart:1494627243895296010>',
+}
+
+const prodEmojis = {
   reject:       '<:scrobbler_reject:1493824434304450711>',
   accept:       '<:scrobbler_accept:1493824386183069787>',
   prev:         '<:scrobbler_prev:1493825851614167040>',
@@ -18,4 +40,6 @@ export const E = {
   listening:    '<:scrobbler_listening:1493831050005053600>',
   graph:        '<:scrobbler_graph:1493835517660500028>',
   chart:        '<:scrobbler_chart:1493833708501864499>',
-};
+}
+
+export const E = process.env.NODE_ENV === 'production' ? prodEmojis : devEmojis

@@ -18,6 +18,7 @@ const {
 
 
 import type { Command } from "../index.ts";
+import { cmdMention } from "../utils.js";
 
 function compatLabel(score: number): string {
   if (score <= 20) return "Very Different 🎭";
@@ -139,7 +140,7 @@ export const compatCommand: Command = {
         new TextDisplayBuilder().setContent(
           user3Discord
             ? `${E.reject} **${user1Discord.username}** hasn't linked their Last.fm account yet.`
-            : `${E.reject} You haven't linked your Last.fm account yet! Use </link:1493336821818720409> to get started.`
+            : `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
         )
       );
       await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
