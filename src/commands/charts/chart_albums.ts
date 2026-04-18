@@ -2,7 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { buildGridCanvas } from "./canvas.js";
 
 const {
   MessageFlags,
@@ -18,8 +18,6 @@ const {
 
 import { PERIOD_LABELS, SIZE_MAP } from "./chart_artists.js";
 import { cmdMention } from "../../utils.js";
-
-const CELL = 200;
 
 export async function executeTopAlbums(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
@@ -69,54 +67,35 @@ export async function executeTopAlbums(interaction: any): Promise<void> {
     return;
   }
 
-  const items = albums.map(a => ({
-    name: a.name,
-    artist: a.artist?.name ?? 'Unknown',
-    plays: parseInt(a.playcount),
-    imageUrl: a.image?.find((img: any) => img.size === 'extralarge')?.['#text'] || null,
-  }));
+  // iTunes for album art — better K-pop coverage than Last.fm embedded images
+  const imageResults = await Promise.all(
+    albums.map(a => {
+      const lfmImage = a.image?.find((img: any) => img.size === 'extralarge')?.['#text'] || null;
+      const LFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
+      if (lfmImage && !lfmImage.includes(LFM_PLACEHOLDER)) return Promise.resolve({ _lfm: lfmImage });
+      return fetch(`https://itunes.apple.com/search?term=${encodeURIComponent((a.artist?.name ?? '') + ' ' + a.name)}&entity=album&limit=1`)
+        .then(r => r.json()).catch(() => null);
+    })
+  );
 
-  const canvas = createCanvas(cols * CELL, rows * CELL);
-  const ctx = canvas.getContext('2d');
-
-  for (let i = 0; i < count; i++) {
-    const item = items[i];
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = col * CELL;
-    const y = row * CELL;
-
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(x, y, CELL, CELL);
-
-    if (item?.imageUrl) {
-      try {
-        const img = await loadImage(item.imageUrl);
-        ctx.drawImage(img, x, y, CELL, CELL);
-      } catch { /* fallback */ }
+  const items = albums.map((a, i) => {
+    const result = imageResults[i] as any;
+    let imageUrl: string | null = null;
+    if (result?._lfm) {
+      imageUrl = result._lfm;
+    } else {
+      const raw = result?.results?.[0]?.artworkUrl100 ?? null;
+      imageUrl = raw ? (raw as string).replace('100x100bb', '600x600bb') : null;
     }
+    return {
+      name: a.name,
+      artist: a.artist?.name ?? 'Unknown',
+      plays: parseInt(a.playcount),
+      imageUrl,
+    };
+  });
 
-    const grad = ctx.createLinearGradient(x, y + CELL - 100, x, y + CELL);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y + CELL - 100, CELL, 100);
-
-    if (item) {
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px Inter';
-      ctx.fillText(item.name, x + 10, y + CELL - 20, 190);
-      ctx.fillStyle = '#cccccc';
-      ctx.font = '12px Inter';
-      ctx.fillText(`${item.plays.toLocaleString('en-US')} plays`, x + 10, y + CELL - 6, 190);
-    }
-
-    ctx.strokeStyle = '#2a2a2a';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, CELL, CELL);
-  }
-
-  const buffer = canvas.toBuffer('image/png');
+  const buffer = await buildGridCanvas(items, cols, rows, count);
   const attachment = new AttachmentBuilder(buffer, { name: 'topalbums.png' });
 
   const container = new ContainerBuilder()

@@ -42,14 +42,37 @@ const sections = [
       { name: "chart artists", desc: "Grid chart of your top artists" },
       { name: "chart albums",  desc: "Grid chart of your top albums" },
       { name: "chart tracks",  desc: "Grid chart of your top tracks" },
-      { name: "chart server",  desc: "Grid chart of your server's top artists, albums or tracks" },
+      { name: "chart server",  desc: "Server-wide top artists, albums or tracks" },
+    ],
+  },
+  {
+    heading: "Info",
+    commands: [
+      { name: "info artist", desc: "Detailed info about an artist" },
+      { name: "info album",  desc: "Detailed info about an album" },
+      { name: "info track",  desc: "Detailed info about a track" },
+      { name: "info genre",  desc: "Detailed info about a genre" },
     ],
   },
   {
     heading: "Insights",
     commands: [
-      { name: "taste",  desc: "A breakdown of your top genres" },
-      { name: "compat", desc: "See how your taste compares to another user" },
+      { name: "taste user",   desc: "Your top 50 genres" },
+      { name: "taste server", desc: "This server's top genres" },
+      { name: "compat",       desc: "See how your taste compares to another user" },
+      { name: "discovery",    desc: "See how underground or mainstream your taste is" },
+      { name: "personality",  desc: "Discover your music personality type" },
+      { name: "streak",       desc: "Your top artist, track and album streaks over 90 day" },
+      { name: "wrapped",      desc: "Your personalized music recap with stats, charts and more" },
+    ],
+  },
+  {
+    heading: "Who Knows",
+    commands: [
+      { name: "wk artist", desc: "Who has listened to this artist the most" },
+      { name: "wk album",  desc: "Who has listened to this album the most" },
+      { name: "wk track",  desc: "Who has listened to this track the most" },
+      { name: "wk genre",  desc: "Who listens to this genre the most" },
     ],
   },
   {

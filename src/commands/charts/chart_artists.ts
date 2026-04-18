@@ -2,7 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { buildGridCanvas } from "./canvas.js";
 import { cmdMention } from "../../utils.js";
 
 const {
@@ -15,7 +15,6 @@ const {
   MediaGalleryItemBuilder,
   AttachmentBuilder,
 } = pkg;
-
 
 export const PERIOD_LABELS: Record<string, string> = {
   "7day":    "Last 7 days",
@@ -31,8 +30,6 @@ export const SIZE_MAP: Record<string, { cols: number; rows: number; count: numbe
   "4x4": { cols: 4, rows: 4, count: 16 },
   "5x5": { cols: 5, rows: 5, count: 25 },
 };
-
-const CELL = 200;
 
 export async function executeTopArtists(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
@@ -84,58 +81,22 @@ export async function executeTopArtists(interaction: any): Promise<void> {
 
   const deezerResults = await Promise.all(
     artists.map(a =>
-      fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(a.name)}`)
+      fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(a.name)}&limit=5`)
         .then(r => r.json()).catch(() => null)
     )
   ) as any[];
 
-  const items = artists.map((a, i) => ({
-    name: a.name,
-    plays: parseInt(a.playcount),
-    imageUrl: deezerResults[i]?.data?.[0]?.picture_medium ?? null,
-  }));
+  const items = artists.map((a, i) => {
+    const results: any[] = deezerResults[i]?.data ?? [];
+    const match = results.find((r: any) => r.name.toLowerCase() === a.name.toLowerCase()) ?? results[0] ?? null;
+    return {
+      name: a.name,
+      plays: parseInt(a.playcount),
+      imageUrl: match?.picture_xl ?? null,
+    };
+  });
 
-  const canvas = createCanvas(cols * CELL, rows * CELL);
-  const ctx = canvas.getContext('2d');
-
-  for (let i = 0; i < count; i++) {
-    const item = items[i];
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = col * CELL;
-    const y = row * CELL;
-
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(x, y, CELL, CELL);
-
-    if (item?.imageUrl) {
-      try {
-        const img = await loadImage(item.imageUrl);
-        ctx.drawImage(img, x, y, CELL, CELL);
-      } catch { /* fallback */ }
-    }
-
-    const grad = ctx.createLinearGradient(x, y + CELL - 100, x, y + CELL);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y + CELL - 100, CELL, 100);
-
-    if (item) {
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px Inter';
-      ctx.fillText(item.name, x + 10, y + CELL - 20, 190);
-      ctx.fillStyle = '#cccccc';
-      ctx.font = '12px Inter';
-      ctx.fillText(`${item.plays.toLocaleString('en-US')} plays`, x + 10, y + CELL - 6, 190);
-    }
-
-    ctx.strokeStyle = '#2a2a2a';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, CELL, CELL);
-  }
-
-  const buffer = canvas.toBuffer('image/png');
+  const buffer = await buildGridCanvas(items, cols, rows, count);
   const attachment = new AttachmentBuilder(buffer, { name: 'topartists.png' });
 
   const container = new ContainerBuilder()

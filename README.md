@@ -25,8 +25,21 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 | `/chart albums` | Grid chart of your top albums |
 | `/chart tracks` | Grid chart of your top tracks |
 | `/chart server` | Server-wide top artists, albums or tracks |
-| `/taste` | A breakdown of your top genres |
+| `/info artist` | Detailed info about an artist |
+| `/info album` | Detailed info about an album |
+| `/info track` | Detailed info about a track |
+| `/info genre` | Detailed info about a genre |
+| `/taste user` | Your top 50 genres |
+| `/taste server` | This server's top genres |
 | `/compat` | See how your taste compares to another user |
+| `/discovery` | See how underground or mainstream your taste is |
+| `/personality` | Discover your music personality type |
+| `/streak` | Your top listening streaks over the last 90 days |
+| `/wrapped` | Your personalized Scrobbler Wrapped |
+| `/wk artist` | Who has listened to this artist the most |
+| `/wk album` | Who has listened to this album the most |
+| `/wk track` | Who has listened to this track the most |
+| `/wk genre` | Who listens to this genre the most |
 | `/stats scrobbles` | Who has scrobbled the most in this server |
 | `/stats artists` | Who has listened to the most unique artists |
 | `/stats albums` | Who has listened to the most unique albums |
@@ -49,8 +62,10 @@ This repository is public so users can verify what the bot does and confirm it i
 ## Tech Stack
 
 - [discord.js](https://discord.js.org) v14 with Components V2
-- [Prisma](https://prisma.io) with PostgreSQL
+- [Prisma](https://prisma.io) with PostgreSQL (Supabase)
 - [@napi-rs/canvas](https://github.com/Brooooooklyn/canvas) for image generation
 - [Groq](https://groq.com) (llama-3.1-8b-instant) for AI bios
 - [Last.fm API](https://www.last.fm/api) for music data
-- [Deezer API](https://developers.deezer.com) for album/artist artwork
+- [Deezer API](https://developers.deezer.com) for artist artwork
+- [iTunes Search API](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI) for album/track artwork
+- [Supabase Storage](https://supabase.com/storage) for wrapped image caching

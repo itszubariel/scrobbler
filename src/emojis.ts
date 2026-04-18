@@ -18,6 +18,10 @@ const devEmojis = {
   listening:    '<:scrobbler_listening:1494627251680051364>',
   graph:        '<:scrobbler_graph:1494627239906770984>',
   chart:        '<:scrobbler_chart:1494627243895296010>',
+  search:       '<:scrobbler_search:1494948080489857135>',
+  fm:           '<:scrobbler_radio:1494948082457251851>',
+  streak:       '<:scrobbler_streak:1494964158662180914>',
+  days:         '<:scrobbler_days:1494965776803958854>',
 }
 
 const prodEmojis = {

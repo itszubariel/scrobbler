@@ -2,7 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { buildGridCanvas } from "./canvas.js";
 
 const {
   MessageFlags,
@@ -17,8 +17,6 @@ const {
 
 
 import { PERIOD_LABELS, SIZE_MAP } from "./chart_artists.js";
-
-const CELL = 200;
 
 export async function executeChartServer(interaction: any): Promise<void> {
   if (!interaction.guildId || !interaction.guild) {
@@ -60,7 +58,7 @@ export async function executeChartServer(interaction: any): Promise<void> {
     )
   ) as any[];
 
-  const playMap = new Map<string, number>();
+  const playMap = new Map<string, { plays: number; artist: string }>();
   for (const data of allResults) {
     if (!data || data.error) continue;
     const entries: any[] =
@@ -70,14 +68,25 @@ export async function executeChartServer(interaction: any): Promise<void> {
     for (const entry of entries) {
       const name = entry.name as string;
       const plays = parseInt(entry.playcount ?? '0');
-      playMap.set(name, (playMap.get(name) ?? 0) + plays);
+      const artist: string =
+        type === "artists" ? name :
+        type === "albums"  ? (entry.artist?.name ?? '') :
+        (entry.artist?.name ?? '');
+      // Key by "name|||artist" for tracks/albums to avoid merging same-named items from different artists
+      const key = (type === "tracks" || type === "albums") ? `${name}|||${artist}` : name;
+      const existing = playMap.get(key);
+      playMap.set(key, { plays: (existing?.plays ?? 0) + plays, artist: existing?.artist ?? artist });
     }
   }
 
   const sorted = [...playMap.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1].plays - a[1].plays)
     .slice(0, count)
-    .map(([name, plays]) => ({ name, plays }));
+    .map(([key, { plays, artist }]) => ({
+      name: key.includes('|||') ? key.split('|||')[0]! : key,
+      plays,
+      artist,
+    }));
 
   if (sorted.length === 0) {
     const container = new ContainerBuilder().addTextDisplayComponents(
@@ -87,67 +96,36 @@ export async function executeChartServer(interaction: any): Promise<void> {
     return;
   }
 
-  const deezerResults = await Promise.all(
-    sorted.map(item =>
-      type === "artists"
-        ? fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(item.name)}`).then(r => r.json()).catch(() => null)
-        : type === "albums"
-          ? fetch(`https://api.deezer.com/search/album?q=${encodeURIComponent(item.name)}`).then(r => r.json()).catch(() => null)
-          : fetch(`https://api.deezer.com/search/track?q=${encodeURIComponent(item.name)}`).then(r => r.json()).catch(() => null)
-    )
+  const imageResults = await Promise.all(
+    sorted.map(item => {
+      if (type === "artists") {
+        return fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(item.name)}&limit=5`)
+          .then(r => r.json()).catch(() => null);
+      } else if (type === "albums") {
+        return fetch(`https://itunes.apple.com/search?term=${encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.name)}&entity=album&limit=1`)
+          .then(r => r.json()).catch(() => null);
+      } else {
+        return fetch(`https://itunes.apple.com/search?term=${encodeURIComponent((item.artist ? item.artist + ' ' : '') + item.name)}&entity=song&limit=1`)
+          .then(r => r.json()).catch(() => null);
+      }
+    })
   ) as any[];
 
-  const items = sorted.map((item, i) => ({
-    name: item.name,
-    plays: item.plays,
-    imageUrl: type === "artists"
-      ? (deezerResults[i]?.data?.[0]?.picture_medium ?? null)
-      : type === "albums"
-        ? (deezerResults[i]?.data?.[0]?.cover_medium ?? null)
-        : (deezerResults[i]?.data?.[0]?.album?.cover_medium ?? null),
-  }));
-
-  const canvas = createCanvas(cols * CELL, rows * CELL);
-  const ctx = canvas.getContext("2d");
-
-  for (let i = 0; i < count; i++) {
-    const item = items[i];
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = col * CELL;
-    const y = row * CELL;
-
-    ctx.fillStyle = "#1a1a1a";
-    ctx.fillRect(x, y, CELL, CELL);
-
-    if (item?.imageUrl) {
-      try {
-        const img = await loadImage(item.imageUrl);
-        ctx.drawImage(img, x, y, CELL, CELL);
-      } catch { /* fallback */ }
+  const LFM_PLACEHOLDER = '2a96cbd8b46e442fc41c2b86b821562f';
+  const items = sorted.map((item, i) => {
+    let imageUrl: string | null = null;
+    if (type === "artists") {
+      const results: any[] = imageResults[i]?.data ?? [];
+      const match = results.find((r: any) => r.name.toLowerCase() === item.name.toLowerCase()) ?? results[0] ?? null;
+      imageUrl = match?.picture_xl ?? null;
+    } else {
+      const raw = imageResults[i]?.results?.[0]?.artworkUrl100 ?? null;
+      imageUrl = raw ? (raw as string).replace('100x100bb', '600x600bb') : null;
     }
+    return { name: item.name, plays: item.plays, imageUrl };
+  });
 
-    const grad = ctx.createLinearGradient(x, y + CELL - 100, x, y + CELL);
-    grad.addColorStop(0, "rgba(0,0,0,0)");
-    grad.addColorStop(1, "rgba(0,0,0,0.85)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y + CELL - 100, CELL, 100);
-
-    if (item) {
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 16px Inter";
-      ctx.fillText(item.name, x + 10, y + CELL - 20, 190);
-      ctx.fillStyle = "#cccccc";
-      ctx.font = "12px Inter";
-      ctx.fillText(`${item.plays.toLocaleString('en-US')} plays`, x + 10, y + CELL - 6, 190);
-    }
-
-    ctx.strokeStyle = "#2a2a2a";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, CELL, CELL);
-  }
-
-  const buffer = canvas.toBuffer("image/png");
+  const buffer = await buildGridCanvas(items, cols, rows, count);
   const attachment = new AttachmentBuilder(buffer, { name: "chart.png" });
 
   const typeLabel = type === "artists" ? "Artists" : type === "albums" ? "Albums" : "Tracks";

@@ -2,7 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { buildGridCanvas } from "./canvas.js";
 
 const {
   MessageFlags,
@@ -18,8 +18,6 @@ const {
 
 import { PERIOD_LABELS, SIZE_MAP } from "./chart_artists.js";
 import { cmdMention } from "../../utils.js";
-
-const CELL = 200;
 
 export async function executeTopTracks(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
@@ -69,60 +67,25 @@ export async function executeTopTracks(interaction: any): Promise<void> {
     return;
   }
 
-  const deezerResults = await Promise.all(
+  // iTunes for track art — better K-pop coverage than Deezer
+  const imageResults = await Promise.all(
     tracks.map(t =>
-      fetch(`https://api.deezer.com/search/track?q=${encodeURIComponent(t.name + ' ' + (t.artist?.name ?? ''))}`)
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent((t.artist?.name ?? '') + ' ' + t.name)}&entity=song&limit=1`)
         .then(r => r.json()).catch(() => null)
     )
-  ) as any[];
+  );
 
-  const items = tracks.map((t, i) => ({
-    name: t.name,
-    plays: parseInt(t.playcount),
-    imageUrl: deezerResults[i]?.data?.[0]?.album?.cover_medium ?? null,
-  }));
+  const items = tracks.map((t, i) => {
+    const raw = imageResults[i]?.results?.[0]?.artworkUrl100 ?? null;
+    const imageUrl = raw ? (raw as string).replace('100x100bb', '600x600bb') : null;
+    return {
+      name: t.name,
+      plays: parseInt(t.playcount),
+      imageUrl,
+    };
+  });
 
-  const canvas = createCanvas(cols * CELL, rows * CELL);
-  const ctx = canvas.getContext('2d');
-
-  for (let i = 0; i < count; i++) {
-    const item = items[i];
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = col * CELL;
-    const y = row * CELL;
-
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(x, y, CELL, CELL);
-
-    if (item?.imageUrl) {
-      try {
-        const img = await loadImage(item.imageUrl);
-        ctx.drawImage(img, x, y, CELL, CELL);
-      } catch { /* fallback */ }
-    }
-
-    const grad = ctx.createLinearGradient(x, y + CELL - 100, x, y + CELL);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y + CELL - 100, CELL, 100);
-
-    if (item) {
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px Inter';
-      ctx.fillText(item.name, x + 10, y + CELL - 20, 190);
-      ctx.fillStyle = '#cccccc';
-      ctx.font = '12px Inter';
-      ctx.fillText(`${item.plays.toLocaleString('en-US')} plays`, x + 10, y + CELL - 6, 190);
-    }
-
-    ctx.strokeStyle = '#2a2a2a';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, CELL, CELL);
-  }
-
-  const buffer = canvas.toBuffer('image/png');
+  const buffer = await buildGridCanvas(items, cols, rows, count);
   const attachment = new AttachmentBuilder(buffer, { name: 'toptracks.png' });
 
   const container = new ContainerBuilder()

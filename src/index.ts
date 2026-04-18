@@ -43,7 +43,7 @@ import { profileCommand } from "./commands/profile.js";
 commands.set(profileCommand.data.name, profileCommand);
 import { compatCommand } from "./commands/compat.js";
 commands.set(compatCommand.data.name, compatCommand);
-import { tasteCommand } from "./commands/taste.js";
+import { tasteCommand } from "./commands/taste/taste.js";
 commands.set(tasteCommand.data.name, tasteCommand);
 import { recentCommand } from "./commands/recent.js";
 commands.set(recentCommand.data.name, recentCommand);
@@ -51,6 +51,20 @@ import { statsCommand } from "./commands/stats/stats.js";
 commands.set(statsCommand.data.name, statsCommand);
 import { chartCommand } from "./commands/charts/chart.js";
 commands.set(chartCommand.data.name, chartCommand);
+import { wkCommand } from "./commands/wk/wk.js";
+commands.set(wkCommand.data.name, wkCommand);
+import { handleWkAutocomplete } from "./commands/wk/autocomplete.js";
+import { infoCommand } from "./commands/info/info.js";
+commands.set(infoCommand.data.name, infoCommand);
+import { handleInfoAutocomplete } from "./commands/info/autocomplete.js";
+import { discoveryCommand } from "./commands/discovery.js";
+commands.set(discoveryCommand.data.name, discoveryCommand);
+import { personalityCommand } from "./commands/personality.js";
+commands.set(personalityCommand.data.name, personalityCommand);
+import { streakCommand } from "./commands/streak.js";
+commands.set(streakCommand.data.name, streakCommand);
+import { wrappedCommand } from "./commands/wrapped.js";
+commands.set(wrappedCommand.data.name, wrappedCommand);
 
 export const commandIds = new Map<string, string>();
 
@@ -120,6 +134,15 @@ client.once("ready", async (readyClient) => {
 client.on("interactionCreate", async (interaction: Interaction) => {
   if (interaction.isButton()) {
     await handleButtonInteraction(interaction);
+    return;
+  }
+
+  if ((interaction as any).isAutocomplete?.()) {
+    if ((interaction as any).commandName === 'wk') {
+      await handleWkAutocomplete(interaction);
+    } else if ((interaction as any).commandName === 'info') {
+      await handleInfoAutocomplete(interaction);
+    }
     return;
   }
 

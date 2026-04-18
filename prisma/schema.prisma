@@ -64,3 +64,12 @@ model PendingLink {
   interactionToken String?
   createdAt        DateTime @default(now())
 }
+
+model WrappedCache {
+  id        String   @id @default(uuid())
+  discordId String   @unique
+  urls      String[]
+  period    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

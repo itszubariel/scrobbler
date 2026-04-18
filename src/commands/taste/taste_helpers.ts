@@ -1,27 +1,19 @@
 import "dotenv/config";
 import pkg from "discord.js";
-import { prisma } from "../db.js";
-import { E } from "../emojis.js";
 import { createCanvas } from "@napi-rs/canvas";
+import { E } from "../../emojis.js";
 
 const {
-  SlashCommandBuilder,
-  MessageFlags,
   ContainerBuilder,
   TextDisplayBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
-  AttachmentBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
 } = pkg;
-
-
-import type { Command } from "../index.ts";
-import { cmdMention } from "../utils.js";
 
 export const TASTE_PAGE_SIZE = 10;
 
@@ -34,18 +26,18 @@ export const PERIOD_LABELS_TASTE: Record<string, string> = {
   "overall": "All time",
 };
 
-const BAR_COLORS = [
+export const BAR_COLORS = [
   '#a78bfa', '#60a5fa', '#34d399', '#f472b6', '#fb923c',
   '#facc15', '#38bdf8', '#f87171', '#a3e635', '#e879f9',
 ];
 
-function capitalizeTag(tag: string): string {
+export function capitalizeTag(tag: string): string {
   return tag.replace(/\b\w/g, c => c.toUpperCase());
 }
 
 const BLOCKED_TAGS = new Set(["seen live", "favorites", "favourite", "favorite", "owned"]);
 
-function isBlockedTag(tag: string, artistNames: Set<string>): boolean {
+export function isBlockedTag(tag: string, artistNames: Set<string>): boolean {
   const lower = tag.toLowerCase();
   if (BLOCKED_TAGS.has(lower)) return true;
   if (/^\d{4}$/.test(lower)) return true;
@@ -102,7 +94,7 @@ export async function fetchTasteData(
 
 export async function buildTasteCanvas(
   allGenres: { tag: string; pct: number }[],
-  username: string,
+  title: string,
   periodLabel: string,
   page: number
 ): Promise<Buffer> {
@@ -133,7 +125,7 @@ export async function buildTasteCanvas(
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 26px Inter';
-  ctx.fillText(`${username}'s Taste Profile`, 30, 44);
+  ctx.fillText(title, 30, 44);
 
   ctx.fillStyle = '#888888';
   ctx.font = '15px Inter';
@@ -208,7 +200,7 @@ export function buildTasteContainer(
   periodLabel: string,
   page: number,
   targetDiscordId: string,
-  period: string  // period key e.g. "7day", not the label
+  period: string
 ) {
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
 
@@ -255,68 +247,56 @@ export function buildTasteContainer(
   return container;
 }
 
-export const tasteCommand: Command = {
-  data: new SlashCommandBuilder()
-    .setName("taste")
-    .setDescription("A breakdown of your top genres")
-    .addStringOption((option) =>
-      option.setName("period").setDescription("Time period").setRequired(false)
-        .addChoices(
-          { name: "Last 7 days",    value: "7day" },
-          { name: "Last month",     value: "1month" },
-          { name: "Last 3 months",  value: "3month" },
-          { name: "Last 6 months",  value: "6month" },
-          { name: "Last year",      value: "12month" },
-          { name: "All time",       value: "overall" },
-        )
+export function buildTasteServerContainer(
+  allGenres: { tag: string; pct: number }[],
+  attachment: any,
+  guildName: string,
+  periodLabel: string,
+  page: number,
+  guildId: string,
+  period: string
+) {
+  const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(`### ${E.listening} ${guildName}'s Top Genres — ${periodLabel}`)
     )
-    .addUserOption((option) =>
-      option.setName("user").setDescription("Check another user's taste (optional)").setRequired(false)
-    ),
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder().setURL('attachment://taste.png')
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# Page ${page + 1} of ${totalPages} • ${allGenres.length} genres`
+      )
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small)
+    );
 
-  async execute(interaction) {
-    await interaction.deferReply();
+  if (totalPages > 1) {
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`taste_server_prev_${page}_${guildId}_${period}`)
+        .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === 0),
+      new ButtonBuilder()
+        .setCustomId(`taste_server_next_${page}_${guildId}_${period}`)
+        .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page >= totalPages - 1),
+    );
+    container.addActionRowComponents(row as any);
+  }
 
-    const apiKey = process.env.LASTFM_API_KEY!;
-    const targetDiscordUser = interaction.options.getUser("user") ?? interaction.user;
-    const isOwnProfile = targetDiscordUser.id === interaction.user.id;
-    const period = (interaction.options as any).getString("period") ?? "overall";
-    const periodLabel = PERIOD_LABELS_TASTE[period] ?? "All time";
-
-    const dbUser = await prisma.user.findUnique({ where: { discordId: targetDiscordUser.id } });
-
-    if (!dbUser?.lastfmUsername) {
-      const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          isOwnProfile
-            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
-            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
-        )
-      );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
-      return;
-    }
-
-    const lfmUsername = dbUser.lastfmUsername;
-    const allGenres = await fetchTasteData(lfmUsername, period, apiKey);
-
-    if (!allGenres) {
-      const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} Couldn't determine genre data for **${lfmUsername}**.`)
-      );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
-      return;
-    }
-
-    const page = 0;
-    const imageBuffer = await buildTasteCanvas(allGenres, lfmUsername, periodLabel, page);
-    const attachment = new AttachmentBuilder(imageBuffer, { name: 'taste.png' });
-    const container = buildTasteContainer(allGenres, attachment, lfmUsername, periodLabel, page, targetDiscordUser.id, period);
-
-    await interaction.editReply({
-      files: [attachment],
-      components: [container],
-      flags: MessageFlags.IsComponentsV2,
-    });
-  },
-};
+  return container;
+}

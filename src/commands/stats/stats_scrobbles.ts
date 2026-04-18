@@ -4,6 +4,7 @@ import { E } from "../../emojis.js";
 import { AttachmentBuilder } from "discord.js";
 import { fetchStatsData, buildStatsImage } from "./stats.js";
 import { cmdMention } from "../../utils.js";
+import { prisma } from "../../db.js";
 
 const {
   MessageFlags,
@@ -46,6 +47,18 @@ export async function executeStatsScrobbles(interaction: any): Promise<void> {
   const allMembers = result.members;
   const page = 0;
   const totalPages = Math.ceil(allMembers.length / PAGE_SIZE);
+
+  // Find caller's rank
+  const callerDb = await prisma.user.findUnique({ where: { discordId: interaction.user.id } });
+  const callerLfm = callerDb?.lastfmUsername;
+  const callerRank = callerLfm ? allMembers.findIndex(m => m.username === callerLfm) + 1 : 0;
+  const callerEntry = callerLfm ? allMembers.find(m => m.username === callerLfm) : null;
+  const callerOnPage = callerRank > 0 && callerRank <= PAGE_SIZE;
+
+  const footerText = callerRank > PAGE_SIZE && callerEntry
+    ? `-# Page ${page + 1} of ${totalPages} • ${allMembers.length} members • You are **#${callerRank}** with **${callerEntry.scrobbles.toLocaleString()}** scrobbles`
+    : `-# Page ${page + 1} of ${totalPages} • ${allMembers.length} members`;
+
   const imageBuffer = await buildStatsImage(allMembers, interaction.guild.name, page);
   const attachment = new AttachmentBuilder(imageBuffer, { name: 'stats.png' });
 
@@ -65,9 +78,7 @@ export async function executeStatsScrobbles(interaction: any): Promise<void> {
       new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `-# Page ${page + 1} of ${totalPages} • ${allMembers.length} members`
-      )
+      new TextDisplayBuilder().setContent(footerText)
     )
     .addSeparatorComponents(
       new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small)
