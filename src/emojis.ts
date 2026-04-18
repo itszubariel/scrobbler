@@ -44,6 +44,10 @@ const prodEmojis = {
   listening:    '<:scrobbler_listening:1493831050005053600>',
   graph:        '<:scrobbler_graph:1493835517660500028>',
   chart:        '<:scrobbler_chart:1493833708501864499>',
+  search:       '<:scrobbler_search:1495002970780336229>',
+  fm:           '<:scrobbler_radio:1495002973473079377>',
+  streak:       '<:scrobbler_streak:1495002968196386977>',
+  days:         '<:scrobbler_days:1495002965331673140>',
 }
 
 export const E = process.env.NODE_ENV === 'production' ? prodEmojis : devEmojis

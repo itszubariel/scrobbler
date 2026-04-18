@@ -6,7 +6,7 @@
   "main": "index.js",
 "scripts": {
   "dev": "tsx src/index.ts",
-  "start": "node --import tsx/esm src/index.ts",
+  "start": "bun src/index.ts",
   "id": "tsx src/id.ts"
 },
   "keywords": [],
