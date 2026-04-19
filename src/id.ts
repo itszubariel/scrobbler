@@ -14,17 +14,34 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 
 rl.question("Command name: ", async (name) => {
   rl.close();
+  const searchName = name.trim();
 
-  const commands: any[] = guildId
-    ? await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[]
-    : await rest.get(Routes.applicationCommands(clientId)) as any[];
+  try {
+    const globalCommands = await rest.get(Routes.applicationCommands(clientId)) as any[];
+    
+    let guildCommands: any[] = [];
+    if (guildId) {
+      guildCommands = await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[];
+    }
 
-  const match = commands.find(c => c.name === name.trim());
+    const globalMatch = globalCommands.find(c => c.name === searchName);
+    const guildMatch = guildCommands.find(c => c.name === searchName);
 
-  if (!match) {
-    console.log(`No command found with name "${name.trim()}"`);
-    console.log("Available:", commands.map(c => c.name).join(", "));
-  } else {
-    console.log(`/${match.name} → ID: ${match.id}`);
+    if (!globalMatch && !guildMatch) {
+      console.log(`No command found with name "${searchName}"`);
+      const allNames = [...new Set([...globalCommands.map(c => c.name), ...guildCommands.map(c => c.name)])];
+      console.log("Available:", allNames.join(", "));
+      return;
+    }
+
+    if (globalMatch) {
+      console.log(`[Global] /${globalMatch.name} → ID: ${globalMatch.id}`);
+    }
+
+    if (guildMatch) {
+      console.log(`[Guild] /${guildMatch.name} → ID: ${guildMatch.id}`);
+    }
+  } catch (error) {
+    console.error("Error fetching commands:", error);
   }
 });
