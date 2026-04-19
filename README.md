@@ -55,7 +55,7 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 
 ## Source Availability
 
-This repository is public so users can verify what the bot does and confirm it is safe to use. The source code is **not open source** you may not copy, self-host, or redistribute it. See [LICENSE.md](LICENSE.md) for details.
+This repository is public so all users can verify what the bot does and confirm it is safe to use. The source code is **not open source** you may not copy, self-host, or redistribute it. See [LICENSE.md](LICENSE.md) for details.
 
 ---
 
