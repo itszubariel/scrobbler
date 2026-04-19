@@ -107,8 +107,8 @@ client.once("ready", async (readyClient) => {
     { name: '/link to start scrobbling', type: 0 },
     { name: 'through your music history', type: 3 },
     { name: 'your taste in music 👀', type: 3 },
-    // { name: `music in ${readyClient.guilds.cache.size} servers`, type: 0 },
-    // { name: `${readyClient.users.cache.size} music lovers`, type: 0 },
+    { name: `music in ${readyClient.guilds.cache.size} servers`, type: 0 },
+    { name: `${readyClient.users.cache.size} music lovers`, type: 0 },
   ];
 
   let statusIndex = 0;

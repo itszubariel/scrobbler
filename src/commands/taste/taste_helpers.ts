@@ -254,7 +254,8 @@ export function buildTasteServerContainer(
   periodLabel: string,
   page: number,
   guildId: string,
-  period: string
+  period: string,
+  authorId: string
 ) {
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
 
@@ -285,12 +286,12 @@ export function buildTasteServerContainer(
   if (totalPages > 1) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`taste_server_prev_${page}_${guildId}_${period}`)
+        .setCustomId(`taste_server_prev_${page}_${guildId}_${period}_${authorId}`)
         .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page === 0),
       new ButtonBuilder()
-        .setCustomId(`taste_server_next_${page}_${guildId}_${period}`)
+        .setCustomId(`taste_server_next_${page}_${guildId}_${period}_${authorId}`)
         .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page >= totalPages - 1),

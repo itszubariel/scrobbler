@@ -85,14 +85,15 @@ export async function executeStatsScrobbles(interaction: any): Promise<void> {
     );
 
   if (totalPages > 1) {
+    const authorId = interaction.user.id;
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`stats_prev_${page}`)
+        .setCustomId(`stats_prev_${page}_${authorId}`)
         .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true),
       new ButtonBuilder()
-        .setCustomId(`stats_next_${page}`)
+        .setCustomId(`stats_next_${page}_${authorId}`)
         .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(false),

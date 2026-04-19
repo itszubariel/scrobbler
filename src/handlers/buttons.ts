@@ -6,17 +6,22 @@ import { E } from "../emojis.js";
 import { fetchStatsData, buildStatsImage } from "../commands/stats/stats.js";
 import { fetchRecentTracks, buildRecentContainer } from "../commands/recent.js";
 import { fetchTasteData, buildTasteCanvas, buildTasteContainer, PERIOD_LABELS_TASTE } from "../commands/taste/taste.js";
-import { fetchServerTasteData, executeTasteServer } from "../commands/taste/taste_server.js";
+import { fetchServerTasteData } from "../commands/taste/taste_server.js";
 import { buildTasteServerContainer } from "../commands/taste/taste_helpers.js";
 import { PERIOD_LABELS_WRAPPED } from "../commands/wrapped.js";
 
 export async function handleButtonInteraction(interaction: any): Promise<void> {
   const { customId, guildId, guild } = interaction;
+  const clickerId = interaction.user.id;
 
-  // ─── Stats pagination ────────────────────────────────────────────────────────
+  // ─── Stats pagination ─────────────────────────────────────────────────────────
+  // format: stats_{prev|next}_{page}_{authorId}
   if (customId.startsWith('stats_prev_') || customId.startsWith('stats_next_')) {
-    await interaction.deferUpdate();
     const parts = customId.split('_');
+    const authorId = parts[3];
+    if (authorId && clickerId !== authorId) return;
+    await interaction.deferUpdate();
+
     const direction = parts[1] as 'prev' | 'next';
     const currentPage = parseInt(parts[2]);
     const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
@@ -33,30 +38,22 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
 
     const container = new ContainerBuilder()
       .addMediaGalleryComponents(
-        new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL('attachment://stats.png')
-        )
+        new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://stats.png'))
       )
-      .addSeparatorComponents(
-        new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
-      )
+      .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `-# Page ${newPage + 1} of ${totalPages} • ${allMembers.length} members`
-        )
+        new TextDisplayBuilder().setContent(`-# Page ${newPage + 1} of ${totalPages} • ${allMembers.length} members`)
       )
-      .addSeparatorComponents(
-        new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small)
-      );
+      .addSeparatorComponents(new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small));
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`stats_prev_${newPage}`)
+        .setCustomId(`stats_prev_${newPage}_${clickerId}`)
         .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(newPage === 0),
       new ButtonBuilder()
-        .setCustomId(`stats_next_${newPage}`)
+        .setCustomId(`stats_next_${newPage}_${clickerId}`)
         .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(newPage >= totalPages - 1),
@@ -67,12 +64,15 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
   }
 
   // ─── Recent tracks pagination ─────────────────────────────────────────────────
+  // format: recent_{prev|next}_{page}_{targetDiscordId}
   if (customId.startsWith('recent_prev_') || customId.startsWith('recent_next_')) {
-    await interaction.deferUpdate();
     const parts = customId.split('_');
     const direction = parts[1] as 'prev' | 'next';
     const currentPage = parseInt(parts[2]);
     const targetDiscordId = parts[3];
+    if (clickerId !== targetDiscordId) return;
+    await interaction.deferUpdate();
+
     const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
     const apiKey = process.env.LASTFM_API_KEY!;
 
@@ -86,12 +86,15 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
   }
 
   // ─── Taste pagination ─────────────────────────────────────────────────────────
+  // format: taste_{prev|next}_{page}_{targetDiscordId}_{period}
   if (customId.startsWith('taste_prev_') || customId.startsWith('taste_next_')) {
-    await interaction.deferUpdate();
     const parts = customId.split('_');
     const direction = parts[1] as 'prev' | 'next';
     const currentPage = parseInt(parts[2]);
     const targetDiscordId = parts[3];
+    if (clickerId !== targetDiscordId) return;
+    await interaction.deferUpdate();
+
     const period = parts[4] ?? 'overall';
     const periodLabel = PERIOD_LABELS_TASTE[period] ?? 'All time';
     const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
@@ -111,14 +114,16 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
   }
 
   // ─── Taste server pagination ──────────────────────────────────────────────────
+  // format: taste_server_{prev|next}_{page}_{guildId}_{period}
   if (customId.startsWith('taste_server_prev_') || customId.startsWith('taste_server_next_')) {
-    await interaction.deferUpdate();
     const parts = customId.split('_');
-    // format: taste_server_{prev|next}_{page}_{guildId}_{period}
     const direction = parts[2] as 'prev' | 'next';
     const currentPage = parseInt(parts[3]);
     const storedGuildId = parts[4];
     const period = parts[5] ?? 'overall';
+    // Taste server is guild-wide — any member can paginate, no author check needed
+    await interaction.deferUpdate();
+
     const periodLabel = PERIOD_LABELS_TASTE[period] ?? 'All time';
     const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
     const apiKey = process.env.LASTFM_API_KEY!;
@@ -135,21 +140,21 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
   }
 
   // ─── Wrapped navigation ───────────────────────────────────────────────────────
+  // format: wrapped_{prev|next}_{page}_{targetDiscordId}
   if (customId.startsWith('wrapped_prev_') || customId.startsWith('wrapped_next_')) {
-    await interaction.deferUpdate();
-    // format: wrapped_{prev|next}_{page}_{targetDiscordId}
     const parts = customId.split('_');
     const direction = parts[1] as 'prev' | 'next';
     const currentPage = parseInt(parts[2]);
     const targetDiscordId = parts[3];
+    if (clickerId !== targetDiscordId) return;
+    await interaction.deferUpdate();
+
     const TOTAL = 5;
     const newPage = direction === 'next' ? currentPage + 1 : currentPage - 1;
 
-    // Look up cache
     const cache = await (prisma as any).wrappedCache.findUnique({ where: { discordId: targetDiscordId } });
 
     if (!cache || new Date(cache.expiresAt) < new Date()) {
-      // Expired or missing
       const container = new ContainerBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(`This wrapped session has expired. Please run /wrapped again.`)
@@ -174,7 +179,6 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const imageUrl = cache.urls[newPage - 1];
     if (!imageUrl) return;
 
-    // Look up username + period label for the header
     const dbUser = await prisma.user.findUnique({ where: { discordId: targetDiscordId } });
     const username = dbUser?.lastfmUsername ?? 'Unknown';
     const periodLabel = PERIOD_LABELS_WRAPPED[cache.period] ?? 'Last 7 days';
@@ -206,7 +210,6 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
         .setDisabled(newPage === TOTAL),
     );
     container.addActionRowComponents(row as any);
-
     await interaction.editReply({ components: [container], flags: 32768 });
     return;
   }
