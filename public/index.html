@@ -1,0 +1,3037 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scrobbler</title>
+    <meta
+      name="description"
+      content="scrobbler is a social music bot for Discord. Track your listening, compare taste, and discover who knows your favourite artists best."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="scrobbler" />
+    <meta
+      property="og:description"
+      content="scrobbler is a social music bot for Discord. Track your listening, compare taste, and discover who knows your favourite artists best."
+    />
+    <meta
+      property="og:image"
+      content="https://scrobbler.netlify.app/assests/images/scrobbler_logo.png"
+    />
+    <meta property="og:url" content="https://scrobbler.netlify.app" />
+    <meta property="og:site_name" content="scrobbler" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --color-paper: #f1f0e3;
+        --color-surface: #e8e7d6;
+        --color-surface-2: #dddccc;
+        --color-charcoal: #2e2e2e;
+        --color-mist: #e5e7eb;
+        --purple-start: #6040b0;
+        --purple-end: #9468d8;
+        --gradient: linear-gradient(
+          135deg,
+          var(--purple-start),
+          var(--purple-end)
+        );
+        --font-display: "Cormorant Garamond", serif;
+        --font-body: "Bricolage Grotesque", sans-serif;
+        --radius-sm: 8px;
+        --radius-md: 16px;
+        --radius-lg: 24px;
+        --shadow-sm:
+          0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        --shadow-md:
+          0 10px 24px -4px rgba(0, 0, 0, 0.12),
+          0 4px 8px -4px rgba(0, 0, 0, 0.08);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+        overflow-x: hidden;
+      }
+      body {
+        background: var(--color-paper);
+        color: var(--color-charcoal);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+        overflow-x: hidden;
+      }
+      /* Lowercase aesthetic */
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      .btn,
+      .nav__links a,
+      .section-label,
+      .hero__eyebrow,
+      .cmd-desc__tag,
+      .testimonial__name,
+      .faq-item__q,
+      .footer__section-title {
+        text-transform: lowercase;
+      }
+      /* Grain overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.025;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        background-size: 200px 200px;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ── Utilities ── */
+      .gradient-text {
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 13px 28px;
+        background: var(--gradient);
+        color: #fff;
+        font-family: var(--font-body);
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        box-shadow: var(--shadow-sm);
+        transition:
+          opacity 0.2s,
+          transform 0.15s,
+          box-shadow 0.2s;
+        white-space: nowrap;
+        opacity: 1;
+      }
+      .btn:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+      }
+      .btn:active {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      .btn:focus {
+        outline: none;
+        opacity: 1;
+      }
+      .section-label {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: var(--purple-start);
+        background: rgba(96, 64, 176, 0.08);
+        padding: 5px 12px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 48px;
+      }
+      @media (max-width: 768px) {
+        .container {
+          padding: 0 20px;
+        }
+      }
+
+      /* ── Nav ── */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(242, 240, 227, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--color-mist);
+      }
+      .nav__inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 48px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nav__wordmark {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 26px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .nav__links {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        list-style: none;
+      }
+      .nav__links a {
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      }
+      .nav__links a:hover {
+        opacity: 1;
+      }
+      .nav__hamburger {
+        display: none;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0;
+      }
+      .nav__hamburger span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: var(--color-charcoal);
+        transition: all 0.3s ease;
+        border-radius: 2px;
+      }
+      .nav__hamburger.active span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+      }
+      .nav__hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+      .nav__hamburger.active span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+      }
+      .nav__mobile-actions {
+        display: none;
+        align-items: center;
+        gap: 12px;
+      }
+      .nav__icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--color-mist);
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-charcoal);
+        font-size: 16px;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.15s;
+        flex-shrink: 0;
+        text-decoration: none;
+      }
+      .nav__icon-btn:hover {
+        background: rgba(96, 64, 176, 0.1);
+        border-color: var(--purple-start);
+        transform: scale(1.05);
+      }
+      @media (max-width: 768px) {
+        .nav__inner {
+          padding: 0 20px;
+        }
+        .nav__hamburger {
+          display: flex;
+        }
+        .nav__mobile-actions {
+          display: flex;
+        }
+        .nav__links {
+          position: fixed;
+          top: 64px;
+          right: -100%;
+          width: 280px;
+          height: calc(100vh - 64px);
+          background: var(--color-paper);
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0;
+          padding: 24px 0;
+          box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+          transition: right 0.3s ease;
+          overflow-y: auto;
+        }
+        .nav__links.active {
+          right: 0;
+        }
+        .nav__links li {
+          width: 100%;
+          border-bottom: 1px solid var(--color-mist);
+        }
+        .nav__links li:last-child {
+          border-bottom: none;
+        }
+        .nav__links a {
+          width: 100%;
+          padding: 16px 24px;
+          text-align: left;
+          display: block;
+          font-size: 15px;
+        }
+        .nav__links .theme-toggle,
+        .nav__links .btn {
+          display: none;
+        }
+      }
+
+      /* ── Hero ── */
+      .hero {
+        padding: 96px 48px 80px;
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: lowercase;
+        color: var(--purple-start);
+        background: rgba(96, 64, 176, 0.08);
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 24px;
+      }
+      .hero__headline {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(96px, 16vw, 160px);
+        font-weight: 400;
+        line-height: 0.92;
+        letter-spacing: -0.02em;
+        margin-bottom: 24px;
+        text-transform: lowercase;
+      }
+      .hero__sub {
+        font-size: 18px;
+        line-height: 1.7;
+        opacity: 0.7;
+        max-width: 600px;
+        margin-bottom: 36px;
+      }
+      .hero__img {
+        width: 100%;
+        max-width: 700px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        margin-top: 48px;
+      }
+      @media (max-width: 640px) {
+        .hero__headline {
+          font-size: 78px;
+        }
+        .hero__sub {
+          font-size: 15px;
+        }
+        .commands__header h2,
+        .cmdref__header h2,
+        .testimonials__header h2,
+        .faq__header h2 {
+          font-size: clamp(48px, 12vw, 72px);
+        }
+      }
+      /* ── Commands showcase ── */
+      .commands {
+        padding: 96px 0;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .commands__header {
+        text-align: center;
+        margin-bottom: 72px;
+      }
+      .commands__header h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(56px, 8vw, 96px);
+        font-weight: 400;
+        line-height: 1.1;
+        margin-bottom: 12px;
+        text-transform: lowercase;
+      }
+      .commands__header p {
+        font-size: 17px;
+        opacity: 0.65;
+      }
+      .command-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto 80px;
+        padding: 0 48px;
+      }
+      .command-row:last-child {
+        margin-bottom: 0;
+      }
+      .command-row.reverse {
+        direction: rtl;
+      }
+      .command-row.reverse > * {
+        direction: ltr;
+      }
+      .cmd-desc__tag {
+        display: inline-block;
+        font-family: monospace;
+        font-size: 13px;
+        background: rgba(96, 64, 176, 0.1);
+        color: var(--purple-start);
+        padding: 4px 10px;
+        border-radius: var(--radius-sm);
+        margin-bottom: 16px;
+      }
+      .cmd-desc h3 {
+        font-size: 25px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 12px;
+      }
+      .cmd-desc p {
+        font-size: 16px;
+        line-height: 1.7;
+        opacity: 0.7;
+      }
+
+      /* Discord mock embed */
+      .discord-mock {
+        background: #f7f5ee;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        border: 1px solid var(--color-mist);
+      }
+      .discord-mock__bar {
+        background: rgba(96, 64, 176, 0.06);
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--color-mist);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .discord-mock__avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .discord-mock__cmd {
+        font-family: monospace;
+        font-size: 13px;
+        background: rgba(96, 64, 176, 0.12);
+        color: var(--purple-start);
+        padding: 3px 10px;
+        border-radius: var(--radius-sm);
+      }
+      .discord-mock__body {
+        padding: 16px;
+      }
+      .discord-embed {
+        border-left: 4px solid var(--purple-start);
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        padding: 14px 16px;
+      }
+      .discord-embed__author {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: lowercase;
+        color: var(--purple-start);
+        margin-bottom: 8px;
+      }
+      .discord-embed__title {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .discord-embed__sub {
+        font-size: 13px;
+        opacity: 0.65;
+        margin-bottom: 12px;
+      }
+      .discord-embed__fields {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .discord-embed__field {
+        font-size: 12px;
+      }
+      .discord-embed__field-name {
+        font-weight: 700;
+        margin-bottom: 2px;
+        opacity: 0.6;
+      }
+      .discord-embed__field-val {
+        font-weight: 600;
+      }
+      /* /np embed */
+      .np-embed {
+        overflow: hidden;
+      }
+      .np-embed__meta {
+        font-size: 11px;
+        opacity: 0.55;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .np-embed__title {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--purple-start);
+        margin-bottom: 2px;
+      }
+      .np-embed__artist {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .np-embed__listeners {
+        font-size: 12px;
+        opacity: 0.55;
+        margin-bottom: 10px;
+      }
+      .np-embed__art {
+        width: 72px;
+        height: 72px;
+        border-radius: var(--radius-sm);
+        background: var(--gradient);
+        float: right;
+        margin: 0 0 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 24px;
+        flex-shrink: 0;
+      }
+      .np-embed__album {
+        font-size: 12px;
+        margin-bottom: 6px;
+        clear: both;
+      }
+      .np-embed__album b {
+        font-weight: 700;
+      }
+      .np-embed__genres {
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+      .np-embed__genres b {
+        font-weight: 700;
+      }
+      .np-embed__divider {
+        border: none;
+        border-top: 1px solid var(--color-mist);
+        margin: 10px 0;
+      }
+      .np-embed__lfm-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(96, 64, 176, 0.1);
+        color: var(--purple-start);
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+      }
+
+      /* /chart artists embed — 3×3 grid */
+      .chart-embed__title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+      }
+      .chart-cell {
+        aspect-ratio: 1;
+        background: #333;
+        position: relative;
+        overflow: hidden;
+      }
+      .chart-cell__overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 4px 6px;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+      }
+      .chart-cell__name {
+        font-size: 9px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+      }
+      .chart-cell__plays {
+        font-size: 8px;
+        color: rgba(255, 255, 255, 0.75);
+      }
+      .chart-embed__caption {
+        font-size: 11px;
+        opacity: 0.5;
+        margin-top: 8px;
+        text-align: center;
+      }
+
+      /* /taste genre bars */
+      .taste-embed__title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+      .taste-embed__sub {
+        font-size: 11px;
+        opacity: 0.5;
+        margin-bottom: 10px;
+      }
+      .genre-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .genre-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        transition: transform 0.2s ease;
+        cursor: pointer;
+      }
+      .genre-bar:hover {
+        transform: translateX(4px);
+      }
+      .genre-bar__name {
+        width: 68px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .genre-bar__track {
+        flex: 1;
+        height: 7px;
+        background: rgba(0, 0, 0, 0.07);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .genre-bar__fill {
+        height: 100%;
+        border-radius: 999px;
+      }
+      .genre-bar__pct {
+        width: 28px;
+        text-align: right;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .taste-embed__footer {
+        font-size: 10px;
+        opacity: 0.4;
+        text-align: center;
+        margin-top: 8px;
+      }
+      .mock-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px 14px;
+        font-size: 12px;
+        opacity: 0.6;
+      }
+      .mock-pagination__arrows {
+        display: flex;
+        gap: 8px;
+      }
+      .mock-pagination__btn {
+        width: 30px;
+        height: 30px;
+        border-radius: var(--radius-sm);
+        background: rgba(96, 64, 176, 0.1);
+        color: var(--purple-start);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition:
+          transform 0.2s ease,
+          background 0.2s ease;
+        cursor: pointer;
+      }
+      .mock-pagination__btn:hover {
+        transform: scale(1.1);
+        background: rgba(96, 64, 176, 0.18);
+      }
+
+      /* /wk embed */
+      .wk-embed__header {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .wk-embed__sub {
+        font-size: 11px;
+        opacity: 0.5;
+        margin-bottom: 10px;
+      }
+      .wk-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .wk-row {
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        transition:
+          transform 0.2s ease,
+          background 0.2s ease;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        margin: 0 -4px;
+        padding-left: 4px;
+        padding-right: 4px;
+      }
+      .wk-row:last-child {
+        border-bottom: none;
+      }
+      .wk-row:hover {
+        transform: translateX(4px);
+        background: rgba(96, 64, 176, 0.04);
+      }
+      .wk-row__rank {
+        font-size: 15px;
+        font-weight: 800;
+        width: 28px;
+        flex-shrink: 0;
+      }
+      .wk-row__name {
+        flex: 1;
+        font-weight: 600;
+      }
+      .wk-row__bar {
+        width: 80px;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.07);
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 0 10px;
+      }
+      .wk-row__bar-fill {
+        height: 100%;
+        background: var(--gradient);
+        border-radius: 999px;
+      }
+      .wk-row__plays {
+        font-size: 12px;
+        opacity: 0.6;
+        white-space: nowrap;
+      }
+      .wk-embed__footer {
+        font-size: 11px;
+        opacity: 0.45;
+        text-align: center;
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid var(--color-mist);
+      }
+      .mock-footer-note {
+        font-size: 11px;
+        opacity: 0.5;
+        padding: 8px 16px 12px;
+      }
+
+      /* /wrapped BY THE NUMBERS */
+      .wrapped-card {
+        background: rgba(96, 64, 176, 0.06);
+        border-radius: var(--radius-sm);
+        padding: 14px;
+      }
+      .wrapped-card__label {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        text-transform: lowercase;
+        opacity: 0.45;
+        margin-bottom: 10px;
+      }
+      .wrapped-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+      .wrapped-stat {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: var(--radius-sm);
+        padding: 10px 10px 8px;
+        text-align: center;
+        transition:
+          transform 0.2s ease,
+          background 0.2s ease;
+        cursor: pointer;
+      }
+      .wrapped-stat:hover {
+        transform: scale(1.08);
+        background: rgba(255, 255, 255, 0.75);
+      }
+      .wrapped-stat__val {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 4px;
+      }
+      .wrapped-stat__key {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        opacity: 0.5;
+      }
+      .wrapped-card__made {
+        font-size: 10px;
+        opacity: 0.35;
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      /* Command reference — clickable pills with dropdown */
+      .cmdref {
+        padding: 96px 0;
+      }
+      .cmdref__header {
+        text-align: center;
+        margin-bottom: 56px;
+      }
+      .cmdref__header h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(56px, 8vw, 96px);
+        font-weight: 400;
+        margin-bottom: 10px;
+        text-transform: lowercase;
+      }
+      .cmdref__header p {
+        font-size: 16px;
+        opacity: 0.6;
+      }
+      .cmdref__groups {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+      }
+      .cmdref__group-name {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: var(--purple-start);
+        margin-bottom: 12px;
+      }
+      .cmdref__pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .cmdref__pill {
+        font-family: monospace;
+        font-size: 13px;
+        background: rgba(96, 64, 176, 0.08);
+        color: var(--purple-start);
+        border: 1px solid rgba(96, 64, 176, 0.18);
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          transform 0.1s,
+          box-shadow 0.15s;
+        user-select: none;
+      }
+      .cmdref__pill:hover {
+        background: rgba(96, 64, 176, 0.16);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(96, 64, 176, 0.12);
+      }
+      .cmdref__pill.active {
+        background: var(--gradient);
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(96, 64, 176, 0.28);
+      }
+
+      /* Dropdown panel — rendered outside pills, positioned by JS */
+      .cmd-dropdown {
+        position: fixed;
+        background: #fff;
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-md);
+        box-shadow:
+          0 16px 40px rgba(0, 0, 0, 0.14),
+          0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 18px 20px;
+        width: 300px;
+        z-index: 500;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(6px);
+        transition:
+          opacity 0.18s ease,
+          transform 0.18s ease;
+      }
+      .cmd-dropdown.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      .cmd-dropdown__name {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--purple-start);
+        background: rgba(96, 64, 176, 0.08);
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: var(--radius-sm);
+        margin-bottom: 10px;
+      }
+      .cmd-dropdown__desc {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--color-charcoal);
+        opacity: 0.8;
+        margin-bottom: 10px;
+      }
+      .cmd-dropdown__usage {
+        font-family: monospace;
+        font-size: 12px;
+        background: rgba(0, 0, 0, 0.04);
+        color: var(--color-charcoal);
+        padding: 6px 10px;
+        border-radius: var(--radius-sm);
+        opacity: 0.65;
+      }
+      @media (max-width: 768px) {
+        .cmdref__groups {
+          padding: 0 20px;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .command-row {
+          grid-template-columns: 1fr;
+          padding: 0 20px;
+          gap: 24px;
+        }
+        .command-row.reverse {
+          direction: ltr;
+        }
+      }
+
+      /* ── Stats bar ── */
+      .statsbar {
+        padding: 64px 48px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .statsbar__inner {
+        display: flex;
+        gap: 0;
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        position: relative;
+        background: rgba(255, 255, 255, 0.4);
+      }
+      .statsbar__inner::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient);
+      }
+      .stat-pill {
+        flex: 1;
+        padding: 32px 24px;
+        text-align: center;
+        border-right: 1px solid var(--color-mist);
+        transition: transform 0.2s ease;
+      }
+      .stat-pill:hover {
+        transform: scale(1.05);
+      }
+      .stat-pill:last-child {
+        border-right: none;
+      }
+      .stat-pill__val {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(48px, 7vw, 72px);
+        font-weight: 400;
+        line-height: 1;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+      }
+      .stat-pill__label {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        opacity: 0.55;
+      }
+      @media (max-width: 640px) {
+        .statsbar {
+          padding: 48px 20px;
+        }
+        .statsbar__inner {
+          flex-direction: column;
+        }
+        .stat-pill {
+          border-right: none;
+          border-bottom: 1px solid var(--color-mist);
+        }
+        .stat-pill:last-child {
+          border-bottom: none;
+        }
+      }
+
+      /* ── Testimonials ── */
+      .testimonials {
+        padding: 96px 0;
+      }
+      .testimonials__header {
+        text-align: center;
+        margin-bottom: 56px;
+      }
+      .testimonials__header h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(56px, 8vw, 96px);
+        font-weight: 400;
+        text-transform: lowercase;
+      }
+      .testimonials__grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 48px;
+      }
+      .testimonial {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        transition:
+          box-shadow 0.2s,
+          transform 0.15s;
+      }
+      .testimonial:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+      }
+      .testimonial__quote {
+        font-size: 15px;
+        line-height: 1.7;
+        opacity: 0.8;
+        margin-bottom: 20px;
+      }
+      .testimonial__quote::before {
+        content: "\201C";
+      }
+      .testimonial__quote::after {
+        content: "\201D";
+      }
+      .testimonial__user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .testimonial__avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .testimonial__name {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .testimonial__handle {
+        font-size: 12px;
+        opacity: 0.5;
+      }
+      @media (max-width: 768px) {
+        .testimonials__grid {
+          grid-template-columns: 1fr;
+          padding: 0 20px;
+        }
+      }
+
+      /* ── FAQ ── */
+      .faq {
+        padding: 96px 0;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .faq__header {
+        text-align: center;
+        margin-bottom: 56px;
+      }
+      .faq__header h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(56px, 8vw, 96px);
+        font-weight: 400;
+        text-transform: lowercase;
+      }
+      .faq__list {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 48px;
+      }
+      .faq-item {
+        border-bottom: 1px solid var(--color-mist);
+      }
+      .faq-item:first-child {
+        border-top: 1px solid var(--color-mist);
+      }
+      .faq-item__q {
+        width: 100%;
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 0;
+        text-align: left;
+        font-family: var(--font-body);
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--color-charcoal);
+        gap: 16px;
+      }
+      .faq-item__q:hover {
+        color: var(--purple-start);
+      }
+      .faq-item__icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: rgba(96, 64, 176, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: var(--purple-start);
+        transition:
+          transform 0.25s,
+          background 0.2s;
+      }
+      .faq-item.open .faq-item__icon {
+        transform: rotate(45deg);
+        background: var(--gradient);
+        color: #fff;
+      }
+      .faq-item__a {
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.3s ease,
+          padding 0.3s ease;
+        font-size: 15px;
+        line-height: 1.7;
+        opacity: 0.7;
+      }
+      .faq-item.open .faq-item__a {
+        max-height: 200px;
+        padding-bottom: 20px;
+      }
+      @media (max-width: 768px) {
+        .faq__list {
+          padding: 0 20px;
+        }
+      }
+
+      /* ── Footer ── */
+      footer {
+        background: #2e2e2e;
+        color: #f1f0e3;
+        padding: 64px 48px 32px;
+      }
+      .footer__inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 48px;
+        margin-bottom: 48px;
+      }
+      .footer__brand h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(48px, 6vw, 64px);
+        font-weight: 400;
+        line-height: 1.1;
+        margin-bottom: 12px;
+      }
+      .footer__brand p {
+        font-size: 15px;
+        line-height: 1.6;
+        opacity: 0.65;
+        max-width: 320px;
+        margin-bottom: 24px;
+      }
+      .footer__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 24px;
+        background: var(--gradient);
+        color: #fff;
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 999px;
+        transition:
+          opacity 0.2s,
+          transform 0.15s;
+      }
+      .footer__cta:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+      }
+      .footer__section-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        margin-bottom: 16px;
+        opacity: 0.9;
+      }
+      .footer__links {
+        display: flex;
+        flex-direction: column;
+        text-transform: lowercase;
+        gap: 10px;
+      }
+      .footer__links a {
+        font-size: 14px;
+        font-weight: 400;
+        opacity: 0.65;
+        color: #f1f0e3;
+        transition:
+          opacity 0.2s,
+          color 0.2s;
+      }
+      .footer__links a:hover {
+        opacity: 1;
+        color: var(--purple-end);
+      }
+      .footer__social {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .footer__social a {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(241, 240, 227, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        opacity: 0.7;
+        color: #f1f0e3;
+        transition:
+          opacity 0.2s,
+          background 0.2s,
+          transform 0.15s;
+      }
+      .footer__social a:hover {
+        opacity: 1;
+        background: rgba(241, 240, 227, 0.2);
+        transform: translateY(-2px);
+      }
+      .footer__bottom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-top: 24px;
+        border-top: 1px solid rgba(241, 240, 227, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        opacity: 0.5;
+      }
+      .footer__made {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .footer__made .heart {
+        color: #ff6b6b;
+      }
+      @media (max-width: 900px) {
+        .footer__inner {
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+        }
+      }
+      @media (max-width: 640px) {
+        footer {
+          padding: 48px 20px 24px;
+        }
+        .footer__inner {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+        .footer__bottom {
+          flex-direction: column;
+          gap: 12px;
+          text-align: center;
+        }
+      }
+
+      /* ── Body transition ── */
+      body {
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+      }
+
+      /* ── Dark mode toggle button ── */
+      .theme-toggle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--color-mist);
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-charcoal);
+        font-size: 16px;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.15s;
+        flex-shrink: 0;
+      }
+      .theme-toggle:hover {
+        background: rgba(96, 64, 176, 0.1);
+        border-color: var(--purple-start);
+        transform: rotate(15deg);
+      }
+      .theme-toggle .icon-sun {
+        display: none;
+      }
+      .theme-toggle .icon-moon {
+        display: block;
+      }
+      [data-theme="dark"] .theme-toggle .icon-sun {
+        display: block;
+      }
+      [data-theme="dark"] .theme-toggle .icon-moon {
+        display: none;
+      }
+
+      /* ── Dark mode overrides ── */
+      [data-theme="dark"] {
+        --color-paper: #1f1f1f;
+        --color-surface: #2a2a2a;
+        --color-surface-2: #303030;
+        --color-charcoal: #d1d0c0;
+        --color-mist: rgba(255, 255, 255, 0.08);
+        --purple-start: #8b6fd4;
+        --purple-end: #b89af0;
+      }
+
+      [data-theme="dark"] .nav {
+        background: rgba(31, 31, 31, 0.92);
+      }
+      [data-theme="dark"] .nav__links {
+        background: var(--color-paper);
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
+      }
+      [data-theme="dark"] .nav__hamburger span {
+        background: var(--color-charcoal);
+      }
+      [data-theme="dark"] .discord-mock {
+        background: #1e1e1e;
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .discord-mock__bar {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .discord-embed {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      [data-theme="dark"] .commands {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      [data-theme="dark"] .faq {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      [data-theme="dark"] .testimonial {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      [data-theme="dark"] .statsbar__inner {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      [data-theme="dark"] .stat-pill {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .wrapped-card {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      [data-theme="dark"] .wrapped-stat {
+        background: rgba(255, 255, 255, 0.08);
+        transition:
+          transform 0.2s ease,
+          background 0.2s ease;
+      }
+      [data-theme="dark"] .wrapped-stat:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: scale(1.08);
+      }
+      [data-theme="dark"] footer {
+        background: #d1d0c0;
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .footer__links a {
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .footer__social a {
+        background: rgba(31, 31, 31, 0.1);
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .footer__social a:hover {
+        background: rgba(31, 31, 31, 0.2);
+      }
+      [data-theme="dark"] .footer__bottom {
+        border-color: rgba(31, 31, 31, 0.15);
+      }
+      [data-theme="dark"] .cmdref__pill {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .cmdref__pill:hover {
+        background: rgba(139, 111, 212, 0.22);
+      }
+      [data-theme="dark"] .cmd-dropdown {
+        background: #1e1e1e;
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      [data-theme="dark"] .cmd-dropdown__usage {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      [data-theme="dark"] .np-embed__lfm-btn {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .np-embed__lfm-btn:hover {
+        background: rgba(139, 111, 212, 0.22);
+      }
+      [data-theme="dark"] .chart-cell__overlay {
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      }
+      [data-theme="dark"] .genre-bar__track {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .wk-row {
+        border-color: rgba(255, 255, 255, 0.06);
+      }
+      [data-theme="dark"] .wk-row:hover {
+        background: rgba(139, 111, 212, 0.08);
+      }
+      [data-theme="dark"] .wk-embed__footer {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .faq-item {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .faq-item:first-child {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .mock-pagination__btn {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .mock-pagination__btn:hover {
+        background: rgba(139, 111, 212, 0.22);
+      }
+      [data-theme="dark"] .hero__eyebrow,
+      [data-theme="dark"] .section-label {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .cmd-desc__tag {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .footer__bottom {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      [data-theme="dark"] .cmd-desc__tag {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .btn {
+        background: linear-gradient(135deg, #8b6fd4, #b89af0);
+        box-shadow: 0 4px 12px rgba(139, 111, 212, 0.3);
+      }
+      [data-theme="dark"] .btn:hover {
+        box-shadow: 0 8px 20px rgba(139, 111, 212, 0.4);
+      }
+    </style>
+
+    <!-- Dark mode: apply before paint to avoid flash -->
+    <script>
+      (function () {
+        var saved = localStorage.getItem("theme");
+        var prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        if (saved === "dark" || (!saved && prefersDark)) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+      <div class="nav__inner">
+        <a href="index.html" class="nav__wordmark" aria-label="scrobbler home"
+          >scrobbler</a
+        >
+
+        <div class="nav__mobile-actions">
+          <button
+            class="theme-toggle nav__icon-btn"
+            id="themeToggle"
+            aria-label="Toggle dark mode"
+          >
+            <svg
+              class="icon-moon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <svg
+              class="icon-sun"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </button>
+
+          <a
+            class="nav__icon-btn"
+            href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Add to Discord"
+            title="Add to Discord"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+              />
+            </svg>
+          </a>
+
+          <button
+            class="nav__hamburger"
+            id="navHamburger"
+            aria-label="Toggle menu"
+            aria-expanded="false"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+
+        <ul class="nav__links" id="navLinks">
+          <li><a href="#hero" data-scroll="hero">home</a></li>
+          <li><a href="#commands" data-scroll="commands">commands</a></li>
+          <li><a href="#cmdref" data-scroll="cmdref">reference</a></li>
+          <li>
+            <a href="#testimonials" data-scroll="testimonials">community</a>
+          </li>
+          <li><a href="#faq" data-scroll="faq">faq</a></li>
+          <li>
+            <button
+              class="theme-toggle"
+              id="themeToggleDesktop"
+              aria-label="Toggle dark mode"
+            >
+              <svg
+                class="icon-moon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <svg
+                class="icon-sun"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            </button>
+          </li>
+          <li>
+            <a
+              class="btn"
+              href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Add to Discord
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+      <!-- HERO -->
+      <section id="hero" class="hero" aria-labelledby="hero-headline">
+        <div class="hero__eyebrow">✦ social music bot</div>
+        <h1 class="hero__headline" id="hero-headline">
+          your music,<br /><span class="gradient-text">shared.</span>
+        </h1>
+        <p class="hero__sub">
+          scrobbler brings last.fm to discord, track what you're listening to,
+          compare taste with friends, and discover who knows your favourite
+          artists best.
+        </p>
+        <a
+          class="btn"
+          href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Add to Discord
+        </a>
+      </section>
+
+      <!-- COMMANDS SHOWCASE -->
+      <section id="commands" class="commands" aria-labelledby="commands-title">
+        <div class="commands__header container">
+          <span class="section-label">Commands</span>
+          <h2 id="commands-title">See it in action</h2>
+          <p>Five of the most-loved commands, right here.</p>
+        </div>
+
+        <!-- /np -->
+        <div class="command-row">
+          <div class="cmd-desc">
+            <span class="cmd-desc__tag">/np</span>
+            <h3>now playing</h3>
+            <p>
+              See what you or any server member is listening to right now,
+              track, artist, listener count, album info, genre tags, and a
+              direct link to their Last.fm profile.
+            </p>
+          </div>
+          <div
+            class="discord-mock"
+            role="img"
+            aria-label="Discord embed preview for /np command"
+          >
+            <div class="discord-mock__bar">
+              <div class="discord-mock__avatar">
+                <img
+                  src="../assests/images/scrobbler_logo.png"
+                  alt="scrobbler"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
+              <span class="discord-mock__cmd">/np</span>
+            </div>
+            <div class="discord-mock__body">
+              <div class="discord-embed">
+                <div class="np-embed">
+                  <div
+                    class="np-embed__art"
+                    style="
+                      background-image: url(&quot;https://imgs.search.brave.com/InGZwyYQNLPoVlf2D-L30t5cjBkHAWf2JQOaXf59YwQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90aGUx/OTc1LmNvbS9hc3Nl/dHMvVGhlLTE5NzUt/LS1CZWluZy1GdW5u/eS1Jbi1BLUZvcmVp/Z24tTGFuZ3VhZ2Uu/anBn&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  ></div>
+                  <div class="np-embed__meta">
+                    ⟳ Last Scrobbled · 2 days ago
+                  </div>
+                  <div class="np-embed__title">About You</div>
+                  <div class="np-embed__artist">The 1975</div>
+                  <div class="np-embed__listeners">2.6M listeners</div>
+                  <div class="np-embed__album" style="clear: both">
+                    <b>Album:</b> Being Funny in a Foreign Lang... · 2023 ·
+                    <b>Your plays:</b> 312
+                  </div>
+                  <div class="np-embed__genres">
+                    <b>Genre:</b> indie · dream pop · chill · ♡
+                  </div>
+                </div>
+                <hr class="np-embed__divider" />
+                <span class="np-embed__lfm-btn">username on Last.fm ↗</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- /chart artists -->
+        <div class="command-row reverse">
+          <div class="cmd-desc">
+            <span class="cmd-desc__tag">/chart artists</span>
+            <h3>artist chart</h3>
+            <p>
+              Generate a 3×3 (or 4×4, 5×5) mosaic of your top artists for any
+              time period. Each cell shows the artist name and play count
+              overlaid on their image.
+            </p>
+          </div>
+          <div
+            class="discord-mock"
+            role="img"
+            aria-label="Discord embed preview for /chart artists command"
+          >
+            <div class="discord-mock__bar">
+              <div class="discord-mock__avatar">
+                <img
+                  src="../assests/images/scrobbler_logo.png"
+                  alt="scrobbler"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
+              <span class="discord-mock__cmd"
+                >/chart artists grid:3x3 period:overall</span
+              >
+            </div>
+            <div class="discord-mock__body">
+              <div class="discord-embed">
+                <div class="chart-embed__title">
+                  🎙 username's Top Artists All time
+                </div>
+                <div class="chart-grid">
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://imgs.search.brave.com/InGZwyYQNLPoVlf2D-L30t5cjBkHAWf2JQOaXf59YwQ/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90aGUx/OTc1LmNvbS9hc3Nl/dHMvVGhlLTE5NzUt/LS1CZWluZy1GdW5u/eS1Jbi1BLUZvcmVp/Z24tTGFuZ3VhZ2Uu/anBn&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">The 1975</div>
+                      <div class="chart-cell__plays">312 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://i.scdn.co/image/ab6761610000e5eb7da39dea0a72f581535fb11f&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Arctic Monkeys</div>
+                      <div class="chart-cell__plays">278 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://i.scdn.co/image/ab6761610000e5eb5a00969a4698c3132a15fbb0&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Taylor Swift</div>
+                      <div class="chart-cell__plays">241 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://imgs.search.brave.com/KcBQOSrCl-rZQBir93Lx0FKqKudksgmvRgIspe4HmTU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnNj/ZG4uY28vaW1hZ2Uv/YWI2NzYxNjEwMDAw/ZTVlYmI5OWNhY2Y4/YWNkNTM3ODIwNjc2/NzI2MQ&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Lana Del Rey</div>
+                      <div class="chart-cell__plays">189 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://i.scdn.co/image/ab6761610000e5ebd8b9980db67272cb4d2c3daf&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Billie Eilish</div>
+                      <div class="chart-cell__plays">154 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://imgs.search.brave.com/tmkFLuJjjXK6XyR6zb623oLAOcM8fWgaXCsNYFnQ6Hg/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnNj/ZG4uY28vaW1hZ2Uv/YWI2NzYxNmQwMDAw/YjI3M2EzZWZmNzJm/NjI3ODJmYjU4OWE0/OTJmOQ&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">The Weeknd</div>
+                      <div class="chart-cell__plays">130 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://i.scdn.co/image/ab6761610000e5ebe03a98785f3658f0b6461ec4&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Olivia Rodrigo</div>
+                      <div class="chart-cell__plays">98 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://imgs.search.brave.com/HIKR97e3AZcRUqjIMhYQiweXDgi1fEB8I2cHUFAOjjU/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pLnNj/ZG4uY28vaW1hZ2Uv/YWI2NzYxNmQwMDAw/YjI3MzZjMjZlNGEy/ZTRkZjk0YTU1NTkx/YzQ4Zg&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Phoebe Bridgers</div>
+                      <div class="chart-cell__plays">76 plays</div>
+                    </div>
+                  </div>
+                  <div
+                    class="chart-cell"
+                    style="
+                      background-image: url(&quot;https://imgs.search.brave.com/JLsDcuHOZudZf0ncBRJyL0ZSqB8vbDbyFf-DPhdtA8I/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZS1jZG4tZmEuc3Bv/dGlmeWNkbi5jb20v/aW1hZ2UvYWI2Nzcw/NmMwMDAwZGE4NDll/OWZjYzYzMGY2NDc3/ZTBkODllNDgzYQ&quot;);
+                      background-size: cover;
+                      background-position: center;
+                    "
+                  >
+                    <div class="chart-cell__overlay">
+                      <div class="chart-cell__name">Frank Ocean</div>
+                      <div class="chart-cell__plays">61 plays</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="chart-embed__caption">
+                  Top 9 artists · 3×3 · All time
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- /taste user -->
+        <div class="command-row">
+          <div class="cmd-desc">
+            <span class="cmd-desc__tag">/taste user</span>
+            <h3>taste profile</h3>
+            <p>
+              see your full genre breakdown as a colour-coded bar chart.
+              paginate through all 50 genres and find out exactly what your
+              listening history says about you.
+            </p>
+          </div>
+          <div
+            class="discord-mock"
+            role="img"
+            aria-label="Discord embed preview for /taste user command"
+          >
+            <div class="discord-mock__bar">
+              <div class="discord-mock__avatar">
+                <img
+                  src="../assests/images/scrobbler_logo.png"
+                  alt="scrobbler"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
+              <span class="discord-mock__cmd">/taste user</span>
+            </div>
+            <div class="discord-mock__body">
+              <div class="discord-embed">
+                <div class="taste-embed__title">
+                  🎵 username's Top Genres — All time
+                </div>
+                <div class="taste-embed__sub">
+                  Taste Profile · All time · Page 1 of 5
+                </div>
+                <div class="genre-bars">
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Indie</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 100%; background: #a78de0"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #a78de0"
+                      >14%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Pop</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 100%; background: #7eb8f7"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #7eb8f7"
+                      >14%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Rnb</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 79%; background: #4ecb8d"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #4ecb8d"
+                      >11%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Black Metal</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 64%; background: #f07ab0"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #f07ab0"
+                      >9%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Hindi</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 50%; background: #f5a742"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #f5a742"
+                      >7%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Folk</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 50%; background: #d4c44a"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #d4c44a"
+                      >7%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">Indie Pop</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 36%; background: #5bc8d4"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #5bc8d4"
+                      >5%</span
+                    >
+                  </div>
+                  <div class="genre-bar">
+                    <span class="genre-bar__name">British</span>
+                    <div class="genre-bar__track">
+                      <div
+                        class="genre-bar__fill"
+                        style="width: 29%; background: #f08080"
+                      ></div>
+                    </div>
+                    <span class="genre-bar__pct" style="color: #f08080"
+                      >4%</span
+                    >
+                  </div>
+                </div>
+                <div class="taste-embed__footer">
+                  Based on top 50 artists · All time
+                </div>
+              </div>
+            </div>
+            <div class="mock-pagination">
+              <span>Page 1 of 5 · 50 genres</span>
+              <div class="mock-pagination__arrows">
+                <div class="mock-pagination__btn">←</div>
+                <div class="mock-pagination__btn">→</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- /wk artist -->
+        <div class="command-row reverse">
+          <div class="cmd-desc">
+            <span class="cmd-desc__tag">/wk artist</span>
+            <h3>who knows</h3>
+            <p>
+              Find the top listeners for any artist in your server. Compete for
+              the crown, see combined server plays, and track who's closing the
+              gap.
+            </p>
+          </div>
+          <div
+            class="discord-mock"
+            role="img"
+            aria-label="Discord embed preview for /wk artist command"
+          >
+            <div class="discord-mock__bar">
+              <div class="discord-mock__avatar">
+                <img
+                  src="../assests/images/scrobbler_logo.png"
+                  alt="scrobbler"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
+              <span class="discord-mock__cmd">/wk artist Artist Name</span>
+            </div>
+            <div class="discord-mock__body">
+              <div class="discord-embed">
+                <div class="wk-embed__header">🎙 Who Knows Artist Name?</div>
+                <div class="wk-embed__sub">artist · your-server</div>
+                <div class="wk-list">
+                  <div class="wk-row">
+                    <span class="wk-row__rank">👑</span>
+                    <span class="wk-row__name">user_one</span>
+                    <div class="wk-row__bar">
+                      <div class="wk-row__bar-fill" style="width: 100%"></div>
+                    </div>
+                    <span class="wk-row__plays">3,204 plays</span>
+                  </div>
+                  <div class="wk-row">
+                    <span class="wk-row__rank">2</span>
+                    <span class="wk-row__name">user_two</span>
+                    <div class="wk-row__bar">
+                      <div class="wk-row__bar-fill" style="width: 68%"></div>
+                    </div>
+                    <span class="wk-row__plays">2,180 plays</span>
+                  </div>
+                  <div class="wk-row">
+                    <span class="wk-row__rank">3</span>
+                    <span class="wk-row__name">user_three</span>
+                    <div class="wk-row__bar">
+                      <div class="wk-row__bar-fill" style="width: 47%"></div>
+                    </div>
+                    <span class="wk-row__plays">1,509 plays</span>
+                  </div>
+                  <div class="wk-row">
+                    <span class="wk-row__rank">4</span>
+                    <span class="wk-row__name">user_four</span>
+                    <div class="wk-row__bar">
+                      <div class="wk-row__bar-fill" style="width: 31%"></div>
+                    </div>
+                    <span class="wk-row__plays">994 plays</span>
+                  </div>
+                  <div class="wk-row">
+                    <span class="wk-row__rank">5</span>
+                    <span class="wk-row__name">user_five</span>
+                    <div class="wk-row__bar">
+                      <div class="wk-row__bar-fill" style="width: 18%"></div>
+                    </div>
+                    <span class="wk-row__plays">577 plays</span>
+                  </div>
+                </div>
+                <div class="wk-embed__footer">
+                  8,464 combined plays in this server
+                </div>
+              </div>
+            </div>
+            <div class="mock-footer-note">5 listeners in this server</div>
+          </div>
+        </div>
+
+        <!-- /wrapped -->
+        <div class="command-row">
+          <div class="cmd-desc">
+            <span class="cmd-desc__tag">/wrapped</span>
+            <h3>wrapped</h3>
+            <p>
+              Your personal stats card: artists, tracks, albums, underground %,
+              top genre, and daily average. Available any time, not just
+              December. Paginate through 5 pages of insights.
+            </p>
+          </div>
+          <div
+            class="discord-mock"
+            role="img"
+            aria-label="Discord embed preview for /wrapped command"
+          >
+            <div class="discord-mock__bar">
+              <div class="discord-mock__avatar">
+                <img
+                  src="../assests/images/scrobbler_logo.png"
+                  alt="scrobbler"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
+              <span class="discord-mock__cmd">/wrapped period:7day</span>
+            </div>
+            <div class="discord-mock__body">
+              <div class="discord-embed">
+                <div
+                  style="font-size: 13px; font-weight: 700; margin-bottom: 10px"
+                >
+                  🎵 username's scrobbler Wrapped Last 7 days
+                </div>
+                <div class="wrapped-card">
+                  <div class="wrapped-card__label">By the numbers</div>
+                  <div class="wrapped-grid">
+                    <div class="wrapped-stat">
+                      <div class="wrapped-stat__val">128</div>
+                      <div class="wrapped-stat__key">Artists</div>
+                    </div>
+                    <div class="wrapped-stat">
+                      <div class="wrapped-stat__val">1,167</div>
+                      <div class="wrapped-stat__key">Tracks</div>
+                    </div>
+                    <div class="wrapped-stat">
+                      <div class="wrapped-stat__val">104</div>
+                      <div class="wrapped-stat__key">Albums</div>
+                    </div>
+                    <div class="wrapped-stat">
+                      <div class="wrapped-stat__val">43%</div>
+                      <div class="wrapped-stat__key">Underground</div>
+                    </div>
+                    <div class="wrapped-stat">
+                      <div class="wrapped-stat__val">Indie</div>
+                      <div class="wrapped-stat__key">Top Genre</div>
+                    </div>
+                    <div class="wrapped-stat">
+                      <div class="wrapped-stat__val">32</div>
+                      <div class="wrapped-stat__key">Daily Avg</div>
+                    </div>
+                  </div>
+                  <div class="wrapped-card__made">Made with scrobbler</div>
+                </div>
+              </div>
+            </div>
+            <div class="mock-pagination">
+              <span>Page 5 of 5 · Last 7 days</span>
+              <div class="mock-pagination__arrows">
+                <div class="mock-pagination__btn">←</div>
+                <div class="mock-pagination__btn">→</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FULL COMMAND REFERENCE -->
+      <section id="cmdref" class="cmdref" aria-labelledby="cmdref-title">
+        <div class="cmdref__header">
+          <span class="section-label">Reference</span>
+          <h2 id="cmdref-title">Full command list</h2>
+          <p>Click any command to see what it does.</p>
+        </div>
+        <div class="cmdref__groups">
+          <div>
+            <div class="cmdref__group-name">Account</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Link your Last.fm account to scrobbler. Run this once and all commands will use your listening data."
+                data-usage="/link username:your_lastfm_name"
+                >/link</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Unlink your Last.fm account and permanently remove your data from scrobbler's database."
+                data-usage="/unlink"
+                >/unlink</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="View a Last.fm profile summary, total scrobbles, top artists, and how long the account has been active."
+                data-usage="/profile [user]"
+                >/profile</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Show a list of all available scrobbler commands with brief descriptions."
+                data-usage="/help"
+                >/help</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Now Playing</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Show what you or another user is currently listening to, track, artist, album, listener count, genre tags, and a link to their Last.fm profile."
+                data-usage="/np [user]"
+                >/np</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Show your recent scrobble history, the last tracks you've listened to in order."
+                data-usage="/recent [user]"
+                >/recent</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Show your current listening streak, how many consecutive days you've scrobbled at least one track."
+                data-usage="/streak [user]"
+                >/streak</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Charts</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Generate a 3×3, 4×4, or 5×5 mosaic image of your top artists for any time period."
+                data-usage="/chart artists [period] [grid]"
+                >/chart artists</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Generate a mosaic chart of your top albums with cover art and play counts."
+                data-usage="/chart albums [period] [grid]"
+                >/chart albums</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Generate a mosaic chart of your top tracks for any time period."
+                data-usage="/chart tracks [period] [grid]"
+                >/chart tracks</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Show a combined chart of the most-played artists across your entire server."
+                data-usage="/chart server [period]"
+                >/chart server</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Info</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Look up an artist, biography, top tracks, global listener count, and your personal play stats."
+                data-usage="/info artist [name]"
+                >/info artist</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Look up an album, tracklist, release year, and how many times you've played it."
+                data-usage="/info album [name]"
+                >/info album</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Look up a track, duration, global play count, and whether you've loved it on Last.fm."
+                data-usage="/info track [name]"
+                >/info track</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Explore a genre tag, top artists in that genre and how much of your library fits it."
+                data-usage="/info genre [genre]"
+                >/info genre</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Insights</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Server-wide scrobble leaderboard, see who has listened the most overall."
+                data-usage="/stats scrobbles"
+                >/stats scrobbles</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="See which server members have the most unique artists in their listening history."
+                data-usage="/stats artists"
+                >/stats artists</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Leaderboard of who has the most unique albums across their entire listening history."
+                data-usage="/stats albums"
+                >/stats albums</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="See who in the server has the most diverse genre taste based on their top artists."
+                data-usage="/stats genres"
+                >/stats genres</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="See your full genre breakdown as a colour-coded bar chart, paginated across 5 pages of 10 genres each."
+                data-usage="/taste user [period]"
+                >/taste user</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Compare genre taste across your whole server, see what genres dominate the room."
+                data-usage="/taste server [period]"
+                >/taste server</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Your personal stats card, artists, tracks, albums, underground %, top genre, and daily average. Available any time, not just December."
+                data-usage="/wrapped [period]"
+                >/wrapped</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Get an AI-generated music personality blurb based on your listening history and top artists."
+                data-usage="/personality [user]"
+                >/personality</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Discover new artists you might like based on your listening history, find what you haven't heard yet."
+                data-usage="/discovery [user]"
+                >/discovery</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Check compatibility between two users, a detailed breakdown of shared taste and common artists."
+                data-usage="/compat user1 user2"
+                >/compat</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Who Knows</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Find the top listeners for any artist in your server, with a ranked leaderboard and combined server play count."
+                data-usage="/wk artist [name]"
+                >/wk artist</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Find who in your server has listened to a specific album the most times."
+                data-usage="/wk album [name]"
+                >/wk album</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Find who in your server has played a specific track the most times."
+                data-usage="/wk track [name]"
+                >/wk track</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Find who in your server listens to a specific genre the most, based on their top artists."
+                data-usage="/wk genre [genre]"
+                >/wk genre</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Shared dropdown panel (moved by JS) -->
+      <div
+        class="cmd-dropdown"
+        id="cmdDropdown"
+        role="tooltip"
+        aria-live="polite"
+      >
+        <div class="cmd-dropdown__name" id="cmdDropdownName"></div>
+        <div class="cmd-dropdown__desc" id="cmdDropdownDesc"></div>
+        <div class="cmd-dropdown__usage" id="cmdDropdownUsage"></div>
+      </div>
+
+      <!-- STATS BAR -->
+      <section id="stats" class="statsbar" aria-label="Key stats">
+        <div class="statsbar__inner">
+          <div class="stat-pill">
+            <div class="stat-pill__val">20+</div>
+            <div class="stat-pill__label">Slash Commands</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill__val">Last.fm</div>
+            <div class="stat-pill__label">Powered</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill__val">Free</div>
+            <div class="stat-pill__label">Forever</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TESTIMONIALS -->
+      <section
+        id="testimonials"
+        class="testimonials"
+        aria-labelledby="testimonials-title"
+      >
+        <div class="testimonials__header">
+          <span class="section-label">Community</span>
+          <h2 id="testimonials-title">Loved by music nerds</h2>
+        </div>
+        <div class="testimonials__grid">
+          <div class="testimonial">
+            <p class="testimonial__quote">
+              The /whoknows command alone is worth it. My server has been in a
+              month-long war over who's the real fan of our favourite band.
+            </p>
+            <div class="testimonial__user">
+              <div class="testimonial__avatar">A</div>
+              <div>
+                <div class="testimonial__name">alex_listens</div>
+                <div class="testimonial__handle">Discord user</div>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial">
+            <p class="testimonial__quote">
+              I've tried every music bot out there. scrobbler is the only one
+              that actually feels like it was made for people who care about
+              music.
+            </p>
+            <div class="testimonial__user">
+              <div class="testimonial__avatar">M</div>
+              <div>
+                <div class="testimonial__name">mayabeats</div>
+                <div class="testimonial__handle">Discord user</div>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial">
+            <p class="testimonial__quote">
+              The personality command is scarily accurate. It called me a
+              "late-night overthinker" and I've never felt so seen by a bot.
+            </p>
+            <div class="testimonial__user">
+              <div class="testimonial__avatar">J</div>
+              <div>
+                <div class="testimonial__name">jordanfm</div>
+                <div class="testimonial__handle">Discord user</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section id="faq" class="faq" aria-labelledby="faq-title">
+        <div class="faq__header">
+          <span class="section-label">FAQ</span>
+          <h2 id="faq-title">Common questions</h2>
+        </div>
+        <div class="faq__list" role="list">
+          <div class="faq-item" role="listitem">
+            <button class="faq-item__q" aria-expanded="false">
+              What is scrobbler?
+              <span class="faq-item__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-item__a">
+              scrobbler is a Discord bot that connects to Last.fm to bring
+              social music features to your server. Track what you're listening
+              to, compare taste with friends, see who knows an artist best, and
+              more, all through slash commands.
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-item__q" aria-expanded="false">
+              How do I set it up?
+              <span class="faq-item__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-item__a">
+              Add scrobbler to your server using the "Add to Discord" button,
+              then run <code>/link</code> and enter your Last.fm username.
+              That's it, all commands are immediately available.
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-item__q" aria-expanded="false">
+              Is it free?
+              <span class="faq-item__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-item__a">
+              Yes, completely free. All 20+ commands are available to every user
+              with no paywalls, premium tiers, or usage limits.
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-item__q" aria-expanded="false">
+              What is Last.fm?
+              <span class="faq-item__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-item__a">
+              Last.fm is a music tracking service that records ("scrobbles")
+              every song you listen to across Spotify, Apple Music, and more.
+              scrobbler uses your Last.fm data to power all its commands. You'll
+              need a free Last.fm account to use scrobbler.
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-item__q" aria-expanded="false">
+              Can I use it in multiple servers?
+              <span class="faq-item__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-item__a">
+              Yes. Your Last.fm account is linked to your Discord account, so
+              your data follows you across every server scrobbler is in.
+              Server-specific features like /whoknows reflect each server's
+              members independently.
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-item__q" aria-expanded="false">
+              How do I get support?
+              <span class="faq-item__icon" aria-hidden="true">+</span>
+            </button>
+            <div class="faq-item__a">
+              Open an issue on our
+              <a
+                href="https://github.com/itszubariel/scrobbler"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="color: var(--purple-start); text-decoration: underline"
+                >GitHub</a
+              >
+              or check the
+              <a
+                href="status.html"
+                style="color: var(--purple-start); text-decoration: underline"
+                >status page</a
+              >
+              if something seems broken. We aim to respond quickly.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer role="contentinfo">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <h2>scrobbler</h2>
+          <p>
+            A social music bot for Discord. Track your listening, compare taste,
+            and discover who knows your favourite artists best.
+          </p>
+          <a
+            class="footer__cta"
+            href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Add to Discord →
+          </a>
+          <div class="footer__social">
+            <a
+              href="https://github.com/itszubariel/scrobbler"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                />
+              </svg>
+            </a>
+            <a
+              href="https://discord.gg/hg6mtVd5Gj"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Discord"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                />
+              </svg>
+            </a>
+            <a
+              href="https://twitter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Twitter"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer__section-title">navigate</div>
+          <nav class="footer__links">
+            <a href="index.html">home</a>
+            <a href="index.html#commands">commands</a>
+            <a href="index.html#cmdref">reference</a>
+            <a href="index.html#testimonials">community</a>
+            <a href="index.html#faq">faq</a>
+          </nav>
+        </div>
+
+        <div>
+          <div class="footer__section-title">resources</div>
+          <nav class="footer__links">
+            <a
+              href="https://github.com/itszubariel/scrobbler"
+              target="_blank"
+              rel="noopener noreferrer"
+              >github</a
+            >
+            <a href="status.html">status</a>
+            <a href="legal.html">legal</a>
+            <a href="about.html">about</a>
+            <a
+              href="https://www.last.fm"
+              target="_blank"
+              rel="noopener noreferrer"
+              >last.fm</a
+            >
+          </nav>
+        </div>
+
+        <div>
+          <div class="footer__section-title">community</div>
+          <nav class="footer__links">
+            <a
+              href="https://discord.com/invite/hg6mtVd5Gj"
+              target="_blank"
+              rel="noopener noreferrer"
+              >discord server</a
+            >
+            <a
+              href="https://github.com/itszubariel/scrobbler/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              >report an issue</a
+            >
+            <a
+              href="https://github.com/itszubariel/scrobbler/discussions"
+              target="_blank"
+              rel="noopener noreferrer"
+              >discussions</a
+            >
+          </nav>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <div>© 2025 scrobbler. All rights reserved.</div>
+        <div class="footer__made">
+          Made with <span class="heart">♥</span> for music lovers
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Smooth scroll without URL hash
+      document.querySelectorAll("a[data-scroll]").forEach(function (link) {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          var target = document.getElementById(this.dataset.scroll);
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+          closeMenu();
+        });
+      });
+
+      // FAQ accordion
+      document.querySelectorAll(".faq-item__q").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var item = this.closest(".faq-item");
+          var isOpen = item.classList.contains("open");
+          document.querySelectorAll(".faq-item").forEach(function (i) {
+            i.classList.remove("open");
+            i.querySelector(".faq-item__q").setAttribute(
+              "aria-expanded",
+              "false",
+            );
+          });
+          if (!isOpen) {
+            item.classList.add("open");
+            this.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+
+      // Hamburger menu toggle
+      var navHamburger = document.getElementById("navHamburger");
+      var navLinks = document.getElementById("navLinks");
+
+      navHamburger.addEventListener("click", function () {
+        var isActive = navLinks.classList.contains("active");
+        navLinks.classList.toggle("active");
+        navHamburger.classList.toggle("active");
+        navHamburger.setAttribute("aria-expanded", !isActive);
+      });
+
+      // Close menu when clicking a link
+      navLinks.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          navLinks.classList.remove("active");
+          navHamburger.classList.remove("active");
+          navHamburger.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener("click", function (e) {
+        if (!navLinks.contains(e.target) && !navHamburger.contains(e.target)) {
+          navLinks.classList.remove("active");
+          navHamburger.classList.remove("active");
+          navHamburger.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      // Command pill dropdown
+      var dropdown = document.getElementById("cmdDropdown");
+      var ddName = document.getElementById("cmdDropdownName");
+      var ddDesc = document.getElementById("cmdDropdownDesc");
+      var ddUsage = document.getElementById("cmdDropdownUsage");
+      var activePill = null;
+
+      function closeDropdown() {
+        dropdown.classList.remove("visible");
+        if (activePill) {
+          activePill.classList.remove("active");
+          activePill = null;
+        }
+      }
+
+      function openDropdown(pill) {
+        ddName.textContent = pill.textContent.trim();
+        ddDesc.textContent = pill.dataset.desc || "";
+        ddUsage.textContent = pill.dataset.usage || "";
+
+        // Position below the pill
+        dropdown.classList.remove("visible");
+        document.body.appendChild(dropdown); // ensure it's at body level
+        var rect = pill.getBoundingClientRect();
+        var scrollY = window.scrollY || window.pageYOffset;
+        var scrollX = window.scrollX || window.pageXOffset;
+        var left = rect.left + scrollX;
+        var top = rect.bottom + scrollY + 8;
+
+        // Clamp so it doesn't overflow right edge
+        var maxLeft = window.innerWidth + scrollX - 316;
+        if (left > maxLeft) left = maxLeft;
+        if (left < scrollX + 8) left = scrollX + 8;
+
+        dropdown.style.left = left + "px";
+        dropdown.style.top = top + "px";
+        dropdown.style.position = "absolute";
+
+        pill.classList.add("active");
+        activePill = pill;
+        // Trigger transition
+        requestAnimationFrame(function () {
+          dropdown.classList.add("visible");
+        });
+      }
+
+      document.querySelectorAll(".cmdref__pill").forEach(function (pill) {
+        pill.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (activePill === pill) {
+            closeDropdown();
+            return;
+          }
+          openDropdown(pill);
+        });
+        pill.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            pill.click();
+          }
+          if (e.key === "Escape") closeDropdown();
+        });
+      });
+
+      document.addEventListener("click", function (e) {
+        if (!dropdown.contains(e.target)) closeDropdown();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeDropdown();
+      });
+
+      // Dark mode toggle - handle both mobile and desktop buttons
+      function toggleTheme() {
+        var html = document.documentElement;
+        var currentTheme = html.getAttribute("data-theme");
+        var newTheme = currentTheme === "dark" ? "light" : "dark";
+
+        if (newTheme === "dark") {
+          html.setAttribute("data-theme", "dark");
+          localStorage.setItem("theme", "dark");
+        } else {
+          html.removeAttribute("data-theme");
+          localStorage.setItem("theme", "light");
+        }
+      }
+
+      var themeToggleMobile = document.getElementById("themeToggle");
+      var themeToggleDesktop = document.getElementById("themeToggleDesktop");
+
+      themeToggleMobile.addEventListener("click", toggleTheme);
+      themeToggleDesktop.addEventListener("click", toggleTheme);
+    </script>
+  </body>
+</html>

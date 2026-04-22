@@ -1,0 +1,1373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>status | scrobbler</title>
+    <meta
+      name="description"
+      content="Current operational status of scrobbler, the Discord social music bot."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="status | scrobbler" />
+    <meta
+      property="og:description"
+      content="Current operational status of scrobbler, the Discord social music bot."
+    />
+    <meta
+      property="og:image"
+      content="https://scrobbler.netlify.app/assests/images/scrobbler_logo.png"
+    />
+    <meta property="og:url" content="https://scrobbler.netlify.app/status" />
+    <meta property="og:site_name" content="scrobbler" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --color-paper: #f1f0e3;
+        --color-surface: #e8e7d6;
+        --color-surface-2: #dddccc;
+        --color-charcoal: #2e2e2e;
+        --color-mist: #e5e7eb;
+        --purple-start: #6040b0;
+        --purple-end: #9468d8;
+        --gradient: linear-gradient(
+          135deg,
+          var(--purple-start),
+          var(--purple-end)
+        );
+        --color-green: #22c55e;
+        --color-green-bg: rgba(34, 197, 94, 0.1);
+        --color-yellow: #eab308;
+        --color-yellow-bg: rgba(234, 179, 8, 0.1);
+        --color-red: #ef4444;
+        --color-red-bg: rgba(239, 68, 68, 0.1);
+        --color-grey: #9ca3af;
+        --color-grey-bg: rgba(156, 163, 175, 0.1);
+        --font-display: "Cormorant Garamond", serif;
+        --font-body: "Bricolage Grotesque", sans-serif;
+        --radius-sm: 8px;
+        --radius-md: 16px;
+        --radius-lg: 24px;
+        --shadow-sm:
+          0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        --shadow-md:
+          0 10px 24px -4px rgba(0, 0, 0, 0.12),
+          0 4px 8px -4px rgba(0, 0, 0, 0.08);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--color-paper);
+        color: var(--color-charcoal);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      .btn,
+      .nav__links a,
+      .page__label,
+      .footer__section-title {
+        text-transform: lowercase;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.025;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        background-size: 200px 200px;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ── Nav ── */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(242, 240, 227, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--color-mist);
+      }
+      .nav__inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 48px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .nav__wordmark {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 26px;
+        font-weight: 600;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .nav__right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .nav__back {
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.65;
+        transition: opacity 0.2s;
+      }
+      .nav__back:hover {
+        opacity: 1;
+      }
+      .theme-toggle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--color-mist);
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-charcoal);
+        font-size: 16px;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.15s;
+        flex-shrink: 0;
+      }
+      .theme-toggle:hover {
+        background: rgba(96, 64, 176, 0.1);
+        border-color: var(--purple-start);
+        transform: rotate(15deg);
+      }
+      .theme-toggle .icon-sun {
+        display: none;
+      }
+      .theme-toggle .icon-moon {
+        display: block;
+      }
+      [data-theme="dark"] .theme-toggle .icon-sun {
+        display: block;
+      }
+      [data-theme="dark"] .theme-toggle .icon-moon {
+        display: none;
+      }
+      @media (max-width: 640px) {
+        .nav__inner {
+          padding: 0 20px;
+        }
+      }
+
+      /* ── Page layout ── */
+      main {
+        flex: 1;
+      }
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 80px 48px 120px;
+      }
+      @media (max-width: 640px) {
+        .page {
+          padding: 48px 20px 80px;
+        }
+      }
+
+      .page__label {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        color: var(--purple-start);
+        background: rgba(96, 64, 176, 0.08);
+        padding: 5px 12px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+      .page__title {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: clamp(56px, 8vw, 96px);
+        font-weight: 400;
+        line-height: 0.95;
+        margin-bottom: 12px;
+        text-transform: lowercase;
+      }
+      .page__sub {
+        font-size: 15px;
+        opacity: 0.55;
+        margin-bottom: 48px;
+      }
+
+      /* ── Status banner ── */
+      .status-banner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-radius: var(--radius-md);
+        padding: 20px 24px;
+        margin-bottom: 40px;
+        border: 1px solid transparent;
+        transition:
+          background 0.3s,
+          border-color 0.3s;
+      }
+      .status-banner--operational {
+        background: var(--color-green-bg);
+        border-color: rgba(34, 197, 94, 0.25);
+      }
+      .status-banner--degraded {
+        background: var(--color-yellow-bg);
+        border-color: rgba(234, 179, 8, 0.25);
+      }
+      .status-banner--outage {
+        background: var(--color-red-bg);
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+      .status-banner--unavailable {
+        background: var(--color-grey-bg);
+        border-color: rgba(156, 163, 175, 0.25);
+      }
+      .status-banner__dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        animation: pulse-dot 2.5s ease-in-out infinite;
+      }
+      .status-banner__dot--green {
+        background: var(--color-green);
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+      }
+      .status-banner__dot--yellow {
+        background: var(--color-yellow);
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.2);
+      }
+      .status-banner__dot--red {
+        background: var(--color-red);
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+      }
+      .status-banner__dot--grey {
+        background: var(--color-grey);
+        box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.2);
+        animation: none;
+      }
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          box-shadow: 0 0 0 4px rgba(var(--pulse-rgb), 0.2);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(var(--pulse-rgb), 0.06);
+        }
+      }
+      .status-banner__dot--green {
+        --pulse-rgb: 34, 197, 94;
+      }
+      .status-banner__dot--yellow {
+        --pulse-rgb: 234, 179, 8;
+      }
+      .status-banner__dot--red {
+        --pulse-rgb: 239, 68, 68;
+      }
+      .status-banner__text {
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: lowercase;
+      }
+      .status-banner__sub {
+        font-size: 13px;
+        opacity: 0.6;
+        margin-top: 2px;
+      }
+
+      /* ── Section title ── */
+      .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: lowercase;
+        opacity: 0.45;
+        margin-bottom: 16px;
+      }
+
+      /* ── Services card ── */
+      .services-card {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 48px;
+      }
+
+      /* ── Service row ── */
+      .service-row {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--color-mist);
+        transition: background 0.15s;
+      }
+      .service-row:last-child {
+        border-bottom: none;
+      }
+      .service-row:hover {
+        background: rgba(96, 64, 176, 0.03);
+      }
+      .service-row__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .service-row__left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .service-row__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        background: rgba(96, 64, 176, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--purple-start);
+      }
+      .service-row__icon svg {
+        display: block;
+      }
+      .service-row__name {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .service-row__rt {
+        font-size: 13px;
+        opacity: 0.5;
+        margin-top: 1px;
+      }
+      .service-row__right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+
+      /* ── Mobile availability circle ── */
+      .service-row__mobile-avail {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        opacity: 0.7;
+      }
+      .service-row__mobile-circle {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .circle--green {
+        background: var(--color-green);
+      }
+      .circle--yellow {
+        background: var(--color-yellow);
+      }
+      .circle--red {
+        background: var(--color-red);
+      }
+      .circle--grey {
+        background: var(--color-grey);
+      }
+
+      /* ── Badge ── */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: lowercase;
+        padding: 4px 10px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .badge--green {
+        color: var(--color-green);
+        background: var(--color-green-bg);
+      }
+      .badge--green::before {
+        background: var(--color-green);
+      }
+      .badge--yellow {
+        color: var(--color-yellow);
+        background: var(--color-yellow-bg);
+      }
+      .badge--yellow::before {
+        background: var(--color-yellow);
+      }
+      .badge--red {
+        color: var(--color-red);
+        background: var(--color-red-bg);
+      }
+      .badge--red::before {
+        background: var(--color-red);
+      }
+      .badge--grey {
+        color: var(--color-grey);
+        background: var(--color-grey-bg);
+      }
+      .badge--grey::before {
+        background: var(--color-grey);
+      }
+
+      /* ── Bar chart ── */
+      .bar-chart {
+        margin-top: 14px;
+      }
+      .bar-chart__bars {
+        display: flex;
+        gap: 2px;
+        align-items: flex-end;
+        height: 28px;
+      }
+      .bar-chart__seg {
+        flex: 1;
+        height: 100%;
+        border-radius: 2px;
+        cursor: pointer;
+        transition:
+          opacity 0.15s,
+          transform 0.1s;
+        position: relative;
+      }
+      .bar-chart__seg:hover {
+        opacity: 0.8;
+        transform: scaleY(1.08);
+        transform-origin: bottom;
+      }
+      .bar-chart__seg--green {
+        background: var(--color-green);
+      }
+      .bar-chart__seg--yellow {
+        background: var(--color-yellow);
+      }
+      .bar-chart__seg--red {
+        background: var(--color-red);
+      }
+      .bar-chart__seg--grey {
+        background: var(--color-mist);
+      }
+      .bar-chart__labels {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        font-size: 11px;
+        opacity: 0.45;
+      }
+      .bar-chart__avail {
+        font-size: 11px;
+        opacity: 0.55;
+      }
+
+      /* ── Tooltip ── */
+      .tooltip {
+        position: fixed;
+        z-index: 1000;
+        background: var(--color-charcoal);
+        color: var(--color-paper);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        font-size: 12px;
+        line-height: 1.5;
+        pointer-events: none;
+        box-shadow: var(--shadow-md);
+        max-width: 200px;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .tooltip.visible {
+        opacity: 1;
+      }
+      .tooltip__date {
+        font-weight: 600;
+        margin-bottom: 4px;
+        font-size: 11px;
+        opacity: 0.7;
+      }
+      .tooltip__row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .tooltip__label {
+        opacity: 0.65;
+      }
+      .tooltip__val {
+        font-weight: 600;
+      }
+      .tooltip__nodata {
+        opacity: 0.65;
+        font-style: italic;
+      }
+
+      /* ── Footer ── */
+      footer {
+        background: #2e2e2e;
+        color: #f1f0e3;
+        padding: 64px 48px 32px;
+      }
+      .footer__inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 48px;
+        margin-bottom: 48px;
+      }
+      .footer__brand h2 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1.1;
+        margin-bottom: 12px;
+      }
+      .footer__brand p {
+        font-size: 15px;
+        line-height: 1.6;
+        opacity: 0.65;
+        max-width: 320px;
+        margin-bottom: 24px;
+      }
+      .footer__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 24px;
+        background: var(--gradient);
+        color: #fff;
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 999px;
+        transition:
+          opacity 0.2s,
+          transform 0.15s;
+        text-decoration: none;
+      }
+      .footer__cta:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+      }
+      .footer__section-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: lowercase;
+        margin-bottom: 16px;
+        opacity: 0.9;
+      }
+      .footer__links {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-transform: lowercase;
+      }
+      .footer__links a {
+        font-size: 14px;
+        font-weight: 400;
+        opacity: 0.65;
+        transition:
+          opacity 0.2s,
+          color 0.2s;
+        text-decoration: none;
+        color: #f1f0e3;
+      }
+      .footer__links a:hover {
+        opacity: 1;
+        color: var(--purple-end);
+      }
+      .footer__social {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .footer__social a {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        opacity: 0.7;
+        transition:
+          opacity 0.2s,
+          background 0.2s,
+          transform 0.15s;
+        text-decoration: none;
+        color: var(--color-paper);
+      }
+      .footer__social a:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.14);
+        transform: translateY(-2px);
+      }
+      .footer__bottom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        opacity: 0.5;
+      }
+      .footer__made {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .footer__made .heart {
+        color: #ff6b6b;
+      }
+      @media (max-width: 900px) {
+        .footer__inner {
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+        }
+      }
+      @media (max-width: 640px) {
+        footer {
+          padding: 48px 20px 24px;
+        }
+        .footer__inner {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+        .footer__bottom {
+          flex-direction: column;
+          gap: 12px;
+          text-align: center;
+        }
+        .page__title {
+          font-size: clamp(48px, 12vw, 72px);
+        }
+      }
+
+      /* ── Dark mode ── */
+      [data-theme="dark"] {
+        --color-paper: #1f1f1f;
+        --color-surface: #2a2a2a;
+        --color-surface-2: #303030;
+        --color-charcoal: #d1d0c0;
+        --color-mist: rgba(255, 255, 255, 0.08);
+        --purple-start: #8b6fd4;
+        --purple-end: #b89af0;
+        --color-green: #22c55e;
+        --color-green-bg: rgba(34, 197, 94, 0.1);
+        --color-yellow: #eab308;
+        --color-yellow-bg: rgba(234, 179, 8, 0.1);
+        --color-red: #ef4444;
+        --color-red-bg: rgba(239, 68, 68, 0.1);
+        --color-grey: #6b7280;
+        --color-grey-bg: rgba(107, 114, 128, 0.1);
+      }
+      [data-theme="dark"] .nav {
+        background: rgba(31, 31, 31, 0.92);
+      }
+      [data-theme="dark"] footer {
+        background: #d1d0c0;
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .footer__links a {
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .footer__social a {
+        background: rgba(31, 31, 31, 0.1);
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .footer__social a:hover {
+        background: rgba(31, 31, 31, 0.2);
+      }
+      [data-theme="dark"] .page__label {
+        background: rgba(139, 111, 212, 0.15);
+      }
+      [data-theme="dark"] .services-card {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      [data-theme="dark"] .service-row__icon {
+        background: rgba(139, 111, 212, 0.12);
+      }
+      [data-theme="dark"] .footer__bottom {
+        border-color: rgba(31, 31, 31, 0.15);
+      }
+      [data-theme="dark"] .tooltip {
+        background: #d1d0c0;
+        color: #1f1f1f;
+      }
+      [data-theme="dark"] .bar-chart__seg--grey {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* ── Mobile: hide bar chart, show simplified avail ── */
+      @media (max-width: 639px) {
+        .bar-chart {
+          display: none;
+        }
+        .service-row__mobile-avail {
+          display: flex;
+        }
+        .service-row__rt {
+          display: none;
+        }
+      }
+    </style>
+    <script>
+      (function () {
+        var s = localStorage.getItem("theme");
+        var d = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (s === "dark" || (!s && d)) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- NAV PLACEHOLDER -->
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+      <div class="nav__inner">
+        <a href="index.html" class="nav__wordmark" aria-label="scrobbler home"
+          >scrobbler</a
+        >
+        <div class="nav__right">
+          <button
+            class="theme-toggle"
+            id="themeToggle"
+            aria-label="Toggle dark mode"
+          >
+            <svg
+              class="icon-moon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <svg
+              class="icon-sun"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </button>
+          <a href="index.html" class="nav__back">← back to home</a>
+        </div>
+      </div>
+    </nav>
+    <main>
+      <div class="page">
+        <span class="page__label">system status</span>
+        <h1 class="page__title">status</h1>
+        <p class="page__sub">
+          live operational status of all scrobbler services.
+        </p>
+
+        <!-- Overall banner -->
+        <div
+          id="statusBanner"
+          class="status-banner status-banner--unavailable"
+          role="status"
+          aria-live="polite"
+        >
+          <div
+            class="status-banner__dot status-banner__dot--grey"
+            aria-hidden="true"
+          ></div>
+          <div>
+            <div class="status-banner__text">loading status…</div>
+            <div class="status-banner__sub" id="bannerSub">fetching data</div>
+          </div>
+        </div>
+
+        <!-- Service rows -->
+        <div class="section-title">system status</div>
+        <div class="services-card" id="servicesCard" role="list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+    </main>
+    <!-- FOOTER PLACEHOLDER -->
+    <footer role="contentinfo">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <h2>scrobbler</h2>
+          <p>
+            A social music bot for Discord. Track your listening, compare taste,
+            and discover who knows your favourite artists best.
+          </p>
+          <a
+            class="footer__cta"
+            href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Add to Discord →</a
+          >
+          <div class="footer__social">
+            <a
+              href="https://github.com/itszubariel/scrobbler"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                />
+              </svg>
+            </a>
+            <a
+              href="https://discord.gg/hg6mtVd5Gj"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Discord"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                />
+              </svg>
+            </a>
+            <a
+              href="https://twitter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Twitter"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div>
+          <div class="footer__section-title">navigate</div>
+          <nav class="footer__links">
+            <a href="index.html">home</a>
+            <a href="index.html#commands">commands</a>
+            <a href="index.html#cmdref">reference</a>
+            <a href="index.html#testimonials">community</a>
+            <a href="index.html#faq">faq</a>
+          </nav>
+        </div>
+        <div>
+          <div class="footer__section-title">resources</div>
+          <nav class="footer__links">
+            <a
+              href="https://github.com/itszubariel/scrobbler"
+              target="_blank"
+              rel="noopener noreferrer"
+              >github</a
+            >
+            <a href="status.html">status</a>
+            <a href="legal.html">legal</a>
+            <a href="about.html">about</a>
+            <a
+              href="https://www.last.fm"
+              target="_blank"
+              rel="noopener noreferrer"
+              >last.fm</a
+            >
+          </nav>
+        </div>
+        <div>
+          <div class="footer__section-title">community</div>
+          <nav class="footer__links">
+            <a
+              href="https://discord.com/invite/hg6mtVd5Gj"
+              target="_blank"
+              rel="noopener noreferrer"
+              >discord server</a
+            >
+            <a
+              href="https://github.com/itszubariel/scrobbler/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              >report an issue</a
+            >
+            <a
+              href="https://github.com/itszubariel/scrobbler/discussions"
+              target="_blank"
+              rel="noopener noreferrer"
+              >discussions</a
+            >
+          </nav>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <div>© 2025 scrobbler. all rights reserved.</div>
+        <div class="footer__made">
+          made with <span class="heart">♥</span> for music lovers
+        </div>
+      </div>
+    </footer>
+    <script>
+      // ── API config ──
+      var IS_PROD = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      var API_URL = IS_PROD
+        ? 'https://api.scrobbler.is-a.dev/api/status'
+        : 'http://localhost:3001/api/status';
+
+      // ── Theme toggle ──
+      document
+        .getElementById("themeToggle")
+        .addEventListener("click", function () {
+          var html = document.documentElement;
+          var isDark = html.getAttribute("data-theme") === "dark";
+          if (isDark) {
+            html.removeAttribute("data-theme");
+            localStorage.setItem("theme", "light");
+          } else {
+            html.setAttribute("data-theme", "dark");
+            localStorage.setItem("theme", "dark");
+          }
+        });
+
+      // ── Service config (fixed order + icons) ──
+      var SERVICE_CONFIG = {
+        website: { label: 'website', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' },
+        bot:     { label: 'bot',     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>' },
+        lastfm:  { label: 'last.fm', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' },
+        database:{ label: 'database',icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>' },
+      };
+      var SERVICE_ORDER = ["website", "bot", "lastfm", "database"];
+
+      // ── Tooltip singleton ──
+      var tooltipEl = document.createElement("div");
+      tooltipEl.className = "tooltip";
+      document.body.appendChild(tooltipEl);
+      var tooltipTimeout = null;
+
+      function showTooltip(html, x, y) {
+        tooltipEl.innerHTML = html;
+        tooltipEl.classList.add("visible");
+        positionTooltip(x, y);
+      }
+
+      function positionTooltip(x, y) {
+        var tw = tooltipEl.offsetWidth || 180;
+        var th = tooltipEl.offsetHeight || 80;
+        var vw = window.innerWidth;
+        var left = x - tw / 2;
+        if (left < 8) left = 8;
+        if (left + tw > vw - 8) left = vw - tw - 8;
+        var top = y - th - 10;
+        if (top < 8) top = y + 16;
+        tooltipEl.style.left = left + "px";
+        tooltipEl.style.top = top + "px";
+      }
+
+      function hideTooltip() {
+        tooltipEl.classList.remove("visible");
+      }
+
+      // tap-outside to dismiss on mobile
+      document.addEventListener("click", function (e) {
+        if (!e.target.classList.contains("bar-chart__seg")) hideTooltip();
+      });
+
+      // ── formatRelativeTime ──
+      function formatRelativeTime(isoString) {
+        if (!isoString) return "unknown";
+        var then = new Date(isoString);
+        if (isNaN(then.getTime())) return "unknown";
+        var diffMs = Date.now() - then.getTime();
+        var diffSec = Math.floor(diffMs / 1000);
+        if (diffSec < 30) return "just now";
+        if (diffSec < 90) return "1 minute ago";
+        var diffMin = Math.round(diffSec / 60);
+        if (diffMin < 60) return diffMin + " minutes ago";
+        var diffHr = Math.round(diffMin / 60);
+        if (diffHr === 1) return "1 hour ago";
+        if (diffHr < 24) return diffHr + " hours ago";
+        var diffDay = Math.round(diffHr / 24);
+        if (diffDay === 1) return "1 day ago";
+        return diffDay + " days ago";
+      }
+
+      // ── formatDowntime ──
+      function formatDowntime(minutes) {
+        if (!minutes || minutes <= 0) return "0m";
+        var h = Math.floor(minutes / 60);
+        var m = Math.round(minutes % 60);
+        if (h === 0) return m + "m";
+        if (m === 0) return h + "h";
+        return h + "h " + m + "m";
+      }
+
+      // ── compute90DayAvail ──
+      function compute90DayAvail(history) {
+        var vals = history.filter(function (d) {
+          return d && d.availability !== null && d.availability !== undefined;
+        });
+        if (vals.length === 0) return null;
+        var sum = vals.reduce(function (acc, d) {
+          return acc + d.availability;
+        }, 0);
+        return Math.round((sum / vals.length) * 10) / 10;
+      }
+
+      // ── renderBanner ──
+      function renderBanner(overall, checkedAt) {
+        var banner = document.getElementById("statusBanner");
+        var sub = document.getElementById("bannerSub");
+        var dot = banner.querySelector(".status-banner__dot");
+        var text = banner.querySelector(".status-banner__text");
+
+        // reset classes
+        banner.className = "status-banner";
+        dot.className = "status-banner__dot";
+
+        if (overall === "operational") {
+          banner.classList.add("status-banner--operational");
+          dot.classList.add("status-banner__dot--green");
+          text.textContent = "all systems operational";
+        } else if (overall === "degraded") {
+          banner.classList.add("status-banner--degraded");
+          dot.classList.add("status-banner__dot--yellow");
+          text.textContent = "degraded performance";
+        } else if (overall === "outage") {
+          banner.classList.add("status-banner--outage");
+          dot.classList.add("status-banner__dot--red");
+          text.textContent = "major outage";
+        } else {
+          banner.classList.add("status-banner--unavailable");
+          dot.classList.add("status-banner__dot--grey");
+          text.textContent = "status unavailable";
+        }
+
+        sub.textContent = checkedAt
+          ? "last updated " + formatRelativeTime(checkedAt)
+          : "last updated unknown";
+      }
+
+      // ── renderTooltip ──
+      function renderTooltip(dayData) {
+        if (
+          !dayData ||
+          dayData.availability === null ||
+          dayData.availability === undefined
+        ) {
+          var dateStr = dayData && dayData.date ? dayData.date : "unknown date";
+          return (
+            '<div class="tooltip__date">' +
+            dateStr +
+            '</div><div class="tooltip__nodata">no data recorded</div>'
+          );
+        }
+        var avail =
+          typeof dayData.availability === "number"
+            ? dayData.availability.toFixed(1) + "%"
+            : "—";
+        var downtime =
+          dayData.downtimeMinutes != null
+            ? formatDowntime(dayData.downtimeMinutes)
+            : "0m";
+        var status = dayData.highestStatus || "—";
+        return (
+          '<div class="tooltip__date">' +
+          (dayData.date || "") +
+          "</div>" +
+          '<div class="tooltip__row"><span class="tooltip__label">availability</span><span class="tooltip__val">' +
+          avail +
+          "</span></div>" +
+          '<div class="tooltip__row"><span class="tooltip__label">downtime</span><span class="tooltip__val">' +
+          downtime +
+          "</span></div>" +
+          '<div class="tooltip__row"><span class="tooltip__label">status</span><span class="tooltip__val">' +
+          status +
+          "</span></div>"
+        );
+      }
+
+      // ── renderBarChart ──
+      function renderBarChart(service) {
+        var history = service.history || [];
+        // pad left with nulls to always have 90 entries
+        var padded = [];
+        for (var i = 0; i < 90 - history.length; i++) padded.push(null);
+        padded = padded.concat(history);
+
+        var avail90 = compute90DayAvail(padded);
+        var availStr = avail90 !== null ? avail90.toFixed(1) + "%" : "—";
+
+        var barsHtml = "";
+        for (var j = 0; j < padded.length; j++) {
+          var day = padded[j];
+          var cls = "bar-chart__seg--grey";
+          if (
+            day &&
+            day.availability !== null &&
+            day.availability !== undefined
+          ) {
+            if (day.availability >= 99) cls = "bar-chart__seg--green";
+            else if (day.availability >= 50) cls = "bar-chart__seg--yellow";
+            else cls = "bar-chart__seg--red";
+          }
+          barsHtml +=
+            '<div class="bar-chart__seg ' +
+            cls +
+            '" data-idx="' +
+            j +
+            '" role="img" aria-label="' +
+            (day && day.date ? day.date : "no data") +
+            '"></div>';
+        }
+
+        var html =
+          '<div class="bar-chart">' +
+          '<div class="bar-chart__bars">' +
+          barsHtml +
+          "</div>" +
+          '<div class="bar-chart__labels">' +
+          "<span>90 days ago</span>" +
+          '<span class="bar-chart__avail">' +
+          availStr +
+          " uptime</span>" +
+          "<span>today</span>" +
+          "</div>" +
+          "</div>";
+
+        return { html: html, padded: padded };
+      }
+
+      // ── badgeClass ──
+      function badgeClass(status) {
+        if (status === "operational") return "badge--green";
+        if (status === "degraded") return "badge--yellow";
+        if (status === "down") return "badge--red";
+        return "badge--grey";
+      }
+
+      // ── circleClass ──
+      function circleClass(status) {
+        if (status === "operational") return "circle--green";
+        if (status === "degraded") return "circle--yellow";
+        if (status === "down") return "circle--red";
+        return "circle--grey";
+      }
+
+      // ── renderServiceRows ──
+      function renderServiceRows(services) {
+        // build a map by service name
+        var map = {};
+        services.forEach(function (s) {
+          map[s.name] = s;
+        });
+
+        var card = document.getElementById("servicesCard");
+        var html = "";
+
+        SERVICE_ORDER.forEach(function (key) {
+          var svc = map[key];
+          var cfg = SERVICE_CONFIG[key];
+          if (!svc || !cfg) return;
+
+          var rtDisplay =
+            svc.responseTime === -1
+              ? "— timeout"
+              : "— " + svc.responseTime + "ms";
+          var bClass = badgeClass(svc.status);
+          var cClass = circleClass(svc.status);
+          var avail90 = compute90DayAvail(svc.history || []);
+          var availStr = avail90 !== null ? avail90.toFixed(1) + "%" : "—";
+
+          var chart = renderBarChart(svc);
+
+          html +=
+            '<div class="service-row" role="listitem" data-service="' +
+            key +
+            '">' +
+            '<div class="service-row__top">' +
+            '<div class="service-row__left">' +
+            '<div class="service-row__icon" aria-hidden="true">' +
+            cfg.icon +
+            "</div>" +
+            "<div>" +
+            '<div class="service-row__name">' +
+            cfg.label +
+            "</div>" +
+            '<div class="service-row__rt">' +
+            rtDisplay +
+            "</div>" +
+            "</div>" +
+            "</div>" +
+            '<div class="service-row__right">' +
+            '<div class="service-row__mobile-avail">' +
+            '<div class="service-row__mobile-circle ' +
+            cClass +
+            '"></div>' +
+            "<span>" +
+            availStr +
+            "</span>" +
+            "</div>" +
+            '<span class="badge ' +
+            bClass +
+            '">' +
+            svc.status +
+            "</span>" +
+            "</div>" +
+            "</div>" +
+            chart.html +
+            "</div>";
+        });
+
+        card.innerHTML = html;
+
+        // attach tooltip events to all segments
+        card.querySelectorAll(".bar-chart__seg").forEach(function (seg) {
+          var serviceEl = seg.closest("[data-service]");
+          var serviceKey = serviceEl
+            ? serviceEl.getAttribute("data-service")
+            : null;
+          var svc = serviceKey ? map[serviceKey] : null;
+          var idx = parseInt(seg.getAttribute("data-idx"), 10);
+
+          // find padded data
+          var history = svc ? svc.history || [] : [];
+          var padded = [];
+          for (var i = 0; i < 90 - history.length; i++) padded.push(null);
+          padded = padded.concat(history);
+          var dayData = padded[idx] || null;
+
+          seg.addEventListener("mouseenter", function (e) {
+            var rect = seg.getBoundingClientRect();
+            var cx = rect.left + rect.width / 2;
+            var cy = rect.top;
+            showTooltip(renderTooltip(dayData), cx, cy);
+          });
+          seg.addEventListener("mousemove", function (e) {
+            var rect = seg.getBoundingClientRect();
+            positionTooltip(rect.left + rect.width / 2, rect.top);
+          });
+          seg.addEventListener("mouseleave", function () {
+            hideTooltip();
+          });
+          // mobile tap
+          seg.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var rect = seg.getBoundingClientRect();
+            showTooltip(
+              renderTooltip(dayData),
+              rect.left + rect.width / 2,
+              rect.top,
+            );
+          });
+        });
+      }
+
+      // ── fetchStatus ──
+      var lastCheckedAt = null;
+
+      async function fetchStatus() {
+        try {
+          var res = await fetch(API_URL);
+          if (!res.ok) throw new Error('non-200');
+          var data = await res.json();
+          lastCheckedAt = data.checkedAt;
+          renderBanner(data.overall, data.checkedAt);
+          renderServiceRows(data.services || []);
+        } catch (err) {
+          renderBanner(null, lastCheckedAt);
+        }
+      }
+
+      // initial fetch + poll every 60s
+      fetchStatus();
+      setInterval(fetchStatus, 60000);
+    </script>
+  </body>
+</html>

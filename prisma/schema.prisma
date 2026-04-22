@@ -73,3 +73,15 @@ model WrappedCache {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model StatusRecord {
+  id           String   @id @default(uuid())
+  service      String
+  checkedAt    DateTime
+  responseTime Int
+  status       String
+  available    Boolean
+
+  @@index([service, checkedAt])
+  @@map("status_records")
+}
