@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const LOGO_PATH = join(__dirname, '../../assests/images/scrobbler_logo.png');
+const LOGO_PATH = join(__dirname, '../../assets/images/scrobbler_logo.png');
 
 const BG = '#111111';
 const BG_COVER = '#0d0d0d';

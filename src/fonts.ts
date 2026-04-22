@@ -5,10 +5,10 @@ import { dirname, join } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 GlobalFonts.registerFromPath(
-  join(__dirname, '../assests/fonts/Inter-Regular.ttf'),
+  join(__dirname, '../assets/fonts/Inter-Regular.ttf'),
   'Inter'
 );
 GlobalFonts.registerFromPath(
-  join(__dirname, '../assests/fonts/Inter-Bold.ttf'),
+  join(__dirname, '../assets/fonts/Inter-Bold.ttf'),
   'Inter'
 );

@@ -12,7 +12,7 @@ import { executeStatsAlbums } from "./stats_albums.js";
 import { executeStatsGenres } from "./stats_genres.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const LOGO_PATH = join(__dirname, '../../assests/images/scrobbler_logo.png');
+const LOGO_PATH = join(__dirname, '../../assets/images/scrobbler_logo.png');
 
 const {
   SlashCommandBuilder,
