@@ -491,7 +491,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding-top: 24px;
-        border-top: 1px solid rgba(241, 240, 227, 0.15);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -640,7 +640,9 @@
 
     <main>
       <div class="error-page">
-        <span class="error-page__number" data-animate style="--d: 80ms">404</span>
+        <span class="error-page__number" data-animate style="--d: 80ms"
+          >404</span
+        >
         <h1 class="error-page__title" data-animate style="--d: 160ms">
           page not found
         </h1>
@@ -656,7 +658,7 @@
     </main>
 
     <footer role="contentinfo">
-      <div class="footer__inner">
+      <div class="footer__inner" data-animate>
         <div class="footer__brand">
           <h2>scrobbler</h2>
           <p>
@@ -707,7 +709,7 @@
               </svg>
             </a>
             <a
-              href="https://twitter.com/scrobbler"
+              href="https://twitter.com/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Twitter"
@@ -780,7 +782,7 @@
           </nav>
         </div>
       </div>
-      <div class="footer__bottom">
+      <div class="footer__bottom" data-animate>
         <div>© 2025 scrobbler. all rights reserved.</div>
         <div class="footer__made">
           made with

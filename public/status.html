@@ -75,6 +75,7 @@
       }
       html {
         scroll-behavior: smooth;
+        overflow-x: hidden;
       }
       body {
         background: var(--color-paper);
@@ -86,6 +87,8 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        position: relative;
+        overflow-x: hidden;
         transition:
           background-color 0.3s ease,
           color 0.3s ease;
@@ -144,6 +147,17 @@
           opacity: 1;
         }
       }
+      @keyframes floaty {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        50% {
+          transform: translate3d(0, -10px, 0);
+        }
+        100% {
+          transform: translate3d(0, 0, 0);
+        }
+      }
 
       [data-animate] {
         opacity: 0;
@@ -159,7 +173,64 @@
         transform: none;
       }
 
+      .bg-orbs {
+        position: fixed;
+        inset: -20vh -20vw;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+        /* prevent flex child from adding height */
+        flex-shrink: 0;
+        height: 0;
+        width: 0;
+      }
+      body > :not(.bg-orbs):not(.tooltip) {
+        position: relative;
+        z-index: 1;
+      }
+      .bg-orbs span {
+        position: absolute;
+        width: min(520px, 42vw);
+        height: min(520px, 42vw);
+        border-radius: 999px;
+        filter: blur(40px);
+        opacity: 0.22;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(148, 104, 216, 0.95),
+          rgba(96, 64, 176, 0) 60%
+        );
+        animation: floaty 7.5s ease-in-out infinite;
+        mix-blend-mode: multiply;
+      }
+      .bg-orbs span:nth-child(1) {
+        top: 6vh;
+        left: 6vw;
+        animation-duration: 10.5s;
+      }
+      .bg-orbs span:nth-child(2) {
+        top: 28vh;
+        right: 10vw;
+        width: min(640px, 54vw);
+        height: min(640px, 54vw);
+        opacity: 0.18;
+        animation-duration: 12.5s;
+        animation-delay: -2s;
+      }
+      .bg-orbs span:nth-child(3) {
+        bottom: 6vh;
+        left: 18vw;
+        width: min(580px, 48vw);
+        height: min(580px, 48vw);
+        opacity: 0.16;
+        animation-duration: 13.5s;
+        animation-delay: -4s;
+      }
+
       @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
         body {
           transition: none;
           opacity: 1;
@@ -167,6 +238,9 @@
         [data-animate] {
           opacity: 1 !important;
           transform: none !important;
+          animation: none !important;
+        }
+        .bg-orbs span {
           animation: none !important;
         }
       }
@@ -390,166 +464,105 @@
 
       /* ── Services card ── */
       .services-card {
-        background: rgba(255, 255, 255, 0.5);
-        border: 1px solid var(--color-mist);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
         margin-bottom: 48px;
       }
 
       /* ── Service row ── */
       .service-row {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid var(--color-mist);
+        border-radius: var(--radius-md);
         padding: 20px 24px;
-        border-bottom: 1px solid var(--color-mist);
         transition: background 0.15s;
       }
-      .service-row:last-child {
-        border-bottom: none;
+      [data-theme="dark"] .service-row {
+        background: rgba(255, 255, 255, 0.04);
       }
-      .service-row:hover {
-        background: rgba(96, 64, 176, 0.03);
-      }
-      .service-row__top {
+      .service-row__header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        margin-bottom: 14px;
       }
-      .service-row__left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-      }
-      .service-row__icon {
-        width: 36px;
-        height: 36px;
-        border-radius: var(--radius-sm);
-        background: rgba(96, 64, 176, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        color: var(--purple-start);
-      }
-      .service-row__icon svg {
-        display: block;
-      }
-      .service-row__name {
+      .service-row__title {
         font-size: 15px;
         font-weight: 600;
       }
       .service-row__rt {
         font-size: 13px;
-        opacity: 0.5;
-        margin-top: 1px;
+        font-weight: 400;
+        opacity: 0.45;
+        margin-left: 6px;
       }
-      .service-row__right {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-shrink: 0;
-      }
-
-      /* ── Mobile availability circle ── */
-      .service-row__mobile-avail {
-        display: none;
-        align-items: center;
-        gap: 8px;
+      .service-row__status {
         font-size: 13px;
-        opacity: 0.7;
-      }
-      .service-row__mobile-circle {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      .circle--green {
-        background: var(--color-green);
-      }
-      .circle--yellow {
-        background: var(--color-yellow);
-      }
-      .circle--red {
-        background: var(--color-red);
-      }
-      .circle--grey {
-        background: var(--color-grey);
-      }
-
-      /* ── Badge ── */
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
         font-weight: 600;
         text-transform: lowercase;
-        padding: 4px 10px;
-        border-radius: 999px;
-        white-space: nowrap;
       }
-      .badge::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-      .badge--green {
+      .service-row__status--green {
         color: var(--color-green);
-        background: var(--color-green-bg);
       }
-      .badge--green::before {
-        background: var(--color-green);
-      }
-      .badge--yellow {
+      .service-row__status--yellow {
         color: var(--color-yellow);
-        background: var(--color-yellow-bg);
       }
-      .badge--yellow::before {
-        background: var(--color-yellow);
-      }
-      .badge--red {
+      .service-row__status--red {
         color: var(--color-red);
-        background: var(--color-red-bg);
       }
-      .badge--red::before {
-        background: var(--color-red);
-      }
-      .badge--grey {
+      .service-row__status--grey {
         color: var(--color-grey);
-        background: var(--color-grey-bg);
-      }
-      .badge--grey::before {
-        background: var(--color-grey);
       }
 
-      /* ── Bar chart ── */
-      .bar-chart {
-        margin-top: 14px;
+      /* ── Pill bar chart ── */
+      .bar-chart__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 12px;
+        opacity: 0.5;
+      }
+      .bar-chart__nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .bar-chart__nav-btn {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid var(--color-mist);
+        background: transparent;
+        cursor: not-allowed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-charcoal);
+        opacity: 0.3;
+        font-size: 11px;
       }
       .bar-chart__bars {
         display: flex;
-        gap: 2px;
-        align-items: flex-end;
-        height: 28px;
+        gap: 3px;
+        align-items: stretch;
+        height: 40px;
       }
       .bar-chart__seg {
         flex: 1;
         height: 100%;
-        border-radius: 2px;
+        border-radius: 5px;
         cursor: pointer;
         transition:
           opacity 0.15s,
-          transform 0.1s;
-        position: relative;
+          transform 0.15s;
+        min-width: 0;
       }
       .bar-chart__seg:hover {
-        opacity: 0.8;
-        transform: scaleY(1.08);
-        transform-origin: bottom;
+        opacity: 0.65;
+        transform: scaleY(1.15);
+        transform-origin: center;
       }
       .bar-chart__seg--green {
         background: var(--color-green);
@@ -561,34 +574,34 @@
         background: var(--color-red);
       }
       .bar-chart__seg--grey {
-        background: var(--color-mist);
+        background: rgba(0, 0, 0, 0.1);
+      }
+      [data-theme="dark"] .bar-chart__seg--grey {
+        background: rgba(255, 255, 255, 0.1);
       }
       .bar-chart__labels {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 6px;
+        margin-top: 8px;
         font-size: 11px;
-        opacity: 0.45;
-      }
-      .bar-chart__avail {
-        font-size: 11px;
-        opacity: 0.55;
+        opacity: 0.4;
       }
 
       /* ── Tooltip ── */
       .tooltip {
         position: fixed;
         z-index: 1000;
-        background: var(--color-charcoal);
-        color: var(--color-paper);
-        border-radius: var(--radius-sm);
-        padding: 10px 14px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-mist);
+        color: var(--color-charcoal);
+        border-radius: var(--radius-md);
+        padding: 16px;
         font-size: 12px;
         line-height: 1.5;
         pointer-events: none;
         box-shadow: var(--shadow-md);
-        max-width: 200px;
+        width: 280px;
         opacity: 0;
         transition: opacity 0.15s;
       }
@@ -596,25 +609,48 @@
         opacity: 1;
       }
       .tooltip__date {
-        font-weight: 600;
-        margin-bottom: 4px;
-        font-size: 11px;
-        opacity: 0.7;
+        font-weight: 700;
+        font-size: 13px;
+        margin-bottom: 10px;
       }
-      .tooltip__row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
+      .tooltip__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .tooltip__cell {
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: var(--radius-sm);
+        padding: 8px 10px;
+      }
+      [data-theme="dark"] .tooltip__cell {
+        background: rgba(255, 255, 255, 0.06);
       }
       .tooltip__label {
-        opacity: 0.65;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.5;
+        margin-bottom: 3px;
       }
       .tooltip__val {
-        font-weight: 600;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .tooltip__val--green {
+        color: var(--color-green);
+      }
+      .tooltip__val--yellow {
+        color: var(--color-yellow);
+      }
+      .tooltip__val--red {
+        color: var(--color-red);
       }
       .tooltip__nodata {
-        opacity: 0.65;
+        opacity: 0.5;
         font-style: italic;
+        font-size: 12px;
       }
 
       /* ── Footer ── */
@@ -725,7 +761,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding-top: 24px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -802,12 +838,6 @@
       [data-theme="dark"] .page__label {
         background: rgba(139, 111, 212, 0.15);
       }
-      [data-theme="dark"] .services-card {
-        background: rgba(255, 255, 255, 0.04);
-      }
-      [data-theme="dark"] .service-row__icon {
-        background: rgba(139, 111, 212, 0.12);
-      }
       [data-theme="dark"] .footer__bottom {
         border-color: rgba(31, 31, 31, 0.15);
       }
@@ -819,15 +849,51 @@
         background: rgba(255, 255, 255, 0.1);
       }
 
-      /* ── Mobile: hide bar chart, show simplified avail ── */
+      .service-row__mobile-stats {
+        display: none;
+      }
+
       @media (max-width: 639px) {
-        .bar-chart {
+        .bar-chart__bars,
+        .bar-chart__labels,
+        .bar-chart__header {
           display: none;
         }
-        .service-row__mobile-avail {
+        .service-row__mobile-stats {
           display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 6px;
         }
-        .service-row__rt {
+        .service-row__mobile-avail {
+          font-size: 13px;
+          opacity: 0.55;
+        }
+        .service-row__mobile-circle {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .service-row__mobile-circle--green {
+          background: var(--color-green);
+        }
+        .service-row__mobile-circle--yellow {
+          background: var(--color-yellow);
+        }
+        .service-row__mobile-circle--red {
+          background: var(--color-red);
+        }
+        .service-row__mobile-circle--grey {
+          background: var(--color-grey);
+        }
+        .service-row__mobile-circle svg {
+          display: block;
+        }
+        .service-row__status {
           display: none;
         }
       }
@@ -843,6 +909,13 @@
     </script>
   </head>
   <body>
+    <!-- Purple orbs background -->
+    <div class="bg-orbs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
     <!-- NAV PLACEHOLDER -->
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <div class="nav__inner">
@@ -940,7 +1013,7 @@
     </main>
     <!-- FOOTER PLACEHOLDER -->
     <footer role="contentinfo">
-      <div class="footer__inner">
+      <div class="footer__inner" data-animate>
         <div class="footer__brand">
           <h2>scrobbler</h2>
           <p>
@@ -952,8 +1025,9 @@
             href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
             target="_blank"
             rel="noopener noreferrer"
-            >Add to Discord →</a
           >
+            Add to Discord →
+          </a>
           <div class="footer__social">
             <a
               href="https://github.com/itszubariel/scrobbler"
@@ -1063,7 +1137,7 @@
           </nav>
         </div>
       </div>
-      <div class="footer__bottom">
+      <div class="footer__bottom" data-animate>
         <div>© 2025 scrobbler. all rights reserved.</div>
         <div class="footer__made">
           made with
@@ -1123,21 +1197,30 @@
       document.body.appendChild(tooltipEl);
       var tooltipTimeout = null;
 
-      function showTooltip(html, x, y) {
+      function showTooltip(html, x, barTop, barBottom) {
         tooltipEl.innerHTML = html;
+        // render off-screen to measure height before positioning
+        tooltipEl.style.top = "-9999px";
+        tooltipEl.style.left = "-9999px";
         tooltipEl.classList.add("visible");
-        positionTooltip(x, y);
+        positionTooltip(x, barTop, barBottom);
       }
 
-      function positionTooltip(x, y) {
-        var tw = tooltipEl.offsetWidth || 180;
-        var th = tooltipEl.offsetHeight || 80;
+      function positionTooltip(x, barTop, barBottom) {
+        var tw = tooltipEl.offsetWidth || 280;
+        var th = tooltipEl.offsetHeight || 120;
         var vw = window.innerWidth;
+
+        // horizontal: center on x, clamp to viewport
         var left = x - tw / 2;
         if (left < 8) left = 8;
         if (left + tw > vw - 8) left = vw - tw - 8;
-        var top = y - th - 10;
-        if (top < 8) top = y + 16;
+
+        // always above the bar — barTop is viewport-relative (fixed positioning)
+        var top = barTop - th - 12;
+        // only fall below if truly no room (bar is within 140px of top of viewport)
+        if (top < 8) top = barBottom + 12;
+
         tooltipEl.style.left = left + "px";
         tooltipEl.style.top = top + "px";
       }
@@ -1199,15 +1282,19 @@
         var dot = banner.querySelector(".status-banner__dot");
         var text = banner.querySelector(".status-banner__text");
 
+        // hide banner entirely when operational
+        if (overall === "operational") {
+          banner.style.display = "none";
+          return;
+        }
+
+        banner.style.display = "";
+
         // reset classes
         banner.className = "status-banner";
         dot.className = "status-banner__dot";
 
-        if (overall === "operational") {
-          banner.classList.add("status-banner--operational");
-          dot.classList.add("status-banner__dot--green");
-          text.textContent = "all systems operational";
-        } else if (overall === "degraded") {
+        if (overall === "degraded") {
           banner.classList.add("status-banner--degraded");
           dot.classList.add("status-banner__dot--yellow");
           text.textContent = "degraded performance";
@@ -1242,39 +1329,54 @@
         }
         var avail =
           typeof dayData.availability === "number"
-            ? dayData.availability.toFixed(1) + "%"
+            ? dayData.availability.toFixed(2) + "%"
             : "—";
         var downtime =
           dayData.downtimeMinutes != null
             ? formatDowntime(dayData.downtimeMinutes)
             : "0m";
         var status = dayData.highestStatus || "—";
+        var statusColor =
+          status === "operational"
+            ? "green"
+            : status === "degraded"
+              ? "yellow"
+              : status === "down"
+                ? "red"
+                : "";
         return (
           '<div class="tooltip__date">' +
           (dayData.date || "") +
           "</div>" +
-          '<div class="tooltip__row"><span class="tooltip__label">availability</span><span class="tooltip__val">' +
+          '<div class="tooltip__grid">' +
+          '<div class="tooltip__cell"><div class="tooltip__label">availability</div><div class="tooltip__val">' +
           avail +
-          "</span></div>" +
-          '<div class="tooltip__row"><span class="tooltip__label">downtime</span><span class="tooltip__val">' +
+          "</div></div>" +
+          '<div class="tooltip__cell"><div class="tooltip__label">downtime</div><div class="tooltip__val">' +
           downtime +
-          "</span></div>" +
-          '<div class="tooltip__row"><span class="tooltip__label">status</span><span class="tooltip__val">' +
+          "</div></div>" +
+          '<div class="tooltip__cell" style="grid-column:1/-1"><div class="tooltip__label">highest status</div><div class="tooltip__val' +
+          (statusColor ? " tooltip__val--" + statusColor : "") +
+          '">' +
           status +
-          "</span></div>"
+          "</div></div>" +
+          "</div>"
         );
       }
 
       // ── renderBarChart ──
       function renderBarChart(service) {
         var history = service.history || [];
-        // pad left with nulls to always have 90 entries
+        var DAYS = 60;
         var padded = [];
-        for (var i = 0; i < 90 - history.length; i++) padded.push(null);
-        padded = padded.concat(history);
+        for (var i = 0; i < DAYS - history.length; i++) padded.push(null);
+        padded = padded.concat(history).slice(-DAYS);
 
-        var avail90 = compute90DayAvail(padded);
-        var availStr = avail90 !== null ? avail90.toFixed(1) + "%" : "—";
+        var avail = compute90DayAvail(padded);
+        var availStr =
+          avail !== null
+            ? avail.toFixed(2) + "% availability"
+            : "— availability";
 
         var barsHtml = "";
         for (var j = 0; j < padded.length; j++) {
@@ -1294,24 +1396,25 @@
             cls +
             '" data-idx="' +
             j +
-            '" role="img" aria-label="' +
+            '" aria-label="' +
             (day && day.date ? day.date : "no data") +
             '"></div>';
         }
 
         var html =
-          '<div class="bar-chart">' +
+          '<div class="bar-chart__header">' +
+          "<span>last 60 days</span>" +
+          '<div class="bar-chart__nav">' +
+          '<button class="bar-chart__nav-btn" disabled title="coming soon">&#8249;</button>' +
+          '<button class="bar-chart__nav-btn" disabled title="coming soon">&#8250;</button>' +
+          "</div>" +
+          "</div>" +
           '<div class="bar-chart__bars">' +
           barsHtml +
           "</div>" +
-          '<div class="bar-chart__labels">' +
-          "<span>90 days ago</span>" +
-          '<span class="bar-chart__avail">' +
+          '<div class="bar-chart__labels"><span>60 days ago</span><span>' +
           availStr +
-          " uptime</span>" +
-          "<span>today</span>" +
-          "</div>" +
-          "</div>";
+          "</span><span>today</span></div>";
 
         return { html: html, padded: padded };
       }
@@ -1334,7 +1437,6 @@
 
       // ── renderServiceRows ──
       function renderServiceRows(services) {
-        // build a map by service name
         var map = {};
         services.forEach(function (s) {
           map[s.name] = s;
@@ -1349,48 +1451,50 @@
           if (!svc || !cfg) return;
 
           var rtDisplay =
-            svc.responseTime === -1
-              ? "— timeout"
-              : "— " + svc.responseTime + "ms";
-          var bClass = badgeClass(svc.status);
-          var cClass = circleClass(svc.status);
+            svc.responseTime === -1 ? "timeout" : svc.responseTime + "ms";
+          var statusColor =
+            svc.status === "operational"
+              ? "green"
+              : svc.status === "degraded"
+                ? "yellow"
+                : svc.status === "down"
+                  ? "red"
+                  : "grey";
           var avail90 = compute90DayAvail(svc.history || []);
-          var availStr = avail90 !== null ? avail90.toFixed(1) + "%" : "—";
+          var availStr = avail90 !== null ? avail90.toFixed(2) + "%" : "—";
 
           var chart = renderBarChart(svc);
+
+          var checkIcon =
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+          var warnIcon =
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+          var circleIcon = statusColor === "green" ? checkIcon : warnIcon;
 
           html +=
             '<div class="service-row" role="listitem" data-service="' +
             key +
             '">' +
-            '<div class="service-row__top">' +
-            '<div class="service-row__left">' +
-            '<div class="service-row__icon" aria-hidden="true">' +
-            cfg.icon +
-            "</div>" +
-            "<div>" +
-            '<div class="service-row__name">' +
+            '<div class="service-row__header">' +
+            '<div><span class="service-row__title">' +
             cfg.label +
-            "</div>" +
-            '<div class="service-row__rt">' +
+            '</span><span class="service-row__rt">— ' +
             rtDisplay +
-            "</div>" +
-            "</div>" +
-            "</div>" +
-            '<div class="service-row__right">' +
-            '<div class="service-row__mobile-avail">' +
-            '<div class="service-row__mobile-circle ' +
-            cClass +
-            '"></div>' +
-            "<span>" +
-            availStr +
-            "</span>" +
-            "</div>" +
-            '<span class="badge ' +
-            bClass +
+            "</span></div>" +
+            '<span class="service-row__status service-row__status--' +
+            statusColor +
             '">' +
             svc.status +
             "</span>" +
+            "</div>" +
+            '<div class="service-row__mobile-stats">' +
+            '<span class="service-row__mobile-avail">availability ' +
+            availStr +
+            "</span>" +
+            '<div class="service-row__mobile-circle service-row__mobile-circle--' +
+            statusColor +
+            '">' +
+            circleIcon +
             "</div>" +
             "</div>" +
             chart.html +
@@ -1411,19 +1515,22 @@
           // find padded data
           var history = svc ? svc.history || [] : [];
           var padded = [];
-          for (var i = 0; i < 90 - history.length; i++) padded.push(null);
-          padded = padded.concat(history);
+          for (var i = 0; i < 60 - history.length; i++) padded.push(null);
+          padded = padded.concat(history).slice(-60);
           var dayData = padded[idx] || null;
 
           seg.addEventListener("mouseenter", function (e) {
             var rect = seg.getBoundingClientRect();
-            var cx = rect.left + rect.width / 2;
-            var cy = rect.top;
-            showTooltip(renderTooltip(dayData), cx, cy);
+            showTooltip(
+              renderTooltip(dayData),
+              rect.left + rect.width / 2,
+              rect.top,
+              rect.bottom,
+            );
           });
           seg.addEventListener("mousemove", function (e) {
             var rect = seg.getBoundingClientRect();
-            positionTooltip(rect.left + rect.width / 2, rect.top);
+            positionTooltip(rect.left + rect.width / 2, rect.top, rect.bottom);
           });
           seg.addEventListener("mouseleave", function () {
             hideTooltip();
@@ -1436,6 +1543,7 @@
               renderTooltip(dayData),
               rect.left + rect.width / 2,
               rect.top,
+              rect.bottom,
             );
           });
         });

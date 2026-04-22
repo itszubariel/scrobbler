@@ -411,17 +411,26 @@
         border-bottom: 1px solid var(--color-mist);
         text-transform: lowercase;
       }
+      .legal-section > div {
+        margin-bottom: 24px;
+      }
+      .legal-section > div:last-child {
+        margin-bottom: 0;
+      }
       .legal-section h3 {
         font-size: 16px;
         font-weight: 700;
-        margin: 28px 0 8px;
+        margin-bottom: 8px;
       }
       .legal-section p {
-        margin-bottom: 16px;
+        margin-bottom: 8px;
         opacity: 0.8;
       }
+      .legal-section p:last-child {
+        margin-bottom: 0;
+      }
       .legal-section ul {
-        margin: 0 0 16px 20px;
+        margin: 0 0 0 20px;
         opacity: 0.8;
       }
       .legal-section ul li {
@@ -546,7 +555,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding-top: 24px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -706,196 +715,240 @@
     <main>
       <div class="page">
         <div class="page__header">
-          <span class="page__label">Legal</span>
-          <h1 class="page__title">Terms &amp; Privacy</h1>
-          <p class="page__updated">Last updated: April 2025</p>
+          <span class="page__label" data-animate style="--d: 0ms">Legal</span>
+          <h1 class="page__title" data-animate style="--d: 80ms">
+            Terms &amp; Privacy
+          </h1>
+          <p class="page__updated" data-animate style="--d: 160ms">
+            Last updated: April 2025
+          </p>
         </div>
 
         <!-- TERMS OF SERVICE -->
         <section class="legal-section" aria-labelledby="tos-title">
-          <h2 id="tos-title">Terms of Service</h2>
+          <h2 id="tos-title" data-animate>Terms of Service</h2>
 
-          <h3>1. Acceptance of Terms</h3>
-          <p>
-            By adding Scrobbler to your Discord server or using any of its
-            commands, you agree to these Terms of Service. If you do not agree,
-            please remove the bot from your server and discontinue use.
-          </p>
+          <div data-animate>
+            <h3>1. Acceptance of Terms</h3>
+            <p>
+              By adding Scrobbler to your Discord server or using any of its
+              commands, you agree to these Terms of Service. If you do not
+              agree, please remove the bot from your server and discontinue use.
+            </p>
+          </div>
 
-          <h3>2. Description of Service</h3>
-          <p>
-            Scrobbler is a Discord bot that integrates with the Last.fm API to
-            provide music tracking, statistics, and social features within
-            Discord servers. The service is provided free of charge.
-          </p>
+          <div data-animate>
+            <h3>2. Description of Service</h3>
+            <p>
+              Scrobbler is a Discord bot that integrates with the Last.fm API to
+              provide music tracking, statistics, and social features within
+              Discord servers. The service is provided free of charge.
+            </p>
+          </div>
 
-          <h3>3. Eligibility</h3>
-          <p>
-            You must comply with Discord's Terms of Service and be of the
-            minimum age required to use Discord in your jurisdiction. Scrobbler
-            is not directed at children under 13.
-          </p>
+          <div data-animate>
+            <h3>3. Eligibility</h3>
+            <p>
+              You must comply with Discord's Terms of Service and be of the
+              minimum age required to use Discord in your jurisdiction.
+              Scrobbler is not directed at children under 13.
+            </p>
+          </div>
 
-          <h3>4. Acceptable Use</h3>
-          <p>You agree not to:</p>
-          <ul>
-            <li>
-              Attempt to abuse, exploit, or overload the bot with automated
-              requests
-            </li>
-            <li>Use the bot to harass, spam, or harm other users</li>
-            <li>
-              Attempt to reverse-engineer, copy, or redistribute the bot's code
-              without permission
-            </li>
-            <li>Use the service for any unlawful purpose</li>
-          </ul>
+          <div data-animate>
+            <h3>4. Acceptable Use</h3>
+            <p>You agree not to:</p>
+            <ul>
+              <li>
+                Attempt to abuse, exploit, or overload the bot with automated
+                requests
+              </li>
+              <li>Use the bot to harass, spam, or harm other users</li>
+              <li>
+                Attempt to reverse-engineer, copy, or redistribute the bot's
+                code without permission
+              </li>
+              <li>Use the service for any unlawful purpose</li>
+            </ul>
+          </div>
 
-          <h3>5. Service Availability</h3>
-          <p>
-            Scrobbler is provided on an "as is" and "as available" basis. We do
-            not guarantee uninterrupted availability and may modify, suspend, or
-            discontinue the service at any time without notice.
-          </p>
+          <div data-animate>
+            <h3>5. Service Availability</h3>
+            <p>
+              Scrobbler is provided on an "as is" and "as available" basis. We
+              do not guarantee uninterrupted availability and may modify,
+              suspend, or discontinue the service at any time without notice.
+            </p>
+          </div>
 
-          <h3>6. Third-Party Services</h3>
-          <p>
-            Scrobbler relies on the Last.fm API and Discord API. Your use of
-            those services is governed by their respective terms. We are not
-            responsible for the availability or accuracy of third-party data.
-          </p>
+          <div data-animate>
+            <h3>6. Third-Party Services</h3>
+            <p>
+              Scrobbler relies on the Last.fm API and Discord API. Your use of
+              those services is governed by their respective terms. We are not
+              responsible for the availability or accuracy of third-party data.
+            </p>
+          </div>
 
-          <h3>7. Limitation of Liability</h3>
-          <p>
-            To the fullest extent permitted by law, Scrobbler and its developers
-            shall not be liable for any indirect, incidental, or consequential
-            damages arising from your use of the service.
-          </p>
+          <div data-animate>
+            <h3>7. Limitation of Liability</h3>
+            <p>
+              To the fullest extent permitted by law, Scrobbler and its
+              developers shall not be liable for any indirect, incidental, or
+              consequential damages arising from your use of the service.
+            </p>
+          </div>
 
-          <h3>8. Changes to Terms</h3>
-          <p>
-            We may update these terms at any time. Continued use of the bot
-            after changes constitutes acceptance of the revised terms. The "last
-            updated" date at the top of this page will reflect any changes.
-          </p>
+          <div data-animate>
+            <h3>8. Changes to Terms</h3>
+            <p>
+              We may update these terms at any time. Continued use of the bot
+              after changes constitutes acceptance of the revised terms. The
+              "last updated" date at the top of this page will reflect any
+              changes.
+            </p>
+          </div>
 
-          <h3>9. Contact</h3>
-          <p>
-            For questions about these terms, please open an issue on our
-            <a
-              href="https://github.com/itszubariel/scrobbler"
-              target="_blank"
-              rel="noopener noreferrer"
-              >GitHub repository</a
-            >.
-          </p>
+          <div data-animate>
+            <h3>9. Contact</h3>
+            <p>
+              For questions about these terms, please open an issue on our
+              <a
+                href="https://github.com/itszubariel/scrobbler"
+                target="_blank"
+                rel="noopener noreferrer"
+                >GitHub repository</a
+              >.
+            </p>
+          </div>
         </section>
 
-        <hr class="divider" />
+        <hr class="divider" data-animate />
 
         <!-- PRIVACY POLICY -->
         <section class="legal-section" aria-labelledby="privacy-title">
-          <h2 id="privacy-title">Privacy Policy</h2>
+          <h2 id="privacy-title" data-animate>Privacy Policy</h2>
 
-          <h3>1. What We Collect</h3>
-          <p>
-            Scrobbler collects and stores only the minimum data required to
-            function:
-          </p>
-          <ul>
-            <li>
-              <strong>Discord User ID</strong> — to identify you across servers
-            </li>
-            <li>
-              <strong>Last.fm username</strong> — to fetch your listening data
-              from Last.fm
-            </li>
-            <li>
-              <strong>Discord Server ID</strong> — to power server-specific
-              features like /whoknows
-            </li>
-            <li>
-              <strong>Cached statistics</strong> — temporary caches of Last.fm
-              data to reduce API calls (e.g. Wrapped data)
-            </li>
-          </ul>
+          <div data-animate>
+            <h3>1. What We Collect</h3>
+            <p>
+              Scrobbler collects and stores only the minimum data required to
+              function:
+            </p>
+            <ul>
+              <li>
+                <strong>Discord User ID</strong> — to identify you across
+                servers
+              </li>
+              <li>
+                <strong>Last.fm username</strong> — to fetch your listening data
+                from Last.fm
+              </li>
+              <li>
+                <strong>Discord Server ID</strong> — to power server-specific
+                features like /whoknows
+              </li>
+              <li>
+                <strong>Cached statistics</strong> — temporary caches of Last.fm
+                data to reduce API calls (e.g. Wrapped data)
+              </li>
+            </ul>
+          </div>
 
-          <h3>2. What We Do Not Collect</h3>
-          <p>We do not read, store, or process:</p>
-          <ul>
-            <li>The content of any Discord messages</li>
-            <li>Your Discord username, avatar, or profile information</li>
-            <li>Any data beyond what is explicitly listed above</li>
-            <li>Payment information of any kind</li>
-          </ul>
+          <div data-animate>
+            <h3>2. What We Do Not Collect</h3>
+            <p>We do not read, store, or process:</p>
+            <ul>
+              <li>The content of any Discord messages</li>
+              <li>Your Discord username, avatar, or profile information</li>
+              <li>Any data beyond what is explicitly listed above</li>
+              <li>Payment information of any kind</li>
+            </ul>
+          </div>
 
-          <h3>3. How We Use Your Data</h3>
-          <p>
-            Your Discord User ID and Last.fm username are used solely to
-            retrieve your listening data from Last.fm and display it in response
-            to slash commands. We do not sell, share, or use your data for
-            advertising or analytics.
-          </p>
+          <div data-animate>
+            <h3>3. How We Use Your Data</h3>
+            <p>
+              Your Discord User ID and Last.fm username are used solely to
+              retrieve your listening data from Last.fm and display it in
+              response to slash commands. We do not sell, share, or use your
+              data for advertising or analytics.
+            </p>
+          </div>
 
-          <h3>4. Data Retention</h3>
-          <p>
-            Your linked account data is retained until you run
-            <code>/unlink</code>, which permanently removes your Discord User ID
-            and Last.fm username from our database. Cached data is automatically
-            purged on a rolling basis.
-          </p>
+          <div data-animate>
+            <h3>4. Data Retention</h3>
+            <p>
+              Your linked account data is retained until you run
+              <code>/unlink</code>, which permanently removes your Discord User
+              ID and Last.fm username from our database. Cached data is
+              automatically purged on a rolling basis.
+            </p>
+          </div>
 
-          <h3>5. Third-Party Services</h3>
-          <p>
-            Scrobbler fetches data from the
-            <a
-              href="https://www.last.fm/api"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Last.fm API</a
-            >. The data returned is governed by Last.fm's own privacy policy. We
-            do not control what Last.fm collects about your listening activity.
-          </p>
+          <div data-animate>
+            <h3>5. Third-Party Services</h3>
+            <p>
+              Scrobbler fetches data from the
+              <a
+                href="https://www.last.fm/api"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Last.fm API</a
+              >. The data returned is governed by Last.fm's own privacy policy.
+              We do not control what Last.fm collects about your listening
+              activity.
+            </p>
+          </div>
 
-          <h3>6. Security</h3>
-          <p>
-            We take reasonable technical measures to protect stored data.
-            However, no system is completely secure, and we cannot guarantee
-            absolute security of your information.
-          </p>
+          <div data-animate>
+            <h3>6. Security</h3>
+            <p>
+              We take reasonable technical measures to protect stored data.
+              However, no system is completely secure, and we cannot guarantee
+              absolute security of your information.
+            </p>
+          </div>
 
-          <h3>7. Your Rights</h3>
-          <p>
-            You may request deletion of your data at any time by running
-            <code>/unlink</code> in any server with Scrobbler, or by contacting
-            us via GitHub. We will process deletion requests promptly.
-          </p>
+          <div data-animate>
+            <h3>7. Your Rights</h3>
+            <p>
+              You may request deletion of your data at any time by running
+              <code>/unlink</code> in any server with Scrobbler, or by
+              contacting us via GitHub. We will process deletion requests
+              promptly.
+            </p>
+          </div>
 
-          <h3>8. Changes to This Policy</h3>
-          <p>
-            We may update this Privacy Policy from time to time. The "last
-            updated" date at the top of this page will reflect any changes.
-            Continued use of the bot constitutes acceptance of the updated
-            policy.
-          </p>
+          <div data-animate>
+            <h3>8. Changes to This Policy</h3>
+            <p>
+              We may update this Privacy Policy from time to time. The "last
+              updated" date at the top of this page will reflect any changes.
+              Continued use of the bot constitutes acceptance of the updated
+              policy.
+            </p>
+          </div>
 
-          <h3>9. Contact</h3>
-          <p>
-            For privacy-related questions or data deletion requests, please open
-            an issue on our
-            <a
-              href="https://github.com/itszubariel/scrobbler"
-              target="_blank"
-              rel="noopener noreferrer"
-              >GitHub repository</a
-            >.
-          </p>
+          <div data-animate>
+            <h3>9. Contact</h3>
+            <p>
+              For privacy-related questions or data deletion requests, please
+              open an issue on our
+              <a
+                href="https://github.com/itszubariel/scrobbler"
+                target="_blank"
+                rel="noopener noreferrer"
+                >GitHub repository</a
+              >.
+            </p>
+          </div>
         </section>
       </div>
     </main>
 
     <footer role="contentinfo">
-      <div class="footer__inner">
+      <div class="footer__inner" data-animate>
         <div class="footer__brand">
           <h2>scrobbler</h2>
           <p>
@@ -1023,7 +1076,7 @@
         </div>
       </div>
 
-      <div class="footer__bottom">
+      <div class="footer__bottom" data-animate>
         <div>© 2025 scrobbler. All rights reserved.</div>
         <div class="footer__made">
           made with

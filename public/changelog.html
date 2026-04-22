@@ -632,7 +632,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding-top: 24px;
-        border-top: 1px solid rgba(241, 240, 227, 0.15);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1168,7 +1168,7 @@
     </main>
 
     <footer role="contentinfo">
-      <div class="footer__inner">
+      <div class="footer__inner" data-animate>
         <div class="footer__brand">
           <h2>scrobbler</h2>
           <p>
@@ -1218,7 +1218,7 @@
                 />
               </svg>
             </a>
-              <a
+            <a
               href="https://twitter.com/"
               target="_blank"
               rel="noopener noreferrer"
@@ -1296,7 +1296,7 @@
         </div>
       </div>
 
-      <div class="footer__bottom">
+      <div class="footer__bottom" data-animate>
         <div>© 2025 scrobbler. all rights reserved.</div>
         <div class="footer__made">
           made with
@@ -1317,16 +1317,18 @@
         var blocks = [".page__header", ".release", ".footer__inner"];
         blocks.forEach(function (sel) {
           document.querySelectorAll(sel).forEach(function (el, idx) {
-            if (!el.hasAttribute("data-animate")) el.setAttribute("data-animate", "");
+            if (!el.hasAttribute("data-animate"))
+              el.setAttribute("data-animate", "");
             if (!el.style.getPropertyValue("--d")) {
               el.style.setProperty("--d", Math.min(idx * 90, 360) + "ms");
             }
           });
         });
         document.querySelectorAll(".group__item").forEach(function (el, idx) {
-          if (!el.hasAttribute("data-animate")) el.setAttribute("data-animate", "");
+          if (!el.hasAttribute("data-animate"))
+            el.setAttribute("data-animate", "");
           if (!el.style.getPropertyValue("--d")) {
-            el.style.setProperty("--d", (120 + Math.min(idx, 8) * 30) + "ms");
+            el.style.setProperty("--d", 120 + Math.min(idx, 8) * 30 + "ms");
           }
         });
       })();
