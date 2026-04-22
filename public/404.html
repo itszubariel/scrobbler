@@ -104,6 +104,123 @@
         text-decoration: none;
       }
 
+      /* ── Motion system (scroll reveal + page load) ── */
+      body {
+        opacity: 0;
+        transition: opacity 0.55s ease;
+      }
+      body.is-loaded {
+        opacity: 1;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 18px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes floaty {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        50% {
+          transform: translate3d(0, -10px, 0);
+        }
+        100% {
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      [data-animate] {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+        will-change: opacity, transform;
+      }
+      [data-animate].is-visible {
+        animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation-delay: var(--d, 0ms);
+      }
+      [data-animate="fade"].is-visible {
+        animation-name: fadeIn;
+        transform: none;
+      }
+      .bg-orbs {
+        position: fixed;
+        inset: -20vh -20vw;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      body > :not(.bg-orbs) {
+        position: relative;
+        z-index: 1;
+      }
+      .bg-orbs span {
+        position: absolute;
+        width: min(520px, 42vw);
+        height: min(520px, 42vw);
+        border-radius: 999px;
+        filter: blur(40px);
+        opacity: 0.22;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(148, 104, 216, 0.95),
+          rgba(96, 64, 176, 0) 60%
+        );
+        animation: floaty 7.5s ease-in-out infinite;
+        mix-blend-mode: multiply;
+      }
+      .bg-orbs span:nth-child(1) {
+        top: 6vh;
+        left: 6vw;
+        animation-duration: 10.5s;
+      }
+      .bg-orbs span:nth-child(2) {
+        top: 28vh;
+        right: 10vw;
+        width: min(640px, 54vw);
+        height: min(640px, 54vw);
+        opacity: 0.18;
+        animation-duration: 12.5s;
+        animation-delay: -2s;
+      }
+      .bg-orbs span:nth-child(3) {
+        bottom: 6vh;
+        left: 18vw;
+        width: min(580px, 48vw);
+        height: min(580px, 48vw);
+        opacity: 0.16;
+        animation-duration: 13.5s;
+        animation-delay: -4s;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        body {
+          transition: none;
+          opacity: 1;
+        }
+        [data-animate] {
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+        }
+        .bg-orbs span {
+          animation: none !important;
+        }
+      }
+
       /* ── Nav ── */
       .nav {
         position: sticky;
@@ -460,9 +577,18 @@
     </script>
   </head>
   <body>
+    <div class="bg-orbs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <div class="nav__inner">
-        <a href="index.html" class="nav__wordmark" aria-label="scrobbler home"
+        <a
+          href="index.html"
+          class="nav__wordmark"
+          aria-label="scrobbler home"
+          data-animate="fade"
           >scrobbler</a
         >
         <div class="nav__right">
@@ -470,6 +596,8 @@
             class="theme-toggle"
             id="themeToggle"
             aria-label="Toggle dark mode"
+            data-animate="fade"
+            style="--d: 80ms"
           >
             <svg
               class="icon-moon"
@@ -512,13 +640,15 @@
 
     <main>
       <div class="error-page">
-        <span class="error-page__number">404</span>
-        <h1 class="error-page__title">page not found</h1>
-        <p class="error-page__sub">
+        <span class="error-page__number" data-animate style="--d: 80ms">404</span>
+        <h1 class="error-page__title" data-animate style="--d: 160ms">
+          page not found
+        </h1>
+        <p class="error-page__sub" data-animate style="--d: 240ms">
           looks like this track doesn't exist in our library.<br />
           maybe it was removed, or the link is off.
         </p>
-        <div class="error-page__actions">
+        <div class="error-page__actions" data-animate style="--d: 320ms">
           <a class="btn" href="index.html">go home</a>
           <a class="btn btn--ghost" href="javascript:history.back()">go back</a>
         </div>
@@ -661,6 +791,47 @@
     </footer>
 
     <script>
+      // Page load class for smooth fade-in
+      window.addEventListener("DOMContentLoaded", function () {
+        document.body.classList.add("is-loaded");
+      });
+
+      // Scroll reveal
+      (function () {
+        var reduced =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          document.querySelectorAll("[data-animate]").forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+        var els = Array.prototype.slice.call(
+          document.querySelectorAll("[data-animate]"),
+        );
+        if (!("IntersectionObserver" in window)) {
+          els.forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { root: null, threshold: 0.16, rootMargin: "0px 0px -10% 0px" },
+        );
+        els.forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+
       document
         .getElementById("themeToggle")
         .addEventListener("click", function () {

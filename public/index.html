@@ -116,6 +116,185 @@
         text-decoration: none;
       }
 
+      /* ── Motion system (scroll reveal + page load) ── */
+      body {
+        opacity: 0;
+        transition: opacity 0.55s ease;
+      }
+      body.is-loaded {
+        opacity: 1;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 18px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes floaty {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        50% {
+          transform: translate3d(0, -10px, 0);
+        }
+        100% {
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes shimmerSweep {
+        0% {
+          transform: translateX(-120%) skewX(-20deg);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        60% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(120%) skewX(-20deg);
+          opacity: 0;
+        }
+      }
+
+      [data-animate] {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+        will-change: opacity, transform;
+      }
+      [data-animate].is-visible {
+        animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation-delay: var(--d, 0ms);
+      }
+      [data-animate="fade"].is-visible {
+        animation-name: fadeIn;
+        transform: none;
+      }
+
+      .bg-orbs {
+        position: fixed;
+        inset: -20vh -20vw;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      body > :not(.bg-orbs) {
+        position: relative;
+        z-index: 1;
+      }
+      .bg-orbs span {
+        position: absolute;
+        width: min(520px, 42vw);
+        height: min(520px, 42vw);
+        border-radius: 999px;
+        filter: blur(40px);
+        opacity: 0.22;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(148, 104, 216, 0.95),
+          rgba(96, 64, 176, 0) 60%
+        );
+        animation: floaty 7.5s ease-in-out infinite;
+        mix-blend-mode: multiply;
+      }
+      .bg-orbs span:nth-child(1) {
+        top: 6vh;
+        left: 6vw;
+        animation-duration: 10.5s;
+      }
+      .bg-orbs span:nth-child(2) {
+        top: 28vh;
+        right: 10vw;
+        width: min(640px, 54vw);
+        height: min(640px, 54vw);
+        opacity: 0.18;
+        animation-duration: 12.5s;
+        animation-delay: -2s;
+      }
+      .bg-orbs span:nth-child(3) {
+        bottom: 6vh;
+        left: 18vw;
+        width: min(580px, 48vw);
+        height: min(580px, 48vw);
+        opacity: 0.16;
+        animation-duration: 13.5s;
+        animation-delay: -4s;
+      }
+
+      .btn,
+      .footer__cta {
+        position: relative;
+        overflow: hidden;
+      }
+      .btn::before,
+      .footer__cta::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -30%;
+        width: 45%;
+        height: 180%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0.55),
+          rgba(255, 255, 255, 0)
+        );
+        transform: translateX(-120%) skewX(-20deg);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .btn:hover::before,
+      .footer__cta:hover::before {
+        animation: shimmerSweep 0.9s ease-out;
+      }
+
+      .discord-mock {
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .command-row:hover .discord-mock {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.14);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        body {
+          transition: none;
+          opacity: 1;
+        }
+        [data-animate] {
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+        }
+        .bg-orbs span {
+          animation: none !important;
+        }
+        .btn::before,
+        .footer__cta::before {
+          display: none !important;
+        }
+      }
+
       /* ── Utilities ── */
       .gradient-text {
         background: var(--gradient);
@@ -307,6 +486,7 @@
           box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
           transition: right 0.3s ease;
           overflow-y: auto;
+          z-index: 200;
         }
         .nav__links.active {
           right: 0;
@@ -328,6 +508,24 @@
         .nav__links .theme-toggle,
         .nav__links .btn {
           display: none;
+        }
+        
+        /* Mobile menu backdrop */
+        .nav__backdrop {
+          position: fixed;
+          top: 64px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.3s ease;
+          z-index: 150;
+        }
+        .nav__backdrop.active {
+          opacity: 1;
+          pointer-events: auto;
         }
       }
 
@@ -1606,10 +1804,19 @@
     </script>
   </head>
   <body>
+    <div class="bg-orbs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
     <!-- NAV -->
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <div class="nav__inner">
-        <a href="index.html" class="nav__wordmark" aria-label="scrobbler home"
+        <a
+          href="index.html"
+          class="nav__wordmark"
+          aria-label="scrobbler home"
+          data-animate="fade"
           >scrobbler</a
         >
 
@@ -1618,6 +1825,8 @@
             class="theme-toggle nav__icon-btn"
             id="themeToggle"
             aria-label="Toggle dark mode"
+            data-animate="fade"
+            style="--d: 60ms"
           >
             <svg
               class="icon-moon"
@@ -1662,6 +1871,8 @@
             rel="noopener noreferrer"
             aria-label="Add to Discord"
             title="Add to Discord"
+            data-animate="fade"
+            style="--d: 120ms"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -1675,6 +1886,8 @@
             id="navHamburger"
             aria-label="Toggle menu"
             aria-expanded="false"
+            data-animate="fade"
+            style="--d: 180ms"
           >
             <span></span>
             <span></span>
@@ -1695,6 +1908,8 @@
               class="theme-toggle"
               id="themeToggleDesktop"
               aria-label="Toggle dark mode"
+              data-animate="fade"
+              style="--d: 240ms"
             >
               <svg
                 class="icon-moon"
@@ -1738,6 +1953,8 @@
               href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
               target="_blank"
               rel="noopener noreferrer"
+              data-animate="fade"
+              style="--d: 300ms"
             >
               Add to Discord
             </a>
@@ -1746,14 +1963,19 @@
       </div>
     </nav>
 
+    <!-- Mobile menu backdrop -->
+    <div class="nav__backdrop" id="navBackdrop"></div>
+
     <main>
       <!-- HERO -->
       <section id="hero" class="hero" aria-labelledby="hero-headline">
-        <div class="hero__eyebrow">✦ social music bot</div>
-        <h1 class="hero__headline" id="hero-headline">
+        <div class="hero__eyebrow" data-animate style="--d: 80ms">
+          ✦ social music bot
+        </div>
+        <h1 class="hero__headline" id="hero-headline" data-animate style="--d: 160ms">
           your music,<br /><span class="gradient-text">shared.</span>
         </h1>
-        <p class="hero__sub">
+        <p class="hero__sub" data-animate style="--d: 260ms">
           scrobbler brings last.fm to discord, track what you're listening to,
           compare taste with friends, and discover who knows your favourite
           artists best.
@@ -1763,6 +1985,8 @@
           href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
           target="_blank"
           rel="noopener noreferrer"
+          data-animate
+          style="--d: 360ms"
         >
           Add to Discord
         </a>
@@ -1770,14 +1994,14 @@
 
       <!-- COMMANDS SHOWCASE -->
       <section id="commands" class="commands" aria-labelledby="commands-title">
-        <div class="commands__header container">
+        <div class="commands__header container" data-animate>
           <span class="section-label">Commands</span>
           <h2 id="commands-title">See it in action</h2>
           <p>Five of the most-loved commands, right here.</p>
         </div>
 
         <!-- /np -->
-        <div class="command-row">
+        <div class="command-row" data-animate>
           <div class="cmd-desc">
             <span class="cmd-desc__tag">/np</span>
             <h3>now playing</h3>
@@ -1840,7 +2064,7 @@
         </div>
 
         <!-- /chart artists -->
-        <div class="command-row reverse">
+        <div class="command-row reverse" data-animate>
           <div class="cmd-desc">
             <span class="cmd-desc__tag">/chart artists</span>
             <h3>artist chart</h3>
@@ -2005,7 +2229,7 @@
         </div>
 
         <!-- /taste user -->
-        <div class="command-row">
+        <div class="command-row" data-animate>
           <div class="cmd-desc">
             <span class="cmd-desc__tag">/taste user</span>
             <h3>taste profile</h3>
@@ -2157,7 +2381,7 @@
         </div>
 
         <!-- /wk artist -->
-        <div class="command-row reverse">
+        <div class="command-row reverse" data-animate>
           <div class="cmd-desc">
             <span class="cmd-desc__tag">/wk artist</span>
             <h3>who knows</h3>
@@ -2243,7 +2467,7 @@
         </div>
 
         <!-- /wrapped -->
-        <div class="command-row">
+        <div class="command-row" data-animate>
           <div class="cmd-desc">
             <span class="cmd-desc__tag">/wrapped</span>
             <h3>wrapped</h3>
@@ -2325,12 +2549,12 @@
 
       <!-- FULL COMMAND REFERENCE -->
       <section id="cmdref" class="cmdref" aria-labelledby="cmdref-title">
-        <div class="cmdref__header">
+        <div class="cmdref__header" data-animate>
           <span class="section-label">Reference</span>
           <h2 id="cmdref-title">Full command list</h2>
           <p>Click any command to see what it does.</p>
         </div>
-        <div class="cmdref__groups">
+        <div class="cmdref__groups" data-animate style="--d: 120ms">
           <div>
             <div class="cmdref__group-name">Account</div>
             <div class="cmdref__pills">
@@ -2587,15 +2811,15 @@
       <!-- STATS BAR -->
       <section id="stats" class="statsbar" aria-label="Key stats">
         <div class="statsbar__inner">
-          <div class="stat-pill">
+          <div class="stat-pill" data-animate>
             <div class="stat-pill__val">20+</div>
             <div class="stat-pill__label">Slash Commands</div>
           </div>
-          <div class="stat-pill">
+          <div class="stat-pill" data-animate style="--d: 100ms">
             <div class="stat-pill__val">Last.fm</div>
             <div class="stat-pill__label">Powered</div>
           </div>
-          <div class="stat-pill">
+          <div class="stat-pill" data-animate style="--d: 200ms">
             <div class="stat-pill__val">Free</div>
             <div class="stat-pill__label">Forever</div>
           </div>
@@ -2608,12 +2832,12 @@
         class="testimonials"
         aria-labelledby="testimonials-title"
       >
-        <div class="testimonials__header">
+        <div class="testimonials__header" data-animate>
           <span class="section-label">Community</span>
           <h2 id="testimonials-title">Loved by music nerds</h2>
         </div>
         <div class="testimonials__grid">
-          <div class="testimonial">
+          <div class="testimonial" data-animate>
             <p class="testimonial__quote">
               The /whoknows command alone is worth it. My server has been in a
               month-long war over who's the real fan of our favourite band.
@@ -2626,7 +2850,7 @@
               </div>
             </div>
           </div>
-          <div class="testimonial">
+          <div class="testimonial" data-animate style="--d: 120ms">
             <p class="testimonial__quote">
               I've tried every music bot out there. scrobbler is the only one
               that actually feels like it was made for people who care about
@@ -2640,7 +2864,7 @@
               </div>
             </div>
           </div>
-          <div class="testimonial">
+          <div class="testimonial" data-animate style="--d: 240ms">
             <p class="testimonial__quote">
               The personality command is scarily accurate. It called me a
               "late-night overthinker" and I've never felt so seen by a bot.
@@ -2658,12 +2882,12 @@
 
       <!-- FAQ -->
       <section id="faq" class="faq" aria-labelledby="faq-title">
-        <div class="faq__header">
+        <div class="faq__header" data-animate>
           <span class="section-label">FAQ</span>
           <h2 id="faq-title">Common questions</h2>
         </div>
         <div class="faq__list" role="list">
-          <div class="faq-item" role="listitem">
+          <div class="faq-item" role="listitem" data-animate>
             <button class="faq-item__q" aria-expanded="false">
               What is scrobbler?
               <span class="faq-item__icon" aria-hidden="true">+</span>
@@ -2676,7 +2900,7 @@
             </div>
           </div>
 
-          <div class="faq-item" role="listitem">
+          <div class="faq-item" role="listitem" data-animate style="--d: 80ms">
             <button class="faq-item__q" aria-expanded="false">
               How do I set it up?
               <span class="faq-item__icon" aria-hidden="true">+</span>
@@ -2688,7 +2912,7 @@
             </div>
           </div>
 
-          <div class="faq-item" role="listitem">
+          <div class="faq-item" role="listitem" data-animate style="--d: 160ms">
             <button class="faq-item__q" aria-expanded="false">
               Is it free?
               <span class="faq-item__icon" aria-hidden="true">+</span>
@@ -2699,7 +2923,7 @@
             </div>
           </div>
 
-          <div class="faq-item" role="listitem">
+          <div class="faq-item" role="listitem" data-animate style="--d: 240ms">
             <button class="faq-item__q" aria-expanded="false">
               What is Last.fm?
               <span class="faq-item__icon" aria-hidden="true">+</span>
@@ -2712,7 +2936,7 @@
             </div>
           </div>
 
-          <div class="faq-item" role="listitem">
+          <div class="faq-item" role="listitem" data-animate style="--d: 320ms">
             <button class="faq-item__q" aria-expanded="false">
               Can I use it in multiple servers?
               <span class="faq-item__icon" aria-hidden="true">+</span>
@@ -2725,7 +2949,7 @@
             </div>
           </div>
 
-          <div class="faq-item" role="listitem">
+          <div class="faq-item" role="listitem" data-animate style="--d: 400ms">
             <button class="faq-item__q" aria-expanded="false">
               How do I get support?
               <span class="faq-item__icon" aria-hidden="true">+</span>
@@ -2754,7 +2978,7 @@
 
     <!-- FOOTER -->
     <footer role="contentinfo">
-      <div class="footer__inner">
+      <div class="footer__inner" data-animate>
         <div class="footer__brand">
           <h2>scrobbler</h2>
           <p>
@@ -2882,7 +3106,7 @@
         </div>
       </div>
 
-      <div class="footer__bottom">
+      <div class="footer__bottom" data-animate style="--d: 140ms">
         <div>© 2025 scrobbler. All rights reserved.</div>
         <div class="footer__made">
           made with
@@ -2893,7 +3117,63 @@
     </footer>
 
     <script>
+      // Page load class for smooth fade-in
+      window.addEventListener("DOMContentLoaded", function () {
+        document.body.classList.add("is-loaded");
+      });
+
+      // Scroll reveal
+      (function () {
+        var reduced =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          document.querySelectorAll("[data-animate]").forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+
+        var els = Array.prototype.slice.call(
+          document.querySelectorAll("[data-animate]"),
+        );
+        if (!("IntersectionObserver" in window)) {
+          els.forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { root: null, threshold: 0.16, rootMargin: "0px 0px -10% 0px" },
+        );
+
+        els.forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+
       // Smooth scroll without URL hash
+      function closeMenu() {
+        var navLinks = document.getElementById("navLinks");
+        var navHamburger = document.getElementById("navHamburger");
+        var navBackdrop = document.getElementById("navBackdrop");
+        if (navLinks && navHamburger && navBackdrop) {
+          navLinks.classList.remove("active");
+          navHamburger.classList.remove("active");
+          navBackdrop.classList.remove("active");
+          navHamburger.setAttribute("aria-expanded", "false");
+        }
+      }
+
       document.querySelectorAll("a[data-scroll]").forEach(function (link) {
         link.addEventListener("click", function (e) {
           e.preventDefault();
@@ -2927,11 +3207,13 @@
       // Hamburger menu toggle
       var navHamburger = document.getElementById("navHamburger");
       var navLinks = document.getElementById("navLinks");
+      var navBackdrop = document.getElementById("navBackdrop");
 
       navHamburger.addEventListener("click", function () {
         var isActive = navLinks.classList.contains("active");
         navLinks.classList.toggle("active");
         navHamburger.classList.toggle("active");
+        navBackdrop.classList.toggle("active");
         navHamburger.setAttribute("aria-expanded", !isActive);
       });
 
@@ -2940,8 +3222,17 @@
         link.addEventListener("click", function () {
           navLinks.classList.remove("active");
           navHamburger.classList.remove("active");
+          navBackdrop.classList.remove("active");
           navHamburger.setAttribute("aria-expanded", "false");
         });
+      });
+
+      // Close menu when clicking backdrop
+      navBackdrop.addEventListener("click", function () {
+        navLinks.classList.remove("active");
+        navHamburger.classList.remove("active");
+        navBackdrop.classList.remove("active");
+        navHamburger.setAttribute("aria-expanded", "false");
       });
 
       // Close menu when clicking outside
@@ -2949,6 +3240,7 @@
         if (!navLinks.contains(e.target) && !navHamburger.contains(e.target)) {
           navLinks.classList.remove("active");
           navHamburger.classList.remove("active");
+          navBackdrop.classList.remove("active");
           navHamburger.setAttribute("aria-expanded", "false");
         }
       });

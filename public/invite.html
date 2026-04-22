@@ -82,6 +82,108 @@
         text-decoration: none;
       }
 
+      /* ── Motion system (page load) ── */
+      body {
+        opacity: 0;
+        transition: opacity 0.55s ease;
+      }
+      body.is-loaded {
+        opacity: 1;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 18px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes floaty {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        50% {
+          transform: translate3d(0, -10px, 0);
+        }
+        100% {
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      [data-animate] {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+        will-change: opacity, transform;
+      }
+      [data-animate].is-visible {
+        animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation-delay: var(--d, 0ms);
+      }
+      .bg-orbs {
+        position: fixed;
+        inset: -20vh -20vw;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      body > :not(.bg-orbs) {
+        position: relative;
+        z-index: 1;
+      }
+      .bg-orbs span {
+        position: absolute;
+        width: min(520px, 42vw);
+        height: min(520px, 42vw);
+        border-radius: 999px;
+        filter: blur(40px);
+        opacity: 0.22;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(148, 104, 216, 0.95),
+          rgba(96, 64, 176, 0) 60%
+        );
+        animation: floaty 7.5s ease-in-out infinite;
+        mix-blend-mode: multiply;
+      }
+      .bg-orbs span:nth-child(1) {
+        top: 6vh;
+        left: 6vw;
+        animation-duration: 10.5s;
+      }
+      .bg-orbs span:nth-child(2) {
+        top: 28vh;
+        right: 10vw;
+        width: min(640px, 54vw);
+        height: min(640px, 54vw);
+        opacity: 0.18;
+        animation-duration: 12.5s;
+        animation-delay: -2s;
+      }
+      .bg-orbs span:nth-child(3) {
+        bottom: 6vh;
+        left: 18vw;
+        width: min(580px, 48vw);
+        height: min(580px, 48vw);
+        opacity: 0.16;
+        animation-duration: 13.5s;
+        animation-delay: -4s;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        body {
+          transition: none;
+          opacity: 1;
+        }
+        [data-animate] {
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+        }
+        .bg-orbs span {
+          animation: none !important;
+        }
+      }
+
       .invite-page {
         text-align: center;
         padding: 24px;
@@ -170,12 +272,23 @@
     </script>
   </head>
   <body>
+    <div class="bg-orbs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
     <div class="invite-page">
-      <span class="invite-page__wordmark">scrobbler</span>
-      <p class="invite-page__sub">adding scrobbler to your server</p>
-      <div class="spinner" aria-hidden="true"></div>
-      <p class="invite-page__status">redirecting you to discord...</p>
-      <p class="invite-page__fallback">
+      <span class="invite-page__wordmark" data-animate style="--d: 80ms"
+        >scrobbler</span
+      >
+      <p class="invite-page__sub" data-animate style="--d: 160ms">
+        adding scrobbler to your server
+      </p>
+      <div class="spinner" aria-hidden="true" data-animate style="--d: 240ms"></div>
+      <p class="invite-page__status" data-animate style="--d: 320ms">
+        redirecting you to discord...
+      </p>
+      <p class="invite-page__fallback" data-animate style="--d: 400ms">
         not redirected?
         <a
           href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
@@ -186,6 +299,13 @@
     </div>
 
     <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        document.body.classList.add("is-loaded");
+        document.querySelectorAll("[data-animate]").forEach(function (el) {
+          el.classList.add("is-visible");
+        });
+      });
+
       var INVITE_URL =
         "https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands";
       setTimeout(function () {

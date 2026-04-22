@@ -94,6 +94,170 @@
         color: inherit;
         text-decoration: none;
       }
+
+      /* ── Motion system (scroll reveal + page load) ── */
+      body {
+        opacity: 0;
+        transition: opacity 0.55s ease;
+      }
+      body.is-loaded {
+        opacity: 1;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 18px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes floaty {
+        0% {
+          transform: translate3d(0, 0, 0);
+        }
+        50% {
+          transform: translate3d(0, -10px, 0);
+        }
+        100% {
+          transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes shimmerSweep {
+        0% {
+          transform: translateX(-120%) skewX(-20deg);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        60% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(120%) skewX(-20deg);
+          opacity: 0;
+        }
+      }
+      [data-animate] {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+        will-change: opacity, transform;
+      }
+      [data-animate].is-visible {
+        animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation-delay: var(--d, 0ms);
+      }
+      [data-animate="fade"].is-visible {
+        animation-name: fadeIn;
+        transform: none;
+      }
+      .bg-orbs {
+        position: fixed;
+        inset: -20vh -20vw;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      body > :not(.bg-orbs) {
+        position: relative;
+        z-index: 1;
+      }
+      .bg-orbs span {
+        position: absolute;
+        width: min(520px, 42vw);
+        height: min(520px, 42vw);
+        border-radius: 999px;
+        filter: blur(40px);
+        opacity: 0.22;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(148, 104, 216, 0.95),
+          rgba(96, 64, 176, 0) 60%
+        );
+        animation: floaty 7.5s ease-in-out infinite;
+        mix-blend-mode: multiply;
+      }
+      .bg-orbs span:nth-child(1) {
+        top: 6vh;
+        left: 6vw;
+        animation-duration: 10.5s;
+      }
+      .bg-orbs span:nth-child(2) {
+        top: 28vh;
+        right: 10vw;
+        width: min(640px, 54vw);
+        height: min(640px, 54vw);
+        opacity: 0.18;
+        animation-duration: 12.5s;
+        animation-delay: -2s;
+      }
+      .bg-orbs span:nth-child(3) {
+        bottom: 6vh;
+        left: 18vw;
+        width: min(580px, 48vw);
+        height: min(580px, 48vw);
+        opacity: 0.16;
+        animation-duration: 13.5s;
+        animation-delay: -4s;
+      }
+      .btn,
+      .footer__cta {
+        position: relative;
+        overflow: hidden;
+      }
+      .btn::before,
+      .footer__cta::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -30%;
+        width: 45%;
+        height: 180%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0.55),
+          rgba(255, 255, 255, 0)
+        );
+        transform: translateX(-120%) skewX(-20deg);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .btn:hover::before,
+      .footer__cta:hover::before {
+        animation: shimmerSweep 0.9s ease-out;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        body {
+          transition: none;
+          opacity: 1;
+        }
+        [data-animate] {
+          opacity: 1 !important;
+          transform: none !important;
+          animation: none !important;
+        }
+        .bg-orbs span {
+          animation: none !important;
+        }
+        .btn::before,
+        .footer__cta::before {
+          display: none !important;
+        }
+      }
       main {
         flex: 1;
       }
@@ -565,9 +729,18 @@
     </script>
   </head>
   <body>
+    <div class="bg-orbs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <div class="nav__inner">
-        <a href="index.html" class="nav__wordmark" aria-label="scrobbler home"
+        <a
+          href="index.html"
+          class="nav__wordmark"
+          aria-label="scrobbler home"
+          data-animate="fade"
           >scrobbler</a
         >
         <div class="nav__right">
@@ -575,6 +748,8 @@
             class="theme-toggle"
             id="themeToggle"
             aria-label="Toggle dark mode"
+            data-animate="fade"
+            style="--d: 80ms"
           >
             <svg
               class="icon-moon"
@@ -611,7 +786,13 @@
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
             </svg>
           </button>
-          <a href="index.html" class="nav__back">← back to home</a>
+          <a
+            href="index.html"
+            class="nav__back"
+            data-animate="fade"
+            style="--d: 160ms"
+            >← back to home</a
+          >
         </div>
       </div>
     </nav>
@@ -1126,6 +1307,66 @@
     </footer>
 
     <script>
+      // Page load class for smooth fade-in
+      window.addEventListener("DOMContentLoaded", function () {
+        document.body.classList.add("is-loaded");
+      });
+
+      // Auto-tag key sections for reveal (keeps HTML tidy)
+      (function () {
+        var blocks = [".page__header", ".release", ".footer__inner"];
+        blocks.forEach(function (sel) {
+          document.querySelectorAll(sel).forEach(function (el, idx) {
+            if (!el.hasAttribute("data-animate")) el.setAttribute("data-animate", "");
+            if (!el.style.getPropertyValue("--d")) {
+              el.style.setProperty("--d", Math.min(idx * 90, 360) + "ms");
+            }
+          });
+        });
+        document.querySelectorAll(".group__item").forEach(function (el, idx) {
+          if (!el.hasAttribute("data-animate")) el.setAttribute("data-animate", "");
+          if (!el.style.getPropertyValue("--d")) {
+            el.style.setProperty("--d", (120 + Math.min(idx, 8) * 30) + "ms");
+          }
+        });
+      })();
+
+      // Scroll reveal
+      (function () {
+        var reduced =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          document.querySelectorAll("[data-animate]").forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+        var els = Array.prototype.slice.call(
+          document.querySelectorAll("[data-animate]"),
+        );
+        if (!("IntersectionObserver" in window)) {
+          els.forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { root: null, threshold: 0.16, rootMargin: "0px 0px -10% 0px" },
+        );
+        els.forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+
       var themeToggle = document.getElementById("themeToggle");
       themeToggle.addEventListener("click", function () {
         var html = document.documentElement;
