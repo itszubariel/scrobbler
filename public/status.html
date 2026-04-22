@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>status | scrobbler</title>
-    <link rel="icon" type="image/png" href="/assets/images/scrobbler_logo.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/assets/images/scrobbler_logo.png"
+    />
     <meta
       name="description"
       content="Current operational status of scrobbler, the Discord social music bot."
@@ -24,6 +28,10 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
     <style>
       :root {
@@ -572,7 +580,7 @@
       .footer__brand h2 {
         font-family: var(--font-display);
         font-style: italic;
-        font-size: 36px;
+        font-size: clamp(48px, 6vw, 64px);
         font-weight: 400;
         line-height: 1.1;
         margin-bottom: 12px;
@@ -676,7 +684,7 @@
         gap: 4px;
       }
       .footer__made .heart {
-        color: #ff6b6b;
+        color: #ff0000;
       }
       @media (max-width: 900px) {
         .footer__inner {
@@ -698,7 +706,7 @@
           text-align: center;
         }
         .page__title {
-          font-size: clamp(48px, 12vw, 72px);
+          font-size: clamp(72px, 12vw, 92px);
         }
       }
 
@@ -956,6 +964,7 @@
             <a href="status.html">status</a>
             <a href="legal.html">legal</a>
             <a href="about.html">about</a>
+            <a href="changelog.html">changelog</a>
             <a
               href="https://www.last.fm"
               target="_blank"
@@ -991,16 +1000,20 @@
       <div class="footer__bottom">
         <div>© 2025 scrobbler. all rights reserved.</div>
         <div class="footer__made">
-          made with <span class="heart">♥</span> for music lovers
+          made with
+          <span class="heart"><i class="fa-solid fa-heart"></i></span> for music
+          lovers
         </div>
       </div>
     </footer>
     <script>
       // ── API config ──
-      var IS_PROD = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      var IS_PROD =
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1";
       var API_URL = IS_PROD
-        ? 'https://api.scrobbler.is-a.dev/api/status'
-        : 'http://localhost:3001/api/status';
+        ? "https://api.scrobbler.is-a.dev/api/status"
+        : "http://localhost:3001/api/status";
 
       // ── Theme toggle ──
       document
@@ -1019,10 +1032,22 @@
 
       // ── Service config (fixed order + icons) ──
       var SERVICE_CONFIG = {
-        website: { label: 'website', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' },
-        bot:     { label: 'bot',     icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>' },
-        lastfm:  { label: 'last.fm', icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>' },
-        database:{ label: 'database',icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>' },
+        website: {
+          label: "website",
+          icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        },
+        bot: {
+          label: "bot",
+          icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>',
+        },
+        lastfm: {
+          label: "last.fm",
+          icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        },
+        database: {
+          label: "database",
+          icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+        },
       };
       var SERVICE_ORDER = ["website", "bot", "lastfm", "database"];
 
@@ -1356,7 +1381,7 @@
       async function fetchStatus() {
         try {
           var res = await fetch(API_URL);
-          if (!res.ok) throw new Error('non-200');
+          if (!res.ok) throw new Error("non-200");
           var data = await res.json();
           lastCheckedAt = data.checkedAt;
           renderBanner(data.overall, data.checkedAt);

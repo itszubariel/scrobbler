@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>about | scrobbler</title>
-    <link rel="icon" type="image/png" href="/assets/images/scrobbler_logo.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/assets/images/scrobbler_logo.png"
+    />
     <meta
       name="description"
       content="Meet the team behind scrobbler, the Discord social music bot."
@@ -24,6 +28,10 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     />
     <style>
       :root {
@@ -286,7 +294,7 @@
           grid-template-columns: 1fr;
         }
         .page__title {
-          font-size: clamp(48px, 12vw, 72px);
+          font-size: clamp(72px, 12vw, 92px);
         }
       }
 
@@ -307,7 +315,7 @@
       .footer__brand h2 {
         font-family: var(--font-display);
         font-style: italic;
-        font-size: 36px;
+        font-size: clamp(48px, 6vw, 64px);
         font-weight: 400;
         line-height: 1.1;
         margin-bottom: 12px;
@@ -411,7 +419,7 @@
         gap: 4px;
       }
       .footer__made .heart {
-        color: #ff6b6b;
+        color: #ff0000;
       }
       @media (max-width: 900px) {
         .footer__inner {
@@ -672,6 +680,7 @@
             <a href="status.html">status</a>
             <a href="legal.html">legal</a>
             <a href="about.html">about</a>
+            <a href="changelog.html">changelog</a>
             <a
               href="https://www.last.fm"
               target="_blank"
@@ -709,7 +718,9 @@
       <div class="footer__bottom">
         <div>© 2025 scrobbler. All rights reserved.</div>
         <div class="footer__made">
-          Made with <span class="heart">♥</span> for music lovers
+          made with
+          <span class="heart"><i class="fa-solid fa-heart"></i></span> for music
+          lovers
         </div>
       </div>
     </footer>

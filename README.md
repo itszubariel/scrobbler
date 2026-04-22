@@ -2,7 +2,7 @@
 
 A Discord bot that brings your Last.fm listening history to life. Track what you're playing, compare taste with friends, generate charts, and explore your music identity, all inside Discord.
 
-![scrobbler banner](assests/images/scrobbler_banner.png)
+![scrobbler banner](assets/images/scrobbler_banner.png)
 
 ---
 
@@ -50,6 +50,8 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 ## Add to your server
 
 > [Invite scrobbler now](https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands)
+
+🌐 **Website:** [scrobbler.netlify.app](https://scrobbler.netlify.app)
 
 ---
 
