@@ -65,6 +65,8 @@ import { streakCommand } from "./commands/streak.js";
 commands.set(streakCommand.data.name, streakCommand);
 import { wrappedCommand } from "./commands/wrapped.js";
 commands.set(wrappedCommand.data.name, wrappedCommand);
+import { devCommand } from "./commands/developer/dev.js";
+commands.set(devCommand.data.name, devCommand);
 
 export const commandIds = new Map<string, string>();
 
@@ -78,43 +80,66 @@ async function deployCommands() {
   }
 
   const rest = new REST({ version: "10" }).setToken(token);
-  const commandData = commands.map((cmd) => cmd.data.toJSON());
   const isDev = process.env.NODE_ENV === "development";
 
+  // Separate dev commands from regular commands
+  const devCommandData = [devCommand.data.toJSON()];
+  const globalCommandData = commands
+    .filter((cmd) => cmd !== devCommand)
+    .map((cmd) => cmd.data.toJSON());
+
   if (isDev && guildId) {
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-      body: commandData,
-    });
-    console.log(`✅Registered ${commandData.length} guild command(s) to dev server`);
+    // In dev: register everything to the guild
+    const allCommandData = commands.map((cmd) => cmd.data.toJSON());
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: allCommandData });
+    console.log(`✅ Registered ${allCommandData.length} guild command(s) to dev server`);
 
     const registered = await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[];
     for (const cmd of registered) commandIds.set(cmd.name, cmd.id);
   } else {
-    await rest.put(Routes.applicationCommands(clientId), {
-      body: commandData,
-    });
-    console.log(`✅Registered ${commandData.length} global command(s)`);
+    // In production: register global commands (excluding dev)
+    await rest.put(Routes.applicationCommands(clientId), { body: globalCommandData });
+    console.log(`✅ Registered ${globalCommandData.length} global command(s)`);
 
-    const registered = await rest.get(Routes.applicationCommands(clientId)) as any[];
-    for (const cmd of registered) commandIds.set(cmd.name, cmd.id);
+    const registeredGlobal = await rest.get(Routes.applicationCommands(clientId)) as any[];
+    for (const cmd of registeredGlobal) commandIds.set(cmd.name, cmd.id);
+
+    // Always register dev command as guild-only (requires DISCORD_DEV_GUILD_ID in prod too)
+    if (guildId) {
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: devCommandData });
+      console.log(`✅ Registered ${devCommandData.length} guild developer command(s) to dev server`);
+
+      const registeredGuild = await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[];
+      for (const cmd of registeredGuild) commandIds.set(cmd.name, cmd.id);
+    }
   }
 }
 
 client.once("ready", async (readyClient) => {
   console.log(`🎵 scrobbler is online as ${readyClient.user.tag}`);
 
-  const getTotalMembers = () =>
-    readyClient.guilds.cache.reduce(
-      (acc, guild) => acc + guild.memberCount,
-      0
-    );
+  let cachedLinkedUsers = 0;
+  let cachedTotalMembers = 0;
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('https://api-scrobbler.netlify.app/stats');
+      if (res.ok) {
+        const data = await res.json() as any;
+        cachedLinkedUsers   = data.linkedUsers   ?? cachedLinkedUsers;
+        cachedTotalMembers  = data.totalMembers  ?? cachedTotalMembers;
+      }
+    } catch { /* keep last known values */ }
+  };
+  await fetchStats();
+  setInterval(fetchStats, 5 * 60 * 1000);
 
   const statuses = [
     { name: '/link to start scrobbling', type: 0 },
     { name: 'through your music history', type: 3 },
     { name: 'your taste in music 👀', type: 3 },
     () => ({ name: `music in ${readyClient.guilds.cache.size} servers`, type: 0 }),
-    () => ({ name: `${getTotalMembers()} music lovers`, type: 0 }),
+    () => ({ name: `${cachedTotalMembers.toLocaleString()} members`, type: 0 }),
+    () => ({ name: `${cachedLinkedUsers.toLocaleString()} music lovers`, type: 0 }),
   ];
 
   let statusIndex = 0;
