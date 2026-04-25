@@ -16,6 +16,7 @@ import type { CheckResult, DailyRecord, StatusResponse } from './healthChecks.js
 // Allowed CORS origins
 const ALLOWED_ORIGINS = [
   'https://scrobbler.netlify.app',
+  'https://scrobbler.anim8.world',
   'http://127.0.0.1:5500',
   'http://localhost:5500', 
 ];
