@@ -50,6 +50,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Mount status router
 app.use('/api/status', createStatusRouter(prisma, client));
 
+// Root route
+app.get('/', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', name: 'scrobbler api', version: '1.1.1' });
+});
+
 // Start server
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
 
