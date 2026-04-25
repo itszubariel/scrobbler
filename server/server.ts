@@ -13,10 +13,9 @@ import {
 } from './healthChecks.js';
 import type { CheckResult, DailyRecord, StatusResponse } from './healthChecks.js';
 
-// Allowed CORS origins
 const ALLOWED_ORIGINS = [
-  'https://scrobbler.netlify.app',
   'https://scrobbler.anim8.world',
+  'https://scrobbler.netlify.app',
   'http://127.0.0.1:5500',
   'http://localhost:5500', 
 ];
@@ -24,14 +23,12 @@ const ALLOWED_ORIGINS = [
 function isAllowedOrigin(origin: string | undefined): boolean {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  // Allow http://localhost:<any port>
   if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true;
   return false;
 }
 
 const app = express();
 
-// CORS middleware — runs on every request
 app.use((req: Request, res: Response, next: NextFunction) => {
   const origin = req.headers.origin;
   if (isAllowedOrigin(origin)) {
@@ -48,15 +45,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Mount status router
 app.use('/api/status', createStatusRouter(prisma, client));
 
-// Root route
 app.get('/', (_req: Request, res: Response) => {
   res.json({ status: 'ok', name: 'scrobbler api', version: '1.1.1' });
 });
 
-// Start server
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
 
 app.listen(PORT, () => {
@@ -64,7 +58,6 @@ app.listen(PORT, () => {
   startScheduler(prisma, client);
 });
 
-// Exported for testing
 export async function runHealthChecks(): Promise<CheckResult[]> {
   return Promise.all([
     checkWebsite(),
