@@ -5,27 +5,32 @@ import { dirname, join } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOGO_PATH = join(__dirname, '../../../assets/images/scrobbler_logo.png');
 
+const PAGE_SIZE = 10;
+
 export interface WkEntry {
   username: string;
   plays: number;
 }
 
 export async function buildWkCanvas(
-  members: WkEntry[],
-  title: string,       // e.g. "Who Knows — Daft Punk"
-  subtitle: string,    // e.g. "artist • server"
-  unit: string,        // e.g. "plays"
-  guildName: string
+  allMembers: WkEntry[],
+  title: string,
+  subtitle: string,
+  unit: string,
+  guildName: string,
+  page: number = 0
 ): Promise<Buffer> {
   const displayName = guildName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  const maxPlays = members[0]?.plays ?? 1;
-  const totalPlays = members.reduce((sum, m) => sum + m.plays, 0).toLocaleString('en-US');
+  const pageMembers = allMembers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(allMembers.length / PAGE_SIZE);
+  const maxPlays = allMembers[0]?.plays ?? 1; // global max for consistent bar scaling
+  const totalPlays = allMembers.reduce((sum, m) => sum + m.plays, 0).toLocaleString('en-US');
 
   const HEADER_H = 120;
   const ROW_H = 72;
   const FOOTER_H = 60;
   const WIDTH = 800;
-  const HEIGHT = Math.max(400, HEADER_H + members.length * ROW_H + FOOTER_H);
+  const HEIGHT = Math.max(400, HEADER_H + pageMembers.length * ROW_H + FOOTER_H);
 
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
@@ -49,7 +54,8 @@ export async function buildWkCanvas(
 
   ctx.fillStyle = '#888888';
   ctx.font = '15px Inter';
-  ctx.fillText(`${subtitle} • ${displayName}`, 30, 76);
+  const pageIndicator = totalPages > 1 ? ` • Page ${page + 1} of ${totalPages}` : '';
+  ctx.fillText(`${subtitle} • ${displayName}${pageIndicator}`, 30, 76);
 
   try {
     const logo = await loadImage(LOGO_PATH);
@@ -64,8 +70,8 @@ export async function buildWkCanvas(
     ctx.restore();
   } catch { /* skip */ }
 
-  members.forEach((member, i) => {
-    const rank = i + 1;
+  pageMembers.forEach((member, i) => {
+    const rank = page * PAGE_SIZE + i + 1;
     const y = HEADER_H + i * ROW_H;
 
     ctx.fillStyle = i % 2 === 0 ? '#111111' : '#0e0e0e';
@@ -128,7 +134,7 @@ export async function buildWkCanvas(
     }
   });
 
-  const footerY = HEADER_H + members.length * ROW_H;
+  const footerY = HEADER_H + pageMembers.length * ROW_H;
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, footerY, WIDTH, FOOTER_H);
 

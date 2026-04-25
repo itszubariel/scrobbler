@@ -1,24 +1,15 @@
 import "dotenv/config";
-import pkg from "discord.js";
+import { MessageFlags, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, MediaGalleryBuilder, MediaGalleryItemBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
-import { AttachmentBuilder } from "discord.js";
-import { cmdMention } from "../../utils.js";
+import { cmdMention, pageStr } from "../../utils.js";
 import { buildLeaderboardCanvas } from "./canvas.js";
+import { uploadToSupabase } from "../../uploadToSupabase.js";
 
-const {
-  MessageFlags,
-  ContainerBuilder,
-  TextDisplayBuilder,
-  SeparatorBuilder,
-  SeparatorSpacingSize,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
-} = pkg;
-
+const PAGE_SIZE = 10;
+const TTL_MS = 10 * 60 * 1000;
 
 const BLOCKED_TAGS = new Set(["seen live", "favorites", "favourite", "favorite", "owned"]);
-
 function isBlockedTag(tag: string, artistNames: Set<string>): boolean {
   const lower = tag.toLowerCase();
   if (BLOCKED_TAGS.has(lower)) return true;
@@ -31,9 +22,7 @@ export async function executeStatsGenres(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
 
   if (!interaction.guildId || !interaction.guild) {
-    const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`${E.reject} This command only works in servers.`)
-    );
+    const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${E.reject} This command only works in servers.`));
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
     return;
   }
@@ -44,21 +33,14 @@ export async function executeStatsGenres(interaction: any): Promise<void> {
   });
 
   if (!server) {
-    const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`${E.reject} This server isn't set up yet.`)
-    );
+    const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${E.reject} This server isn't set up yet.`));
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
     return;
   }
 
   const linkedMembers = server.members.filter(m => m.user.lastfmUsername);
-
-  if (linkedMembers.length < 2) {
-    const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use ${cmdMention('link')} to get started.`
-      )
-    );
+  if (linkedMembers.length === 0) {
+    const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${E.reject} No members have linked their Last.fm yet. Use ${cmdMention('link')} to get started.`));
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
     return;
   }
@@ -70,80 +52,71 @@ export async function executeStatsGenres(interaction: any): Promise<void> {
     )
   ) as any[];
 
-  // For each member, fetch artist tags and count unique genres
   const memberGenreCounts = await Promise.all(
     linkedMembers.map(async (m, memberIdx) => {
       const artists: any[] = memberArtistResults[memberIdx]?.topartists?.artist ?? [];
       const artistNames = new Set(artists.map(a => a.name.toLowerCase()));
-
       const artistInfos = await Promise.all(
         artists.slice(0, 30).map(a =>
           fetch(`https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(a.name)}&api_key=${apiKey}&format=json`)
             .then(r => r.json()).catch(() => null)
         )
       ) as any[];
-
       const uniqueGenres = new Set<string>();
       for (const info of artistInfos) {
         const tags: any[] = info?.artist?.tags?.tag ?? [];
         tags.slice(0, 3).forEach((tag: any) => {
           const name = (tag.name as string).toLowerCase();
-          if (!isBlockedTag(name, artistNames)) {
-            uniqueGenres.add(name);
-          }
+          if (!isBlockedTag(name, artistNames)) uniqueGenres.add(name);
         });
       }
-
-      return {
-        username: m.user.lastfmUsername!,
-        count: uniqueGenres.size,
-      };
+      return { username: m.user.lastfmUsername!, count: uniqueGenres.size };
     })
   );
 
-  const members = memberGenreCounts.sort((a, b) => b.count - a.count);
-
-  const totalGenres = members.reduce((sum, m) => sum + m.count, 0).toLocaleString('en-US');
+  const allMembers = memberGenreCounts.sort((a, b) => b.count - a.count).map(m => ({ ...m, displayCount: m.count.toLocaleString('en-US') }));
+  const totalGenres = allMembers.reduce((s, m) => s + m.count, 0).toLocaleString('en-US');
 
   const callerDb = await prisma.user.findUnique({ where: { discordId: interaction.user.id } });
   const callerLfm = callerDb?.lastfmUsername;
-  const callerRank = callerLfm ? members.findIndex(m => m.username === callerLfm) + 1 : 0;
-  const callerEntry = callerLfm ? members.find(m => m.username === callerLfm) : null;
-  const footerParts = [`${members.length} members • Unique genres from top 50 artists`];
-  if (callerRank > 10 && callerEntry) {
-    footerParts.push(`You are ranked **#${callerRank}** with **${callerEntry.count}** genres`);
-  }
+  const callerRank = callerLfm ? allMembers.findIndex(m => m.username === callerLfm) + 1 : 0;
+  const callerEntry = callerLfm ? allMembers.find(m => m.username === callerLfm) : null;
 
-  const imageBuffer = await buildLeaderboardCanvas(
-    members.slice(0, 10).map(m => ({ ...m, displayCount: m.count.toLocaleString('en-US') })),
-    interaction.guild.name,
-    "genres",
-    `Total unique genres: ${totalGenres}`
+  const totalPages = Math.ceil(allMembers.length / PAGE_SIZE);
+  const memberCount = allMembers.length;
+
+  const buffers = await Promise.all(
+    Array.from({ length: totalPages }, (_, i) => buildLeaderboardCanvas(allMembers, interaction.guild.name, 'genres', `Total unique genres: ${totalGenres}`, i))
   );
-  const attachment = new AttachmentBuilder(imageBuffer, { name: 'stats_genres.png' });
+  const urls = await Promise.all(
+    buffers.map((buf, i) => uploadToSupabase(buf, 'stats-cache', `genres_${interaction.guildId}_${i}.png`))
+  );
+
+  await (prisma as any).statsGenresCache.upsert({
+    where: { guildId: interaction.guildId },
+    create: { guildId: interaction.guildId, urls, totalPages, memberCount, expiresAt: new Date(Date.now() + TTL_MS) },
+    update: { urls, totalPages, memberCount, expiresAt: new Date(Date.now() + TTL_MS) },
+  });
+
+  const footerParts = [`${memberCount} members • Unique genres from top 50 artists`];
+  if (callerRank > PAGE_SIZE && callerEntry) footerParts.push(`You are ranked **#${callerRank}** with **${callerEntry.count}** genres`);
 
   const container = new ContainerBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${E.listening} Server Genre Leaderboard — All time`)
-    )
-    .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
-    )
-    .addMediaGalleryComponents(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL('attachment://stats_genres.png')
-      )
-    )
-    .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
-    )
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`-# ${footerParts.join(' • ')}`)
-    );
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${E.listening} Server Genre Leaderboard — All time`))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+    .addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(urls[0]!)))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${pageStr(0, totalPages)} • ${footerParts.join(' • ')}`))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small));
 
-  await interaction.editReply({
-    files: [attachment],
-    components: [container],
-    flags: MessageFlags.IsComponentsV2,
-  });
+  if (totalPages > 1) {
+    const authorId = interaction.user.id;
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId(`stats_genres_prev_0_${authorId}`).setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' }).setStyle(ButtonStyle.Secondary).setDisabled(true),
+      new ButtonBuilder().setCustomId(`stats_genres_next_0_${authorId}`).setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' }).setStyle(ButtonStyle.Secondary).setDisabled(false),
+    );
+    container.addActionRowComponents(row as any);
+  }
+
+  await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
 }

@@ -2,6 +2,9 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
+import { pageStr } from "../utils.js";
+
+const RECENT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 const {
   SlashCommandBuilder,
@@ -80,7 +83,7 @@ export function buildRecentContainer(
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ${rawTracks.length} scrobbles • ${uniqueArtists} unique artists • Page ${page + 1} of ${totalPages}`
+        `-# ${rawTracks.length} scrobbles • ${uniqueArtists} unique artists • ${pageStr(page, totalPages)}`
       )
     );
 
@@ -147,6 +150,20 @@ export const recentCommand: Command = {
       await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       return;
     }
+
+    // Cache the tracks for pagination
+    await (prisma as any).recentCache.upsert({
+      where: { discordId: targetDiscordUser.id },
+      create: {
+        discordId: targetDiscordUser.id,
+        tracks: rawTracks,
+        expiresAt: new Date(Date.now() + RECENT_CACHE_TTL_MS),
+      },
+      update: {
+        tracks: rawTracks,
+        expiresAt: new Date(Date.now() + RECENT_CACHE_TTL_MS),
+      },
+    });
 
     const container = buildRecentContainer(rawTracks, lfmUsername, targetDiscordUser.id, 0);
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });

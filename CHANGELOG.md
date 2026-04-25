@@ -4,6 +4,20 @@ All notable changes to scrobbler are documented here.
 
 ---
 
+## [1.1.1] — 2026-04-25
+
+### Fixes & Improvements
+- `/stats`, `/wk`, `/taste`, and `/recent` now cache all pages upfront on first run — page navigation is instant with no API calls on button clicks
+- Canvas images are pre-rendered and stored in Supabase Storage (`stats-cache`, `wk-cache`, `taste-cache` buckets) — same approach as `/wrapped`
+- `/stats artists`, `/stats albums`, `/stats genres` now show all linked members with full pagination (was incorrectly capped at top 10)
+- `/stats` and `/wk` commands no longer require a minimum of 2 linked members — works with any number
+- `/taste server` footer now shows member count (e.g. `Page 1 of 5 • 12 members • All time`)
+- Page footer shows `Page 1` instead of `Page 1 of 1` when there's only a single page
+- All command references in bot messages now use proper Discord command mentions instead of plain text (e.g. `/link`)
+- Added `RecentCache`, `TasteUserCache`, `TasteServerCache`, `StatsScrobblesCache`, `StatsArtistsCache`, `StatsAlbumsCache`, `StatsGenresCache`, and `WkCache` Prisma models
+
+---
+
 ## [1.1.0] — 2026-04-18
 
 ### New Commands

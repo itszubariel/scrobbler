@@ -2,6 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { createCanvas } from "@napi-rs/canvas";
 import { E } from "../../emojis.js";
+import { pageStr } from "../../utils.js";
 
 const {
   ContainerBuilder,
@@ -195,14 +196,16 @@ export async function buildTasteCanvas(
 
 export function buildTasteContainer(
   allGenres: { tag: string; pct: number }[],
-  attachment: any,
+  _attachment: any, // kept for signature compat, unused
   lfmUsername: string,
   periodLabel: string,
   page: number,
   targetDiscordId: string,
-  period: string
+  period: string,
+  imageUrl?: string
 ) {
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
+  const url = imageUrl ?? 'attachment://taste.png';
 
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
@@ -213,7 +216,7 @@ export function buildTasteContainer(
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL('attachment://taste.png')
+        new MediaGalleryItemBuilder().setURL(url)
       )
     )
     .addSeparatorComponents(
@@ -221,7 +224,7 @@ export function buildTasteContainer(
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# Page ${page + 1} of ${totalPages} • ${allGenres.length} genres`
+        `-# ${pageStr(page, totalPages)} • ${allGenres.length} genres`
       )
     )
     .addSeparatorComponents(
@@ -249,15 +252,18 @@ export function buildTasteContainer(
 
 export function buildTasteServerContainer(
   allGenres: { tag: string; pct: number }[],
-  attachment: any,
+  _attachment: any,
   guildName: string,
   periodLabel: string,
   page: number,
   guildId: string,
   period: string,
-  authorId: string
+  imageUrl?: string,
+  memberCount?: number
 ) {
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
+  const url = imageUrl ?? 'attachment://taste.png';
+  const memberStr = memberCount != null ? ` • ${memberCount} members` : '';
 
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
@@ -268,7 +274,7 @@ export function buildTasteServerContainer(
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL('attachment://taste.png')
+        new MediaGalleryItemBuilder().setURL(url)
       )
     )
     .addSeparatorComponents(
@@ -276,7 +282,7 @@ export function buildTasteServerContainer(
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# Page ${page + 1} of ${totalPages} • ${allGenres.length} genres`
+        `-# ${pageStr(page, totalPages)}${memberStr} • ${allGenres.length} genres`
       )
     )
     .addSeparatorComponents(
@@ -286,12 +292,12 @@ export function buildTasteServerContainer(
   if (totalPages > 1) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`taste_server_prev_${page}_${guildId}_${period}_${authorId}`)
+        .setCustomId(`taste_server_prev_${page}_${guildId}_${period}`)
         .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page === 0),
       new ButtonBuilder()
-        .setCustomId(`taste_server_next_${page}_${guildId}_${period}_${authorId}`)
+        .setCustomId(`taste_server_next_${page}_${guildId}_${period}`)
         .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page >= totalPages - 1),

@@ -5,6 +5,8 @@ import { dirname, join } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const LOGO_PATH = join(__dirname, '../../assets/images/scrobbler_logo.png');
 
+const PAGE_SIZE = 10;
+
 export interface LeaderboardEntry {
   username: string;
   count: number;
@@ -12,19 +14,22 @@ export interface LeaderboardEntry {
 }
 
 export async function buildLeaderboardCanvas(
-  members: LeaderboardEntry[],
+  allMembers: LeaderboardEntry[],
   guildName: string,
   unit: string,
-  footerText: string
+  footerText: string,
+  page: number = 0
 ): Promise<Buffer> {
   const displayName = guildName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  const maxCount = members[0]?.count ?? 1;
+  const pageMembers = allMembers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(allMembers.length / PAGE_SIZE);
+  const maxCount = allMembers[0]?.count ?? 1; // global max for consistent bar scaling
 
   const HEADER_H = 120;
   const ROW_H = 72;
   const FOOTER_H = 60;
   const WIDTH = 800;
-  const HEIGHT = Math.max(400, HEADER_H + members.length * ROW_H + FOOTER_H);
+  const HEIGHT = Math.max(400, HEADER_H + pageMembers.length * ROW_H + FOOTER_H);
 
   const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext('2d');
@@ -48,7 +53,8 @@ export async function buildLeaderboardCanvas(
 
   ctx.fillStyle = '#888888';
   ctx.font = '16px Inter';
-  ctx.fillText(`${members.length} members linked`, 30, 82);
+  const pageIndicator = totalPages > 1 ? ` • Page ${page + 1} of ${totalPages}` : '';
+  ctx.fillText(`${allMembers.length} members linked${pageIndicator}`, 30, 82);
 
   try {
     const logo = await loadImage(LOGO_PATH);
@@ -63,8 +69,8 @@ export async function buildLeaderboardCanvas(
     ctx.restore();
   } catch { /* skip */ }
 
-  members.forEach((member, i) => {
-    const rank = i + 1;
+  pageMembers.forEach((member, i) => {
+    const rank = page * PAGE_SIZE + i + 1;
     const y = HEADER_H + i * ROW_H;
 
     ctx.fillStyle = i % 2 === 0 ? '#111111' : '#0e0e0e';
@@ -126,7 +132,7 @@ export async function buildLeaderboardCanvas(
     }
   });
 
-  const footerY = HEADER_H + members.length * ROW_H;
+  const footerY = HEADER_H + pageMembers.length * ROW_H;
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, footerY, WIDTH, FOOTER_H);
 

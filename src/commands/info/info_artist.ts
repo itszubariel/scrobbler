@@ -3,6 +3,7 @@ import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { fetchNowPlaying } from "../../nowplaying.js";
+import { cmdMention } from "../../utils.js";
 
 const {
   MessageFlags,
@@ -33,7 +34,7 @@ export async function executeArtistInfo(interaction: any): Promise<void> {
   if (!artistName) {
     if (!lfmUsername) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} No artist specified and you haven't linked your Last.fm. Use \`/link\` or specify an artist.`)
+        new TextDisplayBuilder().setContent(`${E.reject} No artist specified and you haven't linked your Last.fm. Use ${cmdMention('link')} or specify an artist.`)
       );
       await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       return;

@@ -2,6 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
+import { cmdMention } from "../../utils.js";
 import { fetchNowPlaying } from "../../nowplaying.js";
 
 const {
@@ -30,7 +31,7 @@ export async function executeGenreInfo(interaction: any): Promise<void> {
   if (!genreName) {
     if (!lfmUsername) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} No genre specified and you haven't linked your Last.fm. Use \`/link\` or specify a genre.`)
+        new TextDisplayBuilder().setContent(`${E.reject} No genre specified and you haven't linked your Last.fm. Use ${cmdMention('link')} or specify a genre.`)
       );
       await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       return;

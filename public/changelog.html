@@ -808,11 +808,77 @@
         </div>
 
         <div class="timeline">
+          <!-- v1.1.1 -->
+          <div class="release">
+            <div class="release__header">
+              <span class="release__version">v1.1.1</span>
+              <span class="release__latest">latest</span>
+              <span class="release__date">april 25, 2026</span>
+            </div>
+
+            <div class="release__groups">
+              <div>
+                <div class="group__label">fixes &amp; improvements</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      ><code>/stats</code>, <code>/wk</code>,
+                      <code>/taste</code>, and <code>/recent</code> now cache
+                      all pages upfront — page navigation is instant with no API
+                      calls on button clicks</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Canvas images are pre-rendered and stored in Supabase
+                      Storage (<code>stats-cache</code>, <code>wk-cache</code>,
+                      <code>taste-cache</code>) — same approach as
+                      <code>/wrapped</code></span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      ><code>/stats artists</code>, <code>/stats albums</code>,
+                      <code>/stats genres</code> now show all linked members
+                      with full pagination (was capped at top 10)</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      ><code>/stats</code> and <code>/wk</code> commands no
+                      longer require a minimum of 2 linked members</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      ><code>/taste server</code> footer now shows member count
+                      alongside page and period info</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Page footer shows <code>Page 1</code> instead of
+                      <code>Page 1 of 1</code> when there's only a single
+                      page</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >All command references in bot messages now use proper
+                      Discord command mentions instead of plain text</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="release-divider" />
+
           <!-- v1.1.0 -->
           <div class="release">
             <div class="release__header">
               <span class="release__version">v1.1.0</span>
-              <span class="release__latest">latest</span>
               <span class="release__date">april 18, 2026</span>
             </div>
 

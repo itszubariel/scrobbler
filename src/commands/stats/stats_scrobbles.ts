@@ -1,25 +1,13 @@
 import "dotenv/config";
-import pkg from "discord.js";
+import { MessageFlags, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, ActionRowBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder } from "discord.js";
 import { E } from "../../emojis.js";
-import { AttachmentBuilder } from "discord.js";
 import { fetchStatsData, buildStatsImage } from "./stats.js";
-import { cmdMention } from "../../utils.js";
+import { cmdMention, pageStr } from "../../utils.js";
 import { prisma } from "../../db.js";
-
-const {
-  MessageFlags,
-  ContainerBuilder,
-  TextDisplayBuilder,
-  SeparatorBuilder,
-  SeparatorSpacingSize,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
-} = pkg;
+import { uploadToSupabase } from "../../uploadToSupabase.js";
 
 const PAGE_SIZE = 10;
+const TTL_MS = 10 * 60 * 1000;
 
 export async function executeStatsScrobbles(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
@@ -33,77 +21,59 @@ export async function executeStatsScrobbles(interaction: any): Promise<void> {
   }
 
   const result = await fetchStatsData(interaction.guildId, apiKey);
-
-  if (!result || result.members.length < 2) {
+  if (!result || result.members.length === 0) {
     const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `${E.reject} Not enough members have linked their Last.fm yet! Have more members use ${cmdMention('link')} to get started.`
-      )
+      new TextDisplayBuilder().setContent(`${E.reject} No members have linked their Last.fm yet! Use ${cmdMention('link')} to get started.`)
     );
     await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
     return;
   }
 
   const allMembers = result.members;
-  const page = 0;
   const totalPages = Math.ceil(allMembers.length / PAGE_SIZE);
 
-  // Find caller's rank
   const callerDb = await prisma.user.findUnique({ where: { discordId: interaction.user.id } });
   const callerLfm = callerDb?.lastfmUsername;
   const callerRank = callerLfm ? allMembers.findIndex(m => m.username === callerLfm) + 1 : 0;
   const callerEntry = callerLfm ? allMembers.find(m => m.username === callerLfm) : null;
-  const callerOnPage = callerRank > 0 && callerRank <= PAGE_SIZE;
-
   const footerText = callerRank > PAGE_SIZE && callerEntry
-    ? `-# Page ${page + 1} of ${totalPages} • ${allMembers.length} members • You are **#${callerRank}** with **${callerEntry.scrobbles.toLocaleString()}** scrobbles`
-    : `-# Page ${page + 1} of ${totalPages} • ${allMembers.length} members`;
+    ? `You are **#${callerRank}** with **${callerEntry.scrobbles.toLocaleString()}** scrobbles`
+    : '';
 
-  const imageBuffer = await buildStatsImage(allMembers, interaction.guild.name, page);
-  const attachment = new AttachmentBuilder(imageBuffer, { name: 'stats.png' });
+  // Render all pages and upload
+  const buffers = await Promise.all(
+    Array.from({ length: totalPages }, (_, i) => buildStatsImage(allMembers, interaction.guild.name, i))
+  );
+  const urls = await Promise.all(
+    buffers.map((buf, i) => uploadToSupabase(buf, 'stats-cache', `scrobbles_${interaction.guildId}_${i}.png`))
+  );
+
+  await (prisma as any).statsScrobblesCache.upsert({
+    where: { guildId: interaction.guildId },
+    create: { guildId: interaction.guildId, urls, totalPages, footerText, expiresAt: new Date(Date.now() + TTL_MS) },
+    update: { urls, totalPages, footerText, expiresAt: new Date(Date.now() + TTL_MS) },
+  });
+
+  const pageFooter = footerText
+    ? `-# ${pageStr(0, totalPages)} • ${allMembers.length} members • ${footerText}`
+    : `-# ${pageStr(0, totalPages)} • ${allMembers.length} members`;
 
   const container = new ContainerBuilder()
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${E.graph} Server Scrobble Leaderboard — All time`)
-    )
-    .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
-    )
-    .addMediaGalleryComponents(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL('attachment://stats.png')
-      )
-    )
-    .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
-    )
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(footerText)
-    )
-    .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small)
-    );
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${E.graph} Server Scrobble Leaderboard — All time`))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+    .addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(urls[0]!)))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(pageFooter))
+    .addSeparatorComponents(new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small));
 
   if (totalPages > 1) {
     const authorId = interaction.user.id;
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`stats_prev_${page}_${authorId}`)
-        .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
-      new ButtonBuilder()
-        .setCustomId(`stats_next_${page}_${authorId}`)
-        .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(false),
+      new ButtonBuilder().setCustomId(`stats_prev_0_${authorId}`).setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' }).setStyle(ButtonStyle.Secondary).setDisabled(true),
+      new ButtonBuilder().setCustomId(`stats_next_0_${authorId}`).setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' }).setStyle(ButtonStyle.Secondary).setDisabled(false),
     );
     container.addActionRowComponents(row as any);
   }
 
-  await interaction.editReply({
-    files: [attachment],
-    components: [container],
-    flags: MessageFlags.IsComponentsV2,
-  });
+  await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
 }
