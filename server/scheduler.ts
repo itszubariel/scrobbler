@@ -1,5 +1,5 @@
-import type { PrismaClient } from '@prisma/client';
-import type { Client } from 'discord.js';
+import type { PrismaClient } from "@prisma/client";
+import type { Client } from "discord.js";
 import {
   checkWebsite,
   checkBot,
@@ -7,7 +7,7 @@ import {
   checkDatabase,
   deriveOverallStatus,
   persistResults,
-} from './healthChecks.js';
+} from "./healthChecks.js";
 
 export async function cleanupOldRecords(prisma: PrismaClient): Promise<void> {
   const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
@@ -35,12 +35,13 @@ export function startScheduler(
     const overall = deriveOverallStatus(results);
     console.log(`[scheduler] overall=${overall}`);
     for (const r of results) {
-      console.log(`[scheduler] ${r.service}: ${r.status} (${r.responseTime}ms)`);
+      console.log(
+        `[scheduler] ${r.service}: ${r.status} (${r.responseTime}ms)`,
+      );
     }
   }
 
-  // Run immediately before the first interval fires
-  void runCycle();
-
+  // Delay first run to give Discord client time to connect
+  setTimeout(() => void runCycle(), 30_000);
   return setInterval(() => void runCycle(), intervalMs);
 }

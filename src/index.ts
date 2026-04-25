@@ -115,7 +115,7 @@ async function deployCommands() {
   }
 }
 
-client.once("ready", async (readyClient) => {
+client.once("clientReady", async (readyClient) => {
   console.log(`🎵 scrobbler is online as ${readyClient.user.tag}`);
 
   let cachedLinkedUsers = 0;
