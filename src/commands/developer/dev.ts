@@ -16,7 +16,7 @@ export const devCommand: Command = {
     .setName('dev')
     .setDescription('Developer tools')
     .addSubcommand(s => s.setName('stats').setDescription('Bot runtime stats (uptime, memory, ping)'))
-    .addSubcommand(s => s.setName('botstats').setDescription('Real member/server counts from DB'))
+    .addSubcommand(s => s.setName('botstats').setDescription('No cached member/server counts from DB'))
     .addSubcommand(s => s.setName('status').setDescription('Live service health check'))
     .addSubcommand(s => s.setName('cache').setDescription('Cache table row counts'))
     .addSubcommand(s =>

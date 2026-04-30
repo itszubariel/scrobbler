@@ -367,7 +367,7 @@
       .page__sub {
         font-size: 15px;
         opacity: 0.55;
-        margin-bottom: 48px;
+        margin-bottom: 32px;
       }
 
       /* ── Status banner ── */
@@ -1148,12 +1148,7 @@
     </footer>
     <script>
       // ── API config ──
-      var IS_PROD =
-        window.location.hostname !== "localhost" &&
-        window.location.hostname !== "127.0.0.1";
-      var API_URL = IS_PROD
-        ? "https://scrobbler.netlify.app/api/status"
-        : "http://localhost:3001/api/status";
+      var API_URL = "https://scrobbler.anim8.world/api/status";
 
       // ── Theme toggle ──
       document
