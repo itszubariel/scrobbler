@@ -372,7 +372,7 @@
 
       /* ── Status banner ── */
       .status-banner {
-        display: flex;
+        display: none;
         align-items: center;
         gap: 14px;
         border-radius: var(--radius-md);
@@ -1283,7 +1283,7 @@
           return;
         }
 
-        banner.style.display = "";
+        banner.style.display = "flex";
 
         // reset classes
         banner.className = "status-banner";
