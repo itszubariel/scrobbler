@@ -16,16 +16,16 @@ const {
 import type { Command } from "../../index.js";
 
 const periodChoices = [
-  { name: "Last 7 days",    value: "7day" },
-  { name: "Last month",     value: "1month" },
-  { name: "Last 3 months",  value: "3month" },
-  { name: "Last 6 months",  value: "6month" },
-  { name: "Last year",      value: "12month" },
-  { name: "All time",       value: "overall" },
+  { name: "Last 7 days", value: "7day" },
+  { name: "Last month", value: "1month" },
+  { name: "Last 3 months", value: "3month" },
+  { name: "Last 6 months", value: "6month" },
+  { name: "Last year", value: "12month" },
+  { name: "All time", value: "overall" },
 ];
 
 const sizeChoices = [
-  { name: "3x3 (9 items)",  value: "3x3" },
+  { name: "3x3 (9 items)", value: "3x3" },
   { name: "4x4 (16 items)", value: "4x4" },
   { name: "5x5 (25 items)", value: "5x5" },
 ];
@@ -34,74 +34,112 @@ export const chartCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("chart")
     .setDescription("Grid charts of your top music")
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("artists")
         .setDescription("Grid chart of your top artists")
-        .addStringOption(option =>
-          option.setName("period").setDescription("Time period").setRequired(false)
-            .addChoices(...periodChoices)
+        .addStringOption((option) =>
+          option
+            .setName("period")
+            .setDescription("Time period")
+            .setRequired(false)
+            .addChoices(...periodChoices),
         )
-        .addStringOption(option =>
-          option.setName("size").setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)").setRequired(false)
-            .addChoices(...sizeChoices)
+        .addStringOption((option) =>
+          option
+            .setName("size")
+            .setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)")
+            .setRequired(false)
+            .addChoices(...sizeChoices),
         )
-        .addUserOption(option =>
-          option.setName("user").setDescription("Check another user's chart (optional)").setRequired(false)
-        )
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("Check another user's chart (optional)")
+            .setRequired(false),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("tracks")
         .setDescription("Grid chart of your top tracks")
-        .addStringOption(option =>
-          option.setName("period").setDescription("Time period").setRequired(false)
-            .addChoices(...periodChoices)
+        .addStringOption((option) =>
+          option
+            .setName("period")
+            .setDescription("Time period")
+            .setRequired(false)
+            .addChoices(...periodChoices),
         )
-        .addStringOption(option =>
-          option.setName("size").setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)").setRequired(false)
-            .addChoices(...sizeChoices)
+        .addStringOption((option) =>
+          option
+            .setName("size")
+            .setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)")
+            .setRequired(false)
+            .addChoices(...sizeChoices),
         )
-        .addUserOption(option =>
-          option.setName("user").setDescription("Check another user's chart (optional)").setRequired(false)
-        )
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("Check another user's chart (optional)")
+            .setRequired(false),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("albums")
         .setDescription("Grid chart of your top albums")
-        .addStringOption(option =>
-          option.setName("period").setDescription("Time period").setRequired(false)
-            .addChoices(...periodChoices)
+        .addStringOption((option) =>
+          option
+            .setName("period")
+            .setDescription("Time period")
+            .setRequired(false)
+            .addChoices(...periodChoices),
         )
-        .addStringOption(option =>
-          option.setName("size").setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)").setRequired(false)
-            .addChoices(...sizeChoices)
+        .addStringOption((option) =>
+          option
+            .setName("size")
+            .setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)")
+            .setRequired(false)
+            .addChoices(...sizeChoices),
         )
-        .addUserOption(option =>
-          option.setName("user").setDescription("Check another user's chart (optional)").setRequired(false)
-        )
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("Check another user's chart (optional)")
+            .setRequired(false),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("server")
-        .setDescription("Grid chart of your server's top artists, albums or tracks")
-        .addStringOption(option =>
-          option.setName("type").setDescription("Artists, albums or tracks").setRequired(true)
+        .setDescription(
+          "Grid chart of your server's top artists, albums or tracks",
+        )
+        .addStringOption((option) =>
+          option
+            .setName("type")
+            .setDescription("Artists, albums or tracks")
+            .setRequired(true)
             .addChoices(
               { name: "Artists", value: "artists" },
-              { name: "Albums",  value: "albums" },
-              { name: "Tracks",  value: "tracks" },
-            )
+              { name: "Albums", value: "albums" },
+              { name: "Tracks", value: "tracks" },
+            ),
         )
-        .addStringOption(option =>
-          option.setName("period").setDescription("Time period").setRequired(false)
-            .addChoices(...periodChoices)
+        .addStringOption((option) =>
+          option
+            .setName("period")
+            .setDescription("Time period")
+            .setRequired(false)
+            .addChoices(...periodChoices),
         )
-        .addStringOption(option =>
-          option.setName("size").setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)").setRequired(false)
-            .addChoices(...sizeChoices)
-        )
+        .addStringOption((option) =>
+          option
+            .setName("size")
+            .setDescription("Grid size — 3x3 (9), 4x4 (16) or 5x5 (25)")
+            .setRequired(false)
+            .addChoices(...sizeChoices),
+        ),
     ),
 
   async execute(interaction) {
@@ -119,9 +157,12 @@ export const chartCommand: Command = {
       await executeChartServer(interaction);
     } else {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} Unknown subcommand.`)
+        new TextDisplayBuilder().setContent(`${E.reject} Unknown subcommand.`),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
   },
 };

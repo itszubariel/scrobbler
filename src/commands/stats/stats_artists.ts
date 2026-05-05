@@ -7,9 +7,16 @@ import { buildLeaderboardCanvas } from "./canvas.js";
 import { uploadToSupabase } from "../../uploadToSupabase.js";
 
 const {
-  MessageFlags, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder,
-  SeparatorSpacingSize, MediaGalleryBuilder, MediaGalleryItemBuilder,
-  ActionRowBuilder, ButtonBuilder, ButtonStyle,
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
+  MediaGalleryBuilder,
+  MediaGalleryItemBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = pkg;
 
 const PAGE_SIZE = 10;
@@ -19,8 +26,15 @@ export async function executeStatsArtists(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
 
   if (!interaction.guildId || !interaction.guild) {
-    const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${E.reject} This command only works in servers.`));
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    const container = new ContainerBuilder().addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `${E.reject} This command only works in servers.`,
+      ),
+    );
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
     return;
   }
 
@@ -30,73 +44,173 @@ export async function executeStatsArtists(interaction: any): Promise<void> {
   });
 
   if (!server) {
-    const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${E.reject} This server isn't set up yet.`));
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    const container = new ContainerBuilder().addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `${E.reject} This server isn't set up yet.`,
+      ),
+    );
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
     return;
   }
 
-  const linkedMembers = server.members.filter(m => m.user.lastfmUsername);
+  const linkedMembers = server.members.filter((m) => m.user.lastfmUsername);
   if (linkedMembers.length === 0) {
-    const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${E.reject} No members have linked their Last.fm yet. Use ${cmdMention('link')} to get started.`));
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    const container = new ContainerBuilder().addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `${E.reject} No members have linked their Last.fm yet. Use ${cmdMention("link")} to get started.`,
+      ),
+    );
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
     return;
   }
 
-  const artistResults = await Promise.all(
-    linkedMembers.map(m =>
-      fetch(`https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(m.user.lastfmUsername!)}&limit=1000&period=overall&api_key=${apiKey}&format=json`)
-        .then(r => r.json()).catch(() => null)
-    )
-  ) as any[];
+  const artistResults = (await Promise.all(
+    linkedMembers.map((m) =>
+      fetch(
+        `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(m.user.lastfmUsername!)}&limit=1000&period=overall&api_key=${apiKey}&format=json`,
+      )
+        .then((r) => r.json())
+        .catch(() => null),
+    ),
+  )) as any[];
 
-  const allMembers = linkedMembers.map((m, i) => {
-    const raw = (artistResults[i]?.topartists?.artist ?? []).length as number;
-    return { username: m.user.lastfmUsername!, count: raw, displayCount: raw >= 1000 ? '1,000+' : raw.toLocaleString('en-US') };
-  }).sort((a, b) => b.count - a.count);
+  const allMembers = linkedMembers
+    .map((m, i) => {
+      const raw = (artistResults[i]?.topartists?.artist ?? []).length as number;
+      return {
+        username: m.user.lastfmUsername!,
+        count: raw,
+        displayCount: raw >= 1000 ? "1,000+" : raw.toLocaleString("en-US"),
+      };
+    })
+    .sort((a, b) => b.count - a.count);
 
-  const hasCapHit = allMembers.some(m => m.count >= 1000);
-  const totalArtists = (hasCapHit ? allMembers.reduce((s, m) => s + m.count, 0).toLocaleString('en-US') + '+' : allMembers.reduce((s, m) => s + m.count, 0).toLocaleString('en-US'));
+  const hasCapHit = allMembers.some((m) => m.count >= 1000);
+  const totalArtists = hasCapHit
+    ? allMembers.reduce((s, m) => s + m.count, 0).toLocaleString("en-US") + "+"
+    : allMembers.reduce((s, m) => s + m.count, 0).toLocaleString("en-US");
 
-  const callerDb = await prisma.user.findUnique({ where: { discordId: interaction.user.id } });
+  const callerDb = await prisma.user.findUnique({
+    where: { discordId: interaction.user.id },
+  });
   const callerLfm = callerDb?.lastfmUsername;
-  const callerRank = callerLfm ? allMembers.findIndex(m => m.username === callerLfm) + 1 : 0;
-  const callerEntry = callerLfm ? allMembers.find(m => m.username === callerLfm) : null;
+  const callerRank = callerLfm
+    ? allMembers.findIndex((m) => m.username === callerLfm) + 1
+    : 0;
+  const callerEntry = callerLfm
+    ? allMembers.find((m) => m.username === callerLfm)
+    : null;
 
   const totalPages = Math.ceil(allMembers.length / PAGE_SIZE);
   const memberCount = allMembers.length;
 
   const buffers = await Promise.all(
-    Array.from({ length: totalPages }, (_, i) => buildLeaderboardCanvas(allMembers, interaction.guild.name, 'artists', `Total unique artists: ${totalArtists}`, i))
+    Array.from({ length: totalPages }, (_, i) =>
+      buildLeaderboardCanvas(
+        allMembers,
+        interaction.guild.name,
+        "artists",
+        `Total unique artists: ${totalArtists}`,
+        i,
+      ),
+    ),
   );
   const urls = await Promise.all(
-    buffers.map((buf, i) => uploadToSupabase(buf, 'stats-cache', `artists_${interaction.guildId}_${i}.png`))
+    buffers.map((buf, i) =>
+      uploadToSupabase(
+        buf,
+        "stats-cache",
+        `artists_${interaction.guildId}_${i}.png`,
+      ),
+    ),
   );
 
   await (prisma as any).statsArtistsCache.upsert({
     where: { guildId: interaction.guildId },
-    create: { guildId: interaction.guildId, urls, totalPages, memberCount, expiresAt: new Date(Date.now() + TTL_MS) },
-    update: { urls, totalPages, memberCount, expiresAt: new Date(Date.now() + TTL_MS) },
+    create: {
+      guildId: interaction.guildId,
+      urls,
+      totalPages,
+      memberCount,
+      expiresAt: new Date(Date.now() + TTL_MS),
+    },
+    update: {
+      urls,
+      totalPages,
+      memberCount,
+      expiresAt: new Date(Date.now() + TTL_MS),
+    },
   });
 
   const footerParts = [`${memberCount} members • Unique artists overall`];
-  if (callerRank > PAGE_SIZE && callerEntry) footerParts.push(`You are ranked **#${callerRank}** with **${callerEntry.displayCount}** artists`);
+  if (callerRank > PAGE_SIZE && callerEntry)
+    footerParts.push(
+      `You are ranked **#${callerRank}** with **${callerEntry.displayCount}** artists`,
+    );
 
   const container = new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${E.artists} Server Artist Leaderboard — All time`))
-    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-    .addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(urls[0]!)))
-    .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${pageStr(0, totalPages)} • ${footerParts.join(' • ')}`))
-    .addSeparatorComponents(new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small));
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ${E.artists} Server Artist Leaderboard — All time`,
+      ),
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder().setURL(urls[0]!),
+      ),
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `-# ${pageStr(0, totalPages)} • ${footerParts.join(" • ")}`,
+      ),
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(false)
+        .setSpacing(SeparatorSpacingSize.Small),
+    );
 
   if (totalPages > 1) {
     const authorId = interaction.user.id;
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`stats_artists_prev_0_${authorId}`).setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' }).setStyle(ButtonStyle.Secondary).setDisabled(true),
-      new ButtonBuilder().setCustomId(`stats_artists_next_0_${authorId}`).setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' }).setStyle(ButtonStyle.Secondary).setDisabled(false),
+      new ButtonBuilder()
+        .setCustomId(`stats_artists_prev_0_${authorId}`)
+        .setEmoji({
+          id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "scrobbler_prev",
+        })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`stats_artists_next_0_${authorId}`)
+        .setEmoji({
+          id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "scrobbler_next",
+        })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(false),
     );
     container.addActionRowComponents(row as any);
   }
 
-  await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+  await interaction.editReply({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+  });
 }

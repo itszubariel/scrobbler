@@ -10,7 +10,6 @@ const {
   TextDisplayBuilder,
 } = pkg;
 
-
 import type { Command } from "../index.ts";
 
 export const unlinkCommand: Command = {
@@ -27,9 +26,14 @@ export const unlinkCommand: Command = {
 
     if (!user?.lastfmUsername) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} You don't have a Last.fm account linked.`)
+        new TextDisplayBuilder().setContent(
+          `${E.reject} You don't have a Last.fm account linked.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
@@ -41,9 +45,14 @@ export const unlinkCommand: Command = {
     });
 
     const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`${E.accept} Unlinked **${username}** from your account.`)
+      new TextDisplayBuilder().setContent(
+        `${E.accept} Unlinked **${username}** from your account.`,
+      ),
     );
 
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

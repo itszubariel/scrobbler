@@ -3,7 +3,17 @@ import { prisma } from "../../../db.js";
 
 export async function executeDevCache(interaction: any): Promise<void> {
   const db = prisma as any;
-  const [recent, tasteUser, tasteServer, scrobbles, artists, albums, genres, wk, wrapped] = await Promise.all([
+  const [
+    recent,
+    tasteUser,
+    tasteServer,
+    scrobbles,
+    artists,
+    albums,
+    genres,
+    wk,
+    wrapped,
+  ] = await Promise.all([
     db.recentCache.count(),
     db.tasteUserCache.count(),
     db.tasteServerCache.count(),
@@ -26,8 +36,13 @@ export async function executeDevCache(interaction: any): Promise<void> {
     `**StatsGenresCache:** ${genres}`,
     `**WkCache:** ${wk}`,
     `**WrappedCache:** ${wrapped}`,
-  ].join('\n');
+  ].join("\n");
 
-  const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(lines));
-  await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+  const container = new ContainerBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(lines),
+  );
+  await interaction.editReply({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+  });
 }

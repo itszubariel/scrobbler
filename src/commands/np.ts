@@ -28,7 +28,7 @@ export const npCommand: Command = {
       option
         .setName("user")
         .setDescription("Check another user's now playing (optional)")
-        .setRequired(false)
+        .setRequired(false),
     ),
 
   async execute(interaction) {
@@ -47,9 +47,9 @@ export const npCommand: Command = {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           isOwnProfile
-            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
-            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
-        )
+            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention("link")} to get started.`
+            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`,
+        ),
       );
       await interaction.editReply({
         components: [container],
@@ -61,15 +61,15 @@ export const npCommand: Command = {
     const lfmUsername = dbUser.lastfmUsername;
 
     const res = await fetch(
-      `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&api_key=${apiKey}&format=json&limit=1`
+      `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&api_key=${apiKey}&format=json&limit=1`,
     );
     const data = (await res.json()) as any;
 
     if (data.error) {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `${E.reject} Couldn't fetch Last.fm data for **${lfmUsername}**.`
-        )
+          `${E.reject} Couldn't fetch Last.fm data for **${lfmUsername}**.`,
+        ),
       );
       await interaction.editReply({
         components: [container],
@@ -83,9 +83,14 @@ export const npCommand: Command = {
 
     if (!track) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} No recent tracks found for **${lfmUsername}**.`)
+        new TextDisplayBuilder().setContent(
+          `${E.reject} No recent tracks found for **${lfmUsername}**.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
@@ -95,10 +100,12 @@ export const npCommand: Command = {
     const artistName = track.artist?.["#text"] ?? "Unknown Artist";
     const albumName = track.album?.["#text"] ?? null;
     const albumArt = track.image?.find(
-      (img: any) => img.size === "extralarge"
+      (img: any) => img.size === "extralarge",
     )?.["#text"];
     const trackUrl = track.url ?? null;
-    const scrobbleTimestamp: number | null = track.date?.uts ? parseInt(track.date.uts) : null;
+    const scrobbleTimestamp: number | null = track.date?.uts
+      ? parseInt(track.date.uts)
+      : null;
 
     let userPlayCount: string | null = null;
     let topTags: string | null = null;
@@ -106,11 +113,13 @@ export const npCommand: Command = {
     let releaseYear: string | null = null;
     try {
       const trackInfoRes = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&user=${encodeURIComponent(lfmUsername)}&artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}&api_key=${apiKey}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&user=${encodeURIComponent(lfmUsername)}&artist=${encodeURIComponent(artistName)}&track=${encodeURIComponent(trackName)}&api_key=${apiKey}&format=json`,
       );
       const trackInfo = (await trackInfoRes.json()) as any;
       if (trackInfo.track?.userplaycount) {
-        userPlayCount = parseInt(trackInfo.track.userplaycount).toLocaleString();
+        userPlayCount = parseInt(
+          trackInfo.track.userplaycount,
+        ).toLocaleString();
       }
       const tags = trackInfo.track?.toptags?.tag;
       if (Array.isArray(tags) && tags.length > 0) {
@@ -125,12 +134,12 @@ export const npCommand: Command = {
           .map((t: any) => t.name);
         if (filtered.length > 0) {
           const firstTwo = filtered.slice(0, 2);
-          const firstTwoLength = firstTwo.join(' • ').length;
+          const firstTwoLength = firstTwo.join(" • ").length;
           const finalTags = firstTwoLength > 20 ? firstTwo : filtered;
-          topTags = finalTags.join(' • ');
+          topTags = finalTags.join(" • ");
         }
       }
-      isLoved = trackInfo.track?.userloved === '1';
+      isLoved = trackInfo.track?.userloved === "1";
 
       const wikiDate = trackInfo.track?.wiki?.published;
       if (wikiDate) {
@@ -143,7 +152,7 @@ export const npCommand: Command = {
     if (!releaseYear && albumName) {
       try {
         const albumInfoRes = await fetch(
-          `https://ws.audioscrobbler.com/2.0/?method=album.getInfo&artist=${encodeURIComponent(artistName)}&album=${encodeURIComponent(albumName)}&api_key=${apiKey}&format=json`
+          `https://ws.audioscrobbler.com/2.0/?method=album.getInfo&artist=${encodeURIComponent(artistName)}&album=${encodeURIComponent(albumName)}&api_key=${apiKey}&format=json`,
         );
         const albumInfo = (await albumInfoRes.json()) as any;
         const albumWikiDate = albumInfo.album?.wiki?.published;
@@ -157,10 +166,10 @@ export const npCommand: Command = {
     let listenerCount: string | null = null;
     try {
       const artistInfoRes = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artistName)}&api_key=${apiKey}&format=json`
+        `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artistName)}&api_key=${apiKey}&format=json`,
       );
       const artistInfo = (await artistInfoRes.json()) as any;
-      const listeners = parseInt(artistInfo.artist?.stats?.listeners ?? '0');
+      const listeners = parseInt(artistInfo.artist?.stats?.listeners ?? "0");
       if (listeners >= 1_000_000) {
         listenerCount = `${(listeners / 1_000_000).toFixed(1)}M listeners`;
       } else if (listeners >= 1_000) {
@@ -175,7 +184,9 @@ export const npCommand: Command = {
     if (isNowPlaying) {
       statusLine = `${E.musicalNote} Scrobbling • Now`;
     } else {
-      const timestampStr = scrobbleTimestamp ? ` • <t:${scrobbleTimestamp}:R>` : '';
+      const timestampStr = scrobbleTimestamp
+        ? ` • <t:${scrobbleTimestamp}:R>`
+        : "";
       statusLine = `${E.musicLast} Last Scrobbled${timestampStr}`;
     }
 
@@ -183,21 +194,27 @@ export const npCommand: Command = {
     const sectionTexts: InstanceType<typeof TextDisplayBuilder>[] = [
       new TextDisplayBuilder().setContent(statusLine),
       new TextDisplayBuilder().setContent(`### [${trackName}](${trackUrl})`),
-      new TextDisplayBuilder().setContent(`**${artistName}**${listenerCount ? `\n${listenerCount}` : ''}`),
+      new TextDisplayBuilder().setContent(
+        `**${artistName}**${listenerCount ? `\n${listenerCount}` : ""}`,
+      ),
     ];
 
     // Dynamic layout: if album name is long (>15 chars), move "Your Plays" below with genre
-    const ALBUM_SUFFIX_PATTERN = /[\s\-–(]+(?:OKNOTOK\s*\d{4}\s*\d{4}|remaster(?:ed)?(?:\s+\d{4})?|deluxe(?:\s+edition)?|special(?:\s+edition)?|expanded(?:\s+edition)?|anniversary(?:\s+edition)?|\d{4}\s+remaster(?:ed)?|bonus\s+tracks?|explicit\s+version|standard\s+edition|collector[''s]*\s+edition).*$/i;
-    const albumCleaned = albumName ? albumName.replace(ALBUM_SUFFIX_PATTERN, '').trim() : null;
+    const ALBUM_SUFFIX_PATTERN =
+      /[\s\-–(]+(?:OKNOTOK\s*\d{4}\s*\d{4}|remaster(?:ed)?(?:\s+\d{4})?|deluxe(?:\s+edition)?|special(?:\s+edition)?|expanded(?:\s+edition)?|anniversary(?:\s+edition)?|\d{4}\s+remaster(?:ed)?|bonus\s+tracks?|explicit\s+version|standard\s+edition|collector[''s]*\s+edition).*$/i;
+    const albumCleaned = albumName
+      ? albumName.replace(ALBUM_SUFFIX_PATTERN, "").trim()
+      : null;
 
     const ALBUM_LENGTH_THRESHOLD = 20;
-    const albumIsLong = albumCleaned && albumCleaned.length > ALBUM_LENGTH_THRESHOLD;
+    const albumIsLong =
+      albumCleaned && albumCleaned.length > ALBUM_LENGTH_THRESHOLD;
 
     // Truncate very long album names with ellipsis
     const MAX_ALBUM_DISPLAY = 30;
     const albumDisplay = albumCleaned
       ? albumCleaned.length > MAX_ALBUM_DISPLAY
-        ? albumCleaned.slice(0, MAX_ALBUM_DISPLAY - 1) + '…'
+        ? albumCleaned.slice(0, MAX_ALBUM_DISPLAY - 1) + "…"
         : albumCleaned
       : null;
 
@@ -239,46 +256,60 @@ export const npCommand: Command = {
         new ThumbnailBuilder().setURL(
           albumArt && albumArt !== ""
             ? albumArt
-            : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png"
-        )
+            : "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png",
+        ),
       );
 
-    const container = new ContainerBuilder()
-      .addSectionComponents(section);
+    const container = new ContainerBuilder().addSectionComponents(section);
 
     if (albumWithPlays) {
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(albumWithPlays));
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(albumWithPlays),
+      );
     } else if (albumLine) {
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(albumLine));
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(albumLine),
+      );
     }
 
     if (genreLine) {
-      const genreWithLoved = heartOnGenre ? `${genreLine} • ${lovedIndicator}` : genreLine;
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(genreWithLoved));
+      const genreWithLoved = heartOnGenre
+        ? `${genreLine} • ${lovedIndicator}`
+        : genreLine;
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(genreWithLoved),
+      );
     } else if (heartOnGenre) {
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(lovedIndicator!));
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(lovedIndicator!),
+      );
     }
 
     if (playsBelow) {
-      const playsWithLoved = heartOnPlays ? `${playsBelow} • ${lovedIndicator}` : playsBelow;
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(playsWithLoved));
+      const playsWithLoved = heartOnPlays
+        ? `${playsBelow} • ${lovedIndicator}`
+        : playsBelow;
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(playsWithLoved),
+      );
     } else if (heartOnPlays) {
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(lovedIndicator!));
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(lovedIndicator!),
+      );
     }
 
-    container
-      .addSeparatorComponents(
-        new SeparatorBuilder()
-          .setDivider(true)
-          .setSpacing(SeparatorSpacingSize.Small)
-      );
+    container.addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
+    );
 
     const profileUrl = `https://www.last.fm/user/${encodeURIComponent(lfmUsername)}`;
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setLabel(`${lfmUsername} on Last.fm`)
         .setURL(profileUrl)
-        .setStyle(ButtonStyle.Link)
+        .setStyle(ButtonStyle.Link),
     );
     container.addActionRowComponents(row as any);
 

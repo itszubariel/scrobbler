@@ -16,7 +16,9 @@ import { E } from "./emojis.js";
 dotenv.config();
 
 export interface Command {
-  data: SlashCommandBuilder | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
+  data:
+    | SlashCommandBuilder
+    | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
 }
 
@@ -91,25 +93,41 @@ async function deployCommands() {
   if (isDev && guildId) {
     // In dev: register everything to the guild
     const allCommandData = commands.map((cmd) => cmd.data.toJSON());
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: allCommandData });
-    console.log(`✅ Registered ${allCommandData.length} guild command(s) to dev server`);
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: allCommandData,
+    });
+    console.log(
+      `✅ Registered ${allCommandData.length} guild command(s) to dev server`,
+    );
 
-    const registered = await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[];
+    const registered = (await rest.get(
+      Routes.applicationGuildCommands(clientId, guildId),
+    )) as any[];
     for (const cmd of registered) commandIds.set(cmd.name, cmd.id);
   } else {
     // In production: register global commands (excluding dev)
-    await rest.put(Routes.applicationCommands(clientId), { body: globalCommandData });
+    await rest.put(Routes.applicationCommands(clientId), {
+      body: globalCommandData,
+    });
     console.log(`✅ Registered ${globalCommandData.length} global command(s)`);
 
-    const registeredGlobal = await rest.get(Routes.applicationCommands(clientId)) as any[];
+    const registeredGlobal = (await rest.get(
+      Routes.applicationCommands(clientId),
+    )) as any[];
     for (const cmd of registeredGlobal) commandIds.set(cmd.name, cmd.id);
 
     // Always register dev command as guild-only (requires DISCORD_DEV_GUILD_ID in prod too)
     if (guildId) {
-      await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: devCommandData });
-      console.log(`✅ Registered ${devCommandData.length} guild developer command(s) to dev server`);
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+        body: devCommandData,
+      });
+      console.log(
+        `✅ Registered ${devCommandData.length} guild developer command(s) to dev server`,
+      );
 
-      const registeredGuild = await rest.get(Routes.applicationGuildCommands(clientId, guildId)) as any[];
+      const registeredGuild = (await rest.get(
+        Routes.applicationGuildCommands(clientId, guildId),
+      )) as any[];
       for (const cmd of registeredGuild) commandIds.set(cmd.name, cmd.id);
     }
   }
@@ -122,24 +140,32 @@ client.once("clientReady", async (readyClient) => {
   let cachedTotalMembers = 0;
   const fetchStats = async () => {
     try {
-      const res = await fetch('https://api-scrobbler.netlify.app/stats');
+      const res = await fetch("https://api-scrobbler.netlify.app/stats");
       if (res.ok) {
-        const data = await res.json() as any;
-        cachedLinkedUsers   = data.linkedUsers   ?? cachedLinkedUsers;
-        cachedTotalMembers  = data.totalMembers  ?? cachedTotalMembers;
+        const data = (await res.json()) as any;
+        cachedLinkedUsers = data.linkedUsers ?? cachedLinkedUsers;
+        cachedTotalMembers = data.totalMembers ?? cachedTotalMembers;
       }
-    } catch { /* keep last known values */ }
+    } catch {
+      /* keep last known values */
+    }
   };
   await fetchStats();
   setInterval(fetchStats, 5 * 60 * 1000);
 
   const statuses = [
-    { name: '/link to start scrobbling', type: 0 },
-    { name: 'through your music history', type: 3 },
-    { name: 'your taste in music 👀', type: 3 },
-    () => ({ name: `music in ${readyClient.guilds.cache.size} servers`, type: 0 }),
+    { name: "/link to start scrobbling", type: 0 },
+    { name: "through your music history", type: 3 },
+    { name: "your taste in music 👀", type: 3 },
+    () => ({
+      name: `music in ${readyClient.guilds.cache.size} servers`,
+      type: 0,
+    }),
     () => ({ name: `${cachedTotalMembers.toLocaleString()} members`, type: 0 }),
-    () => ({ name: `${cachedLinkedUsers.toLocaleString()} music lovers`, type: 0 }),
+    () => ({
+      name: `${cachedLinkedUsers.toLocaleString()} music lovers`,
+      type: 0,
+    }),
   ];
 
   let statusIndex = 0;
@@ -149,7 +175,7 @@ client.once("clientReady", async (readyClient) => {
 
     readyClient.user.setPresence({
       activities: [{ name: s.name, type: s.type as any }],
-      status: 'online',
+      status: "online",
     });
     statusIndex++;
   };
@@ -171,9 +197,9 @@ client.on("interactionCreate", async (interaction: Interaction) => {
   }
 
   if ((interaction as any).isAutocomplete?.()) {
-    if ((interaction as any).commandName === 'wk') {
+    if ((interaction as any).commandName === "wk") {
       await handleWkAutocomplete(interaction);
-    } else if ((interaction as any).commandName === 'info') {
+    } else if ((interaction as any).commandName === "info") {
       await handleInfoAutocomplete(interaction);
     }
     return;

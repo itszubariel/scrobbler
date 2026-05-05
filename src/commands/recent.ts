@@ -18,7 +18,6 @@ const {
   ButtonStyle,
 } = pkg;
 
-
 import type { Command } from "../index.ts";
 import { cmdMention } from "../utils.js";
 
@@ -26,7 +25,7 @@ const PAGE_SIZE = 10;
 
 export async function fetchRecentTracks(lfmUsername: string, apiKey: string) {
   const res = await fetch(
-    `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&api_key=${apiKey}&format=json&limit=50`
+    `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&api_key=${apiKey}&format=json&limit=50`,
   );
   const data = (await res.json()) as any;
   if (data.error) return null;
@@ -40,14 +39,16 @@ export function buildRecentContainer(
   rawTracks: any[],
   lfmUsername: string,
   targetDiscordId: string,
-  page: number
+  page: number,
 ) {
   const headerTrack = rawTracks[0];
-  const isNowPlaying = headerTrack?.['@attr']?.nowplaying === 'true';
-  const firstName = headerTrack?.name ?? 'Unknown Track';
-  const firstArtist = headerTrack?.artist?.['#text'] ?? 'Unknown Artist';
+  const isNowPlaying = headerTrack?.["@attr"]?.nowplaying === "true";
+  const firstName = headerTrack?.name ?? "Unknown Track";
+  const firstArtist = headerTrack?.artist?.["#text"] ?? "Unknown Artist";
   const firstUrl = headerTrack?.url ?? null;
-  const firstTrackText = firstUrl ? `[**${firstName}**](${firstUrl})` : `**${firstName}**`;
+  const firstTrackText = firstUrl
+    ? `[**${firstName}**](${firstUrl})`
+    : `**${firstName}**`;
   const summaryLine = isNowPlaying
     ? `${E.musicalNote} Now playing: ${firstTrackText} by **${firstArtist}**`
     : `${E.musicalNote} Last played: ${firstTrackText} by **${firstArtist}**`;
@@ -56,16 +57,18 @@ export function buildRecentContainer(
   const totalPages = Math.ceil(listTracks.length / PAGE_SIZE);
   const pageTracks = listTracks.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const lines = pageTracks.map(t => {
-    const name = t.name ?? 'Unknown Track';
-    const artist = t.artist?.['#text'] ?? 'Unknown Artist';
+  const lines = pageTracks.map((t) => {
+    const name = t.name ?? "Unknown Track";
+    const artist = t.artist?.["#text"] ?? "Unknown Artist";
     const url = t.url ?? null;
-    const ago = t.date?.uts ? `<t:${t.date.uts}:R>` : '?';
+    const ago = t.date?.uts ? `<t:${t.date.uts}:R>` : "?";
     const trackText = url ? `[**${name}**](${url})` : `**${name}**`;
     return `${ago} • ${trackText} by **${artist}**`;
   });
 
-  const uniqueArtists = new Set(rawTracks.map(t => t.artist?.['#text']).filter(Boolean)).size;
+  const uniqueArtists = new Set(
+    rawTracks.map((t) => t.artist?.["#text"]).filter(Boolean),
+  ).size;
 
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
@@ -73,30 +76,40 @@ export function buildRecentContainer(
       new TextDisplayBuilder().setContent(summaryLine),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(lines.join('\n'))
+      new TextDisplayBuilder().setContent(lines.join("\n")),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ${rawTracks.length} scrobbles • ${uniqueArtists} unique artists • ${pageStr(page, totalPages)}`
-      )
+        `-# ${rawTracks.length} scrobbles • ${uniqueArtists} unique artists • ${pageStr(page, totalPages)}`,
+      ),
     );
 
   if (totalPages > 1) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`recent_prev_${page}_${targetDiscordId}`)
-        .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'rewind_prev' })
+        .setEmoji({
+          id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "rewind_prev",
+        })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page === 0),
       new ButtonBuilder()
         .setCustomId(`recent_next_${page}_${targetDiscordId}`)
-        .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'rewind_next' })
+        .setEmoji({
+          id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "rewind_next",
+        })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page >= totalPages - 1),
     );
@@ -114,14 +127,15 @@ export const recentCommand: Command = {
       option
         .setName("user")
         .setDescription("Check another user's recent tracks (optional)")
-        .setRequired(false)
+        .setRequired(false),
     ),
 
   async execute(interaction) {
     await interaction.deferReply();
 
     const apiKey = process.env.LASTFM_API_KEY!;
-    const targetDiscordUser = interaction.options.getUser("user") ?? interaction.user;
+    const targetDiscordUser =
+      interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
 
     const dbUser = await prisma.user.findUnique({
@@ -132,11 +146,14 @@ export const recentCommand: Command = {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           isOwnProfile
-            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
-            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
-        )
+            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention("link")} to get started.`
+            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
@@ -145,9 +162,14 @@ export const recentCommand: Command = {
 
     if (!rawTracks) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} Couldn't fetch Last.fm data for **${lfmUsername}**.`)
+        new TextDisplayBuilder().setContent(
+          `${E.reject} Couldn't fetch Last.fm data for **${lfmUsername}**.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
@@ -165,7 +187,15 @@ export const recentCommand: Command = {
       },
     });
 
-    const container = buildRecentContainer(rawTracks, lfmUsername, targetDiscordUser.id, 0);
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    const container = buildRecentContainer(
+      rawTracks,
+      lfmUsername,
+      targetDiscordUser.id,
+      0,
+    );
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

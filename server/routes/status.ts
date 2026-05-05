@@ -1,7 +1,7 @@
-import { Router } from 'express';
-import type { Request, Response } from 'express';
-import type { PrismaClient } from '@prisma/client';
-import type { Client } from 'discord.js';
+import { Router } from "express";
+import type { Request, Response } from "express";
+import type { PrismaClient } from "@prisma/client";
+import type { Client } from "discord.js";
 import {
   checkWebsite,
   checkBot,
@@ -9,8 +9,13 @@ import {
   checkDatabase,
   deriveOverallStatus,
   persistResults,
-} from '../healthChecks.js';
-import type { DailyRecord, ServiceName, StatusLabel, StatusResponse } from '../healthChecks.js';
+} from "../healthChecks.js";
+import type {
+  DailyRecord,
+  ServiceName,
+  StatusLabel,
+  StatusResponse,
+} from "../healthChecks.js";
 
 // Raw query row shape returned by Prisma $queryRaw
 interface AggRow {
@@ -65,7 +70,7 @@ async function queryDailyHistory(
   }
 
   // Ensure all four services are present even if they have no rows yet
-  const allServices: ServiceName[] = ['website', 'bot', 'lastfm', 'database'];
+  const allServices: ServiceName[] = ["website", "bot", "lastfm", "database"];
   for (const svc of allServices) {
     if (!result.has(svc)) {
       result.set(svc, buildPaddedHistory(days, new Map()));
@@ -102,13 +107,23 @@ function buildPaddedHistory(
   return days.map((dateStr) => {
     const row = dateMap.get(dateStr);
     if (!row) {
-      return { date: dateStr, availability: null, highestStatus: null, downtimeMinutes: null };
+      return {
+        date: dateStr,
+        availability: null,
+        highestStatus: null,
+        downtimeMinutes: null,
+      };
     }
 
-    const availability = row.total > 0 ? (row.up_count / row.total) * 100 : null;
+    const availability =
+      row.total > 0 ? (row.up_count / row.total) * 100 : null;
 
     const highestStatus: StatusLabel =
-      row.worst_status === 2 ? 'down' : row.worst_status === 1 ? 'degraded' : 'operational';
+      row.worst_status === 2
+        ? "down"
+        : row.worst_status === 1
+          ? "degraded"
+          : "operational";
 
     // Estimate downtime: unavailable checks × 5 minutes each
     const unavailableChecks = row.total - row.up_count;
@@ -125,7 +140,7 @@ async function getStatus(
   prisma: PrismaClient,
   client: Client,
 ): Promise<void> {
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader("Content-Type", "application/json");
 
   try {
     // Run all four probes in parallel
@@ -159,16 +174,19 @@ async function getStatus(
 
     res.status(200).json(response);
   } catch (err) {
-    console.error('getStatus error:', err);
-    res.status(500).json({ error: 'internal server error' });
+    console.error("getStatus error:", err);
+    res.status(500).json({ error: "internal server error" });
   }
 }
 
 // Factory function — avoids circular deps by accepting prisma and client as params
-export function createStatusRouter(prisma: PrismaClient, client: Client): Router {
+export function createStatusRouter(
+  prisma: PrismaClient,
+  client: Client,
+): Router {
   const router = Router();
 
-  router.get('/', (req: Request, res: Response) => {
+  router.get("/", (req: Request, res: Response) => {
     getStatus(req, res, prisma, client);
   });
 

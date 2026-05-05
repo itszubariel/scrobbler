@@ -15,11 +15,11 @@ const {
 import type { Command } from "../index.js";
 import { cmdMention } from "../utils.js";
 
-const MEDALS = ['1.', '2.', '3.'];
+const MEDALS = ["1.", "2.", "3."];
 
 function utsToDateStr(uts: number): string {
   const d = new Date(uts * 1000);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function daysBetween(dateStrA: string, dateStrB: string): number {
@@ -74,12 +74,14 @@ function calcStreaks(daysByKey: Map<string, Set<string>>): StreakResult[] {
 }
 
 function formatStreak(streak: StreakResult, rank: number): string {
-  const medal = MEDALS[rank] ?? '▪️';
+  const medal = MEDALS[rank] ?? "▪️";
   const today = todayStr();
   const daysAgo = daysBetween(streak.lastDay, today);
   const isActive = daysAgo <= 3;
 
-  const namePart = streak.name.includes('|||') ? streak.name.split('|||')[0]! : streak.name;
+  const namePart = streak.name.includes("|||")
+    ? streak.name.split("|||")[0]!
+    : streak.name;
 
   if (isActive) {
     return `${medal} **${namePart}** — ${E.streak} ${streak.days} day streak`;
@@ -92,33 +94,42 @@ export const streakCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("streak")
     .setDescription("Your top artist, track and album streaks over 90 day")
-    .addUserOption(option =>
-      option.setName("user").setDescription("Check another user's streaks (optional)").setRequired(false)
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("Check another user's streaks (optional)")
+        .setRequired(false),
     ),
 
   async execute(interaction) {
     await interaction.deferReply();
 
     const apiKey = process.env.LASTFM_API_KEY!;
-    const targetDiscordUser = interaction.options.getUser("user") ?? interaction.user;
+    const targetDiscordUser =
+      interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
 
-    const dbUser = await prisma.user.findUnique({ where: { discordId: targetDiscordUser.id } });
+    const dbUser = await prisma.user.findUnique({
+      where: { discordId: targetDiscordUser.id },
+    });
 
     if (!dbUser?.lastfmUsername) {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           isOwnProfile
-            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
-            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
-        )
+            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention("link")} to get started.`
+            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
     const lfmUsername = dbUser.lastfmUsername;
-    const cutoffMs = Date.now() - (90 * 24 * 60 * 60 * 1000);
+    const cutoffMs = Date.now() - 90 * 24 * 60 * 60 * 1000;
     const cutoffUts = Math.floor(cutoffMs / 1000);
 
     // Fetch pages until 90 days covered or 10 pages max
@@ -127,18 +138,24 @@ export const streakCommand: Command = {
     const MAX_PAGES = 10;
 
     while (page <= MAX_PAGES) {
-      const res = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&limit=200&page=${page}&api_key=${apiKey}&format=json`
-      ).then(r => r.json()).catch(() => null) as any;
+      const res = (await fetch(
+        `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&limit=200&page=${page}&api_key=${apiKey}&format=json`,
+      )
+        .then((r) => r.json())
+        .catch(() => null)) as any;
 
       const pageTracks: any[] = Array.isArray(res?.recenttracks?.track)
         ? res.recenttracks.track
-        : res?.recenttracks?.track ? [res.recenttracks.track] : [];
+        : res?.recenttracks?.track
+          ? [res.recenttracks.track]
+          : [];
 
       if (pageTracks.length === 0) break;
 
       // Filter out now playing and tracks without date
-      const valid = pageTracks.filter(t => !t['@attr']?.nowplaying && t.date?.uts);
+      const valid = pageTracks.filter(
+        (t) => !t["@attr"]?.nowplaying && t.date?.uts,
+      );
       allTracks.push(...valid);
 
       // Check if oldest track on this page is before cutoff
@@ -146,20 +163,27 @@ export const streakCommand: Command = {
       if (oldest && parseInt(oldest.date.uts) < cutoffUts) break;
 
       // Check if there are more pages
-      const totalPages = parseInt(res?.recenttracks?.['@attr']?.totalPages ?? '1');
+      const totalPages = parseInt(
+        res?.recenttracks?.["@attr"]?.totalPages ?? "1",
+      );
       if (page >= totalPages) break;
 
       page++;
     }
 
     // Filter to only tracks within 90 days
-    const tracks = allTracks.filter(t => parseInt(t.date.uts) >= cutoffUts);
+    const tracks = allTracks.filter((t) => parseInt(t.date.uts) >= cutoffUts);
 
     if (tracks.length === 0) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} No scrobbles found in the last 90 days for **${lfmUsername}**.`)
+        new TextDisplayBuilder().setContent(
+          `${E.reject} No scrobbles found in the last 90 days for **${lfmUsername}**.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
@@ -171,9 +195,9 @@ export const streakCommand: Command = {
     for (const t of tracks) {
       const uts = parseInt(t.date.uts);
       const day = utsToDateStr(uts);
-      const artist = t.artist?.['#text'] ?? t.artist?.name ?? '';
-      const trackName = t.name ?? '';
-      const album = t.album?.['#text'] ?? '';
+      const artist = t.artist?.["#text"] ?? t.artist?.name ?? "";
+      const trackName = t.name ?? "";
+      const album = t.album?.["#text"] ?? "";
 
       if (artist) {
         if (!artistDays.has(artist)) artistDays.set(artist, new Set());
@@ -197,64 +221,97 @@ export const streakCommand: Command = {
     const trackStreaks = calcStreaks(trackDays);
     const albumStreaks = calcStreaks(albumDays);
 
-    const hasAny = artistStreaks.length > 0 || trackStreaks.length > 0 || albumStreaks.length > 0;
+    const hasAny =
+      artistStreaks.length > 0 ||
+      trackStreaks.length > 0 ||
+      albumStreaks.length > 0;
 
-    const container = new ContainerBuilder()
-      .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`### ${E.listening} ${lfmUsername}'s Scrobbling Streaks — Last 90 Days`)
-      );
+    const container = new ContainerBuilder().addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ${E.listening} ${lfmUsername}'s Scrobbling Streaks — Last 90 Days`,
+      ),
+    );
 
     if (!hasAny) {
       container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`No streaks found in the last 90 days — keep scrobbling!`)
+        new TextDisplayBuilder().setContent(
+          `No streaks found in the last 90 days — keep scrobbling!`,
+        ),
       );
     } else {
       if (artistStreaks.length > 0) {
         container
-          .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-          .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`**${E.artists} Artist Streaks**`)
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
           )
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
-              artistStreaks.map((s, i) => formatStreak(s, i)).join('\n')
-            )
+              `**${E.artists} Artist Streaks**`,
+            ),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              artistStreaks.map((s, i) => formatStreak(s, i)).join("\n"),
+            ),
           );
       }
 
       if (trackStreaks.length > 0) {
         container
-          .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-          .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`**${E.tracks} Track Streaks**`)
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
           )
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
-              trackStreaks.map((s, i) => formatStreak(s, i)).join('\n')
-            )
+              `**${E.tracks} Track Streaks**`,
+            ),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              trackStreaks.map((s, i) => formatStreak(s, i)).join("\n"),
+            ),
           );
       }
 
       if (albumStreaks.length > 0) {
         container
-          .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
-          .addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`**${E.albums} Album Streaks**`)
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
           )
           .addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
-              albumStreaks.map((s, i) => formatStreak(s, i)).join('\n')
-            )
+              `**${E.albums} Album Streaks**`,
+            ),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              albumStreaks.map((s, i) => formatStreak(s, i)).join("\n"),
+            ),
           );
       }
     }
 
     container
-      .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`-# Based on last 90 days of scrobbles • up to 2,000 tracks analyzed`)
+        new TextDisplayBuilder().setContent(
+          `-# Based on last 90 days of scrobbles • up to 2,000 tracks analyzed`,
+        ),
       );
 
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

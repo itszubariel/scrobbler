@@ -14,38 +14,49 @@ const {
 import type { Command } from "../../index.js";
 
 const periodChoices = [
-  { name: "Last 7 days",    value: "7day" },
-  { name: "Last month",     value: "1month" },
-  { name: "Last 3 months",  value: "3month" },
-  { name: "Last 6 months",  value: "6month" },
-  { name: "Last year",      value: "12month" },
-  { name: "All time",       value: "overall" },
+  { name: "Last 7 days", value: "7day" },
+  { name: "Last month", value: "1month" },
+  { name: "Last 3 months", value: "3month" },
+  { name: "Last 6 months", value: "6month" },
+  { name: "Last year", value: "12month" },
+  { name: "All time", value: "overall" },
 ];
 
 export const tasteCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("taste")
     .setDescription("A breakdown of top genres")
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("user")
         .setDescription("Your top 50 genres")
-        .addStringOption(option =>
-          option.setName("period").setDescription("Time period").setRequired(false)
-            .addChoices(...periodChoices)
+        .addStringOption((option) =>
+          option
+            .setName("period")
+            .setDescription("Time period")
+            .setRequired(false)
+            .addChoices(...periodChoices),
         )
-        .addUserOption(option =>
-          option.setName("user").setDescription("Check another user's taste (optional)").setRequired(false)
-        )
+        .addUserOption((option) =>
+          option
+            .setName("user")
+            .setDescription("Check another user's taste (optional)")
+            .setRequired(false),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("server")
-        .setDescription("This server's top 50 genres based on all linked members")
-        .addStringOption(option =>
-          option.setName("period").setDescription("Time period").setRequired(false)
-            .addChoices(...periodChoices)
+        .setDescription(
+          "This server's top 50 genres based on all linked members",
         )
+        .addStringOption((option) =>
+          option
+            .setName("period")
+            .setDescription("Time period")
+            .setRequired(false)
+            .addChoices(...periodChoices),
+        ),
     ),
 
   async execute(interaction) {
@@ -59,9 +70,12 @@ export const tasteCommand: Command = {
       await executeTasteServer(interaction);
     } else {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} Unknown subcommand.`)
+        new TextDisplayBuilder().setContent(`${E.reject} Unknown subcommand.`),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
   },
 };

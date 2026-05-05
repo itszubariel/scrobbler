@@ -12,10 +12,10 @@ export async function buildGridCanvas(
   items: GridItem[],
   cols: number,
   rows: number,
-  count: number
+  count: number,
 ): Promise<Buffer> {
   const canvas = createCanvas(cols * CELL, rows * CELL);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
   for (let i = 0; i < count; i++) {
     const item = items[i];
@@ -24,35 +24,42 @@ export async function buildGridCanvas(
     const x = col * CELL;
     const y = row * CELL;
 
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = "#1a1a1a";
     ctx.fillRect(x, y, CELL, CELL);
 
     if (item?.imageUrl) {
       try {
         const img = await loadImage(item.imageUrl);
         ctx.drawImage(img, x, y, CELL, CELL);
-      } catch { /* fallback */ }
+      } catch {
+        /* fallback */
+      }
     }
 
     const grad = ctx.createLinearGradient(x, y + CELL - 100, x, y + CELL);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+    grad.addColorStop(0, "rgba(0,0,0,0)");
+    grad.addColorStop(1, "rgba(0,0,0,0.85)");
     ctx.fillStyle = grad;
     ctx.fillRect(x, y + CELL - 100, CELL, 100);
 
     if (item) {
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px Inter';
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 16px Inter";
       ctx.fillText(item.name, x + 10, y + CELL - 20, 190);
-      ctx.fillStyle = '#cccccc';
-      ctx.font = '12px Inter';
-      ctx.fillText(`${item.plays.toLocaleString('en-US')} plays`, x + 10, y + CELL - 6, 190);
+      ctx.fillStyle = "#cccccc";
+      ctx.font = "12px Inter";
+      ctx.fillText(
+        `${item.plays.toLocaleString("en-US")} plays`,
+        x + 10,
+        y + CELL - 6,
+        190,
+      );
     }
 
-    ctx.strokeStyle = '#2a2a2a';
+    ctx.strokeStyle = "#2a2a2a";
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, CELL, CELL);
   }
 
-  return canvas.toBuffer('image/png');
+  return canvas.toBuffer("image/png");
 }

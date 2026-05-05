@@ -19,24 +19,38 @@ const {
 export const TASTE_PAGE_SIZE = 10;
 
 export const PERIOD_LABELS_TASTE: Record<string, string> = {
-  "7day":    "Last 7 days",
-  "1month":  "Last month",
-  "3month":  "Last 3 months",
-  "6month":  "Last 6 months",
+  "7day": "Last 7 days",
+  "1month": "Last month",
+  "3month": "Last 3 months",
+  "6month": "Last 6 months",
   "12month": "Last year",
-  "overall": "All time",
+  overall: "All time",
 };
 
 export const BAR_COLORS = [
-  '#a78bfa', '#60a5fa', '#34d399', '#f472b6', '#fb923c',
-  '#facc15', '#38bdf8', '#f87171', '#a3e635', '#e879f9',
+  "#a78bfa",
+  "#60a5fa",
+  "#34d399",
+  "#f472b6",
+  "#fb923c",
+  "#facc15",
+  "#38bdf8",
+  "#f87171",
+  "#a3e635",
+  "#e879f9",
 ];
 
 export function capitalizeTag(tag: string): string {
-  return tag.replace(/\b\w/g, c => c.toUpperCase());
+  return tag.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-const BLOCKED_TAGS = new Set(["seen live", "favorites", "favourite", "favorite", "owned"]);
+const BLOCKED_TAGS = new Set([
+  "seen live",
+  "favorites",
+  "favourite",
+  "favorite",
+  "owned",
+]);
 
 export function isBlockedTag(tag: string, artistNames: Set<string>): boolean {
   const lower = tag.toLowerCase();
@@ -49,23 +63,26 @@ export function isBlockedTag(tag: string, artistNames: Set<string>): boolean {
 export async function fetchTasteData(
   lfmUsername: string,
   period: string,
-  apiKey: string
+  apiKey: string,
 ): Promise<{ tag: string; pct: number }[] | null> {
   const topRes = await fetch(
-    `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(lfmUsername)}&period=${period}&limit=50&api_key=${apiKey}&format=json`
+    `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(lfmUsername)}&period=${period}&limit=50&api_key=${apiKey}&format=json`,
   );
   const topData = (await topRes.json()) as any;
   if (topData.error) return null;
 
   const artists: any[] = topData.topartists?.artist ?? [];
-  const artistNames = new Set(artists.map(a => a.name.toLowerCase()));
+  const artistNames = new Set(artists.map((a) => a.name.toLowerCase()));
 
-  const artistInfos = await Promise.all(
-    artists.map(a =>
-      fetch(`https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(a.name)}&api_key=${apiKey}&format=json`)
-        .then(r => r.json()).catch(() => null)
-    )
-  ) as any[];
+  const artistInfos = (await Promise.all(
+    artists.map((a) =>
+      fetch(
+        `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(a.name)}&api_key=${apiKey}&format=json`,
+      )
+        .then((r) => r.json())
+        .catch(() => null),
+    ),
+  )) as any[];
 
   const tagWeights = new Map<string, number>();
   for (let i = 0; i < artists.length; i++) {
@@ -97,9 +114,12 @@ export async function buildTasteCanvas(
   allGenres: { tag: string; pct: number }[],
   title: string,
   periodLabel: string,
-  page: number
+  page: number,
 ): Promise<Buffer> {
-  const pageGenres = allGenres.slice(page * TASTE_PAGE_SIZE, (page + 1) * TASTE_PAGE_SIZE);
+  const pageGenres = allGenres.slice(
+    page * TASTE_PAGE_SIZE,
+    (page + 1) * TASTE_PAGE_SIZE,
+  );
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
 
   const WIDTH = 800;
@@ -109,28 +129,29 @@ export async function buildTasteCanvas(
   const HEIGHT = HEADER_H + pageGenres.length * ROW_H + FOOTER_H;
 
   const canvas = createCanvas(WIDTH, HEIGHT);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = '#111111';
+  ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ctx.fillStyle = '#1a1a1a';
+  ctx.fillStyle = "#1a1a1a";
   ctx.fillRect(0, 0, WIDTH, HEADER_H);
 
   const hazeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 200);
-  hazeGrad.addColorStop(0, 'rgba(120, 60, 220, 0.18)');
-  hazeGrad.addColorStop(0.5, 'rgba(80, 30, 160, 0.08)');
-  hazeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  hazeGrad.addColorStop(0, "rgba(120, 60, 220, 0.18)");
+  hazeGrad.addColorStop(0.5, "rgba(80, 30, 160, 0.08)");
+  hazeGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = hazeGrad;
   ctx.fillRect(0, 0, WIDTH, HEADER_H);
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 26px Inter';
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 26px Inter";
   ctx.fillText(title, 30, 44);
 
-  ctx.fillStyle = '#888888';
-  ctx.font = '15px Inter';
-  const pageIndicator = totalPages > 1 ? ` • Page ${page + 1} of ${totalPages}` : '';
+  ctx.fillStyle = "#888888";
+  ctx.font = "15px Inter";
+  const pageIndicator =
+    totalPages > 1 ? ` • Page ${page + 1} of ${totalPages}` : "";
   ctx.fillText(`${periodLabel}${pageIndicator}`, 30, 72);
 
   const LABEL_W = 200;
@@ -141,27 +162,30 @@ export async function buildTasteCanvas(
     const globalRank = page * TASTE_PAGE_SIZE + i;
     const y = HEADER_H + i * ROW_H;
     const MID_Y = y + ROW_H / 2;
-    const color = BAR_COLORS[globalRank % BAR_COLORS.length] ?? '#a78bfa';
+    const color = BAR_COLORS[globalRank % BAR_COLORS.length] ?? "#a78bfa";
 
-    ctx.fillStyle = i % 2 === 0 ? '#111111' : '#0e0e0e';
+    ctx.fillStyle = i % 2 === 0 ? "#111111" : "#0e0e0e";
     ctx.fillRect(0, y, WIDTH, ROW_H);
 
-    ctx.fillStyle = '#1e1e1e';
+    ctx.fillStyle = "#1e1e1e";
     ctx.fillRect(0, y + ROW_H - 1, WIDTH, 1);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px Inter';
-    ctx.textAlign = 'left';
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 16px Inter";
+    ctx.textAlign = "left";
     let label = capitalizeTag(genre.tag);
     if (ctx.measureText(label).width > LABEL_W - 20) {
-      while (ctx.measureText(label + '…').width > LABEL_W - 20 && label.length > 0) {
+      while (
+        ctx.measureText(label + "…").width > LABEL_W - 20 &&
+        label.length > 0
+      ) {
         label = label.slice(0, -1);
       }
-      label += '…';
+      label += "…";
     }
     ctx.fillText(label, 20, MID_Y + 6);
 
-    ctx.fillStyle = '#2a2a2a';
+    ctx.fillStyle = "#2a2a2a";
     ctx.beginPath();
     ctx.roundRect(BAR_X, MID_Y - 8, BAR_MAX_W, 16, 4);
     ctx.fill();
@@ -175,23 +199,27 @@ export async function buildTasteCanvas(
     ctx.globalAlpha = 1;
 
     ctx.fillStyle = color;
-    ctx.font = 'bold 14px Inter';
-    ctx.textAlign = 'right';
+    ctx.font = "bold 14px Inter";
+    ctx.textAlign = "right";
     ctx.fillText(`${genre.pct}%`, WIDTH - 20, MID_Y + 5);
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
   });
 
   const footerY = HEADER_H + pageGenres.length * ROW_H;
-  ctx.fillStyle = '#0a0a0a';
+  ctx.fillStyle = "#0a0a0a";
   ctx.fillRect(0, footerY, WIDTH, FOOTER_H);
 
-  ctx.fillStyle = '#555555';
-  ctx.font = '13px Inter';
-  ctx.textAlign = 'center';
-  ctx.fillText(`Based on top 50 artists • ${periodLabel}`, WIDTH / 2, footerY + 32);
-  ctx.textAlign = 'left';
+  ctx.fillStyle = "#555555";
+  ctx.font = "13px Inter";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    `Based on top 50 artists • ${periodLabel}`,
+    WIDTH / 2,
+    footerY + 32,
+  );
+  ctx.textAlign = "left";
 
-  return canvas.toBuffer('image/png');
+  return canvas.toBuffer("image/png");
 }
 
 export function buildTasteContainer(
@@ -202,45 +230,59 @@ export function buildTasteContainer(
   page: number,
   targetDiscordId: string,
   period: string,
-  imageUrl?: string
+  imageUrl?: string,
 ) {
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
-  const url = imageUrl ?? 'attachment://taste.png';
+  const url = imageUrl ?? "attachment://taste.png";
 
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${E.listening} ${lfmUsername}'s Top Genres — ${periodLabel}`)
+      new TextDisplayBuilder().setContent(
+        `### ${E.listening} ${lfmUsername}'s Top Genres — ${periodLabel}`,
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(url)
-      )
+        new MediaGalleryItemBuilder().setURL(url),
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ${pageStr(page, totalPages)} • ${allGenres.length} genres`
-      )
+        `-# ${pageStr(page, totalPages)} • ${allGenres.length} genres`,
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(false)
+        .setSpacing(SeparatorSpacingSize.Small),
     );
 
   if (totalPages > 1) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`taste_prev_${page}_${targetDiscordId}_${period}`)
-        .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
+        .setEmoji({
+          id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "scrobbler_prev",
+        })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page === 0),
       new ButtonBuilder()
         .setCustomId(`taste_next_${page}_${targetDiscordId}_${period}`)
-        .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
+        .setEmoji({
+          id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "scrobbler_next",
+        })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page >= totalPages - 1),
     );
@@ -259,46 +301,60 @@ export function buildTasteServerContainer(
   guildId: string,
   period: string,
   imageUrl?: string,
-  memberCount?: number
+  memberCount?: number,
 ) {
   const totalPages = Math.ceil(allGenres.length / TASTE_PAGE_SIZE);
-  const url = imageUrl ?? 'attachment://taste.png';
-  const memberStr = memberCount != null ? ` • ${memberCount} members` : '';
+  const url = imageUrl ?? "attachment://taste.png";
+  const memberStr = memberCount != null ? ` • ${memberCount} members` : "";
 
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${E.listening} ${guildName}'s Top Genres — ${periodLabel}`)
+      new TextDisplayBuilder().setContent(
+        `### ${E.listening} ${guildName}'s Top Genres — ${periodLabel}`,
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(url)
-      )
+        new MediaGalleryItemBuilder().setURL(url),
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(true)
+        .setSpacing(SeparatorSpacingSize.Small),
     )
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# ${pageStr(page, totalPages)}${memberStr} • ${allGenres.length} genres`
-      )
+        `-# ${pageStr(page, totalPages)}${memberStr} • ${allGenres.length} genres`,
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small)
+      new SeparatorBuilder()
+        .setDivider(false)
+        .setSpacing(SeparatorSpacingSize.Small),
     );
 
   if (totalPages > 1) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`taste_server_prev_${page}_${guildId}_${period}`)
-        .setEmoji({ id: E.prev.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_prev' })
+        .setEmoji({
+          id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "scrobbler_prev",
+        })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page === 0),
       new ButtonBuilder()
         .setCustomId(`taste_server_next_${page}_${guildId}_${period}`)
-        .setEmoji({ id: E.next.match(/:(\d+)>/)?.[1] ?? '0', name: 'scrobbler_next' })
+        .setEmoji({
+          id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "scrobbler_next",
+        })
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(page >= totalPages - 1),
     );

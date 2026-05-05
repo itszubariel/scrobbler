@@ -1,25 +1,27 @@
 export async function uploadToSupabase(
   buffer: Buffer,
   bucket: string,
-  filename: string
+  filename: string,
 ): Promise<string> {
   const supabaseUrl = process.env.SUPABASE_URL!;
   const serviceKey = process.env.SUPABASE_SERVICE_KEY!;
   const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${filename}`;
 
   const res = await fetch(uploadUrl, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${serviceKey}`,
-      'Content-Type': 'image/png',
-      'x-upsert': 'true',
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "image/png",
+      "x-upsert": "true",
     },
     body: buffer as unknown as BodyInit,
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    console.error(`Supabase upload failed [${bucket}/${filename}]: ${res.status} ${text}`);
+    const text = await res.text().catch(() => "");
+    console.error(
+      `Supabase upload failed [${bucket}/${filename}]: ${res.status} ${text}`,
+    );
   }
 
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;

@@ -4,7 +4,21 @@ All notable changes to scrobbler are documented here.
 
 ---
 
-## [1.1.1] — 2026-04-25
+## [1.2.1] — 2026-05-05
+
+### Improvements
+- Status page degraded threshold changed from "any service degraded" to 
+  "majority of services degraded", minor issues no longer mark the 
+  entire status page as degraded
+- Database health check timeout increased from 1.2s to 2.0s to better 
+  reflect acceptable response times and reduce false degraded states
+
+### Internal
+- Codebase-wide formatting pass across 65 files (no logic changes)
+
+---
+
+## [1.2.0] — 2026-04-25
 
 ### Fixes & Improvements
 - `/stats`, `/wk`, `/taste`, and `/recent` now cache all pages upfront on first run — page navigation is instant with no API calls on button clicks

@@ -18,38 +18,58 @@ import type { Command } from "../../index.js";
 export const wkCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("wk")
-    .setDescription("See who in this server knows a specific artist, album, track or genre")
-    .addSubcommand(sub =>
+    .setDescription(
+      "See who in this server knows a specific artist, album, track or genre",
+    )
+    .addSubcommand((sub) =>
       sub
         .setName("artist")
         .setDescription("Who has listened to this artist the most")
-        .addStringOption(option =>
-          option.setName("artist").setDescription("Artist name (defaults to now playing)").setRequired(false).setAutocomplete(true)
-        )
+        .addStringOption((option) =>
+          option
+            .setName("artist")
+            .setDescription("Artist name (defaults to now playing)")
+            .setRequired(false)
+            .setAutocomplete(true),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("album")
         .setDescription("Who has listened to this album the most")
-        .addStringOption(option =>
-          option.setName("album").setDescription("Album name (defaults to now playing)").setRequired(false).setAutocomplete(true)
-        )
+        .addStringOption((option) =>
+          option
+            .setName("album")
+            .setDescription("Album name (defaults to now playing)")
+            .setRequired(false)
+            .setAutocomplete(true),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("track")
         .setDescription("Who has listened to this track the most")
-        .addStringOption(option =>
-          option.setName("track").setDescription("Track name (defaults to now playing)").setRequired(false).setAutocomplete(true)
-        )
+        .addStringOption((option) =>
+          option
+            .setName("track")
+            .setDescription("Track name (defaults to now playing)")
+            .setRequired(false)
+            .setAutocomplete(true),
+        ),
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("genre")
         .setDescription("Who listens to this genre the most")
-        .addStringOption(option =>
-          option.setName("genre").setDescription("Genre name (defaults to your top genre now playing)").setRequired(false).setAutocomplete(true)
-        )
+        .addStringOption((option) =>
+          option
+            .setName("genre")
+            .setDescription(
+              "Genre name (defaults to your top genre now playing)",
+            )
+            .setRequired(false)
+            .setAutocomplete(true),
+        ),
     ),
 
   async execute(interaction) {
@@ -67,9 +87,12 @@ export const wkCommand: Command = {
       await executeWkGenres(interaction);
     } else {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} Unknown subcommand.`)
+        new TextDisplayBuilder().setContent(`${E.reject} Unknown subcommand.`),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
   },
 };

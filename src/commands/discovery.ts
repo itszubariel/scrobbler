@@ -20,12 +20,12 @@ import type { Command } from "../index.js";
 import { cmdMention } from "../utils.js";
 
 const PERIOD_LABELS: Record<string, string> = {
-  "7day":    "Last 7 days",
-  "1month":  "Last month",
-  "3month":  "Last 3 months",
-  "6month":  "Last 6 months",
+  "7day": "Last 7 days",
+  "1month": "Last month",
+  "3month": "Last 3 months",
+  "6month": "Last 6 months",
   "12month": "Last year",
-  "overall": "All time",
+  overall: "All time",
 };
 
 function getLabel(undergroundScore: number): string {
@@ -37,16 +37,16 @@ function getLabel(undergroundScore: number): string {
 }
 
 async function buildDiscoveryCanvas(
-  rows: { label: string; score: number; color: string }[]
+  rows: { label: string; score: number; color: string }[],
 ): Promise<Buffer> {
   const WIDTH = 800;
   const ROW_H = 56;
   const HEIGHT = rows.length * ROW_H;
 
   const canvas = createCanvas(WIDTH, HEIGHT);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = '#111111';
+  ctx.fillStyle = "#111111";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
   const LABEL_W = 120;
@@ -57,22 +57,25 @@ async function buildDiscoveryCanvas(
     const y = i * ROW_H;
     const MID_Y = y + ROW_H / 2;
 
-    ctx.fillStyle = i % 2 === 0 ? '#111111' : '#0e0e0e';
+    ctx.fillStyle = i % 2 === 0 ? "#111111" : "#0e0e0e";
     ctx.fillRect(0, y, WIDTH, ROW_H);
-    ctx.fillStyle = '#1e1e1e';
+    ctx.fillStyle = "#1e1e1e";
     ctx.fillRect(0, y + ROW_H - 1, WIDTH, 1);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px Inter';
-    ctx.textAlign = 'left';
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 16px Inter";
+    ctx.textAlign = "left";
     ctx.fillText(row.label, 20, MID_Y + 6);
 
-    ctx.fillStyle = '#2a2a2a';
+    ctx.fillStyle = "#2a2a2a";
     ctx.beginPath();
     ctx.roundRect(BAR_X, MID_Y - 8, BAR_MAX_W, 16, 4);
     ctx.fill();
 
-    const fillW = Math.max(row.score > 0 ? 8 : 0, BAR_MAX_W * (row.score / 100));
+    const fillW = Math.max(
+      row.score > 0 ? 8 : 0,
+      BAR_MAX_W * (row.score / 100),
+    );
     if (fillW > 0) {
       ctx.fillStyle = row.color;
       ctx.globalAlpha = 0.85;
@@ -83,96 +86,124 @@ async function buildDiscoveryCanvas(
     }
 
     ctx.fillStyle = row.color;
-    ctx.font = 'bold 14px Inter';
-    ctx.textAlign = 'right';
+    ctx.font = "bold 14px Inter";
+    ctx.textAlign = "right";
     ctx.fillText(`${row.score}%`, WIDTH - 20, MID_Y + 5);
-    ctx.textAlign = 'left';
+    ctx.textAlign = "left";
   });
 
-  return canvas.toBuffer('image/png');
+  return canvas.toBuffer("image/png");
 }
 
 export const discoveryCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("discovery")
     .setDescription("See how underground or mainstream your music taste is")
-    .addUserOption(option =>
-      option.setName("user").setDescription("Check another user's discovery score (optional)").setRequired(false)
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("Check another user's discovery score (optional)")
+        .setRequired(false),
     )
-    .addStringOption(option =>
-      option.setName("period").setDescription("Time period").setRequired(false)
+    .addStringOption((option) =>
+      option
+        .setName("period")
+        .setDescription("Time period")
+        .setRequired(false)
         .addChoices(
-          { name: "Last 7 days",    value: "7day" },
-          { name: "Last month",     value: "1month" },
-          { name: "Last 3 months",  value: "3month" },
-          { name: "Last 6 months",  value: "6month" },
-          { name: "Last year",      value: "12month" },
-          { name: "All time",       value: "overall" },
-        )
+          { name: "Last 7 days", value: "7day" },
+          { name: "Last month", value: "1month" },
+          { name: "Last 3 months", value: "3month" },
+          { name: "Last 6 months", value: "6month" },
+          { name: "Last year", value: "12month" },
+          { name: "All time", value: "overall" },
+        ),
     ),
 
   async execute(interaction) {
     await interaction.deferReply();
 
     const apiKey = process.env.LASTFM_API_KEY!;
-    const targetDiscordUser = interaction.options.getUser("user") ?? interaction.user;
+    const targetDiscordUser =
+      interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
-    const period = (interaction.options as any).getString("period") ?? "overall";
+    const period =
+      (interaction.options as any).getString("period") ?? "overall";
     const periodLabel = PERIOD_LABELS[period] ?? "All time";
 
-    const dbUser = await prisma.user.findUnique({ where: { discordId: targetDiscordUser.id } });
+    const dbUser = await prisma.user.findUnique({
+      where: { discordId: targetDiscordUser.id },
+    });
 
     if (!dbUser?.lastfmUsername) {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           isOwnProfile
-            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention('link')} to get started.`
-            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`
-        )
+            ? `${E.reject} You haven't linked your Last.fm account yet! Use ${cmdMention("link")} to get started.`
+            : `${E.reject} **${targetDiscordUser.username}** hasn't linked their Last.fm account yet.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
     const lfmUsername = dbUser.lastfmUsername;
 
-    const topRes = await fetch(
-      `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(lfmUsername)}&period=${period}&limit=100&api_key=${apiKey}&format=json`
-    ).then(r => r.json()).catch(() => null) as any;
+    const topRes = (await fetch(
+      `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(lfmUsername)}&period=${period}&limit=100&api_key=${apiKey}&format=json`,
+    )
+      .then((r) => r.json())
+      .catch(() => null)) as any;
 
     const artists: any[] = topRes?.topartists?.artist ?? [];
 
     if (artists.length === 0) {
       const container = new ContainerBuilder().addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`${E.reject} No listening data found for **${lfmUsername}** in this period.`)
+        new TextDisplayBuilder().setContent(
+          `${E.reject} No listening data found for **${lfmUsername}** in this period.`,
+        ),
       );
-      await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
       return;
     }
 
-    const artistInfos = await Promise.all(
-      artists.map(a =>
-        fetch(`https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(a.name)}&api_key=${apiKey}&format=json`)
-          .then(r => r.json()).catch(() => null)
-      )
-    ) as any[];
+    const artistInfos = (await Promise.all(
+      artists.map((a) =>
+        fetch(
+          `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(a.name)}&api_key=${apiKey}&format=json`,
+        )
+          .then((r) => r.json())
+          .catch(() => null),
+      ),
+    )) as any[];
 
     let totalWeightedScore = 0;
     let totalPlaycount = 0;
-    const artistScores: { name: string; listeners: number; mainstreamScore: number }[] = [];
+    const artistScores: {
+      name: string;
+      listeners: number;
+      mainstreamScore: number;
+    }[] = [];
 
     for (let i = 0; i < artists.length; i++) {
       const artist = artists[i];
       const info = artistInfos[i];
-      const listeners = parseInt(info?.artist?.stats?.listeners ?? '0') || 0;
-      const playcount = parseInt(artist.playcount ?? '0') || 1;
+      const listeners = parseInt(info?.artist?.stats?.listeners ?? "0") || 0;
+      const playcount = parseInt(artist.playcount ?? "0") || 1;
       const mainstreamScore = Math.min(listeners / 5_000_000, 1) * 100;
       totalWeightedScore += mainstreamScore * playcount;
       totalPlaycount += playcount;
       artistScores.push({ name: artist.name, listeners, mainstreamScore });
     }
 
-    const mainstreamScore = totalPlaycount > 0 ? Math.round(totalWeightedScore / totalPlaycount) : 50;
+    const mainstreamScore =
+      totalPlaycount > 0 ? Math.round(totalWeightedScore / totalPlaycount) : 50;
     const undergroundScore = 100 - mainstreamScore;
     const label = getLabel(undergroundScore);
 
@@ -181,41 +212,57 @@ export const discoveryCommand: Command = {
     const mostMainstream = sorted[sorted.length - 1]!;
 
     const scoreRows = [
-      { label: 'Underground', score: undergroundScore, color: '#a78bfa' },
-      { label: 'Mainstream',  score: mainstreamScore,  color: '#f472b6' },
+      { label: "Underground", score: undergroundScore, color: "#a78bfa" },
+      { label: "Mainstream", score: mainstreamScore, color: "#f472b6" },
     ];
 
     const imageBuffer = await buildDiscoveryCanvas(scoreRows);
-    const attachment = new AttachmentBuilder(imageBuffer, { name: 'discovery.png' });
+    const attachment = new AttachmentBuilder(imageBuffer, {
+      name: "discovery.png",
+    });
 
     const container = new ContainerBuilder()
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`### Discovery Score — ${lfmUsername}`),
+        new TextDisplayBuilder().setContent(
+          `### Discovery Score — ${lfmUsername}`,
+        ),
         new TextDisplayBuilder().setContent(`# ${undergroundScore}%\n${label}`),
       )
       .addSeparatorComponents(
-        new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
       )
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL('attachment://discovery.png')
-        )
+          new MediaGalleryItemBuilder().setURL("attachment://discovery.png"),
+        ),
       )
       .addSeparatorComponents(
-        new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
       )
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `${E.search} **Most Underground:** ${mostUnderground.name} — ${mostUnderground.listeners.toLocaleString('en-US')} listeners\n${E.fm} **Most Mainstream:** ${mostMainstream.name} — ${mostMainstream.listeners.toLocaleString('en-US')} listeners`
-        )
+          `${E.search} **Most Underground:** ${mostUnderground.name} — ${mostUnderground.listeners.toLocaleString("en-US")} listeners\n${E.fm} **Most Mainstream:** ${mostMainstream.name} — ${mostMainstream.listeners.toLocaleString("en-US")} listeners`,
+        ),
       )
       .addSeparatorComponents(
-        new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
       )
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`-# Based on your top 100 artists • ${periodLabel}`)
+        new TextDisplayBuilder().setContent(
+          `-# Based on your top 100 artists • ${periodLabel}`,
+        ),
       );
 
-    await interaction.editReply({ files: [attachment], components: [container], flags: MessageFlags.IsComponentsV2 });
+    await interaction.editReply({
+      files: [attachment],
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

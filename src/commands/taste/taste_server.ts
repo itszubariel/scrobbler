@@ -20,18 +20,21 @@ const TTL_MS = 15 * 60 * 1000;
 export async function fetchServerTasteData(
   guildId: string,
   period: string,
-  apiKey: string
+  apiKey: string,
 ): Promise<{ tag: string; pct: number }[] | null> {
   const server = await prisma.server.findUnique({
     where: { guildId },
     include: { members: { include: { user: true } } },
   });
 
-  const linkedMembers = server?.members.filter(m => m.user.lastfmUsername) ?? [];
+  const linkedMembers =
+    server?.members.filter((m) => m.user.lastfmUsername) ?? [];
   if (linkedMembers.length === 0) return null;
 
   const memberGenres = await Promise.all(
-    linkedMembers.map(m => fetchTasteData(m.user.lastfmUsername!, period, apiKey))
+    linkedMembers.map((m) =>
+      fetchTasteData(m.user.lastfmUsername!, period, apiKey),
+    ),
   );
 
   const tagWeights = new Map<string, number>();
@@ -42,11 +45,16 @@ export async function fetchServerTasteData(
     }
   }
 
-  const sorted = [...tagWeights.entries()].sort((a, b) => b[1] - a[1]).slice(0, 50);
+  const sorted = [...tagWeights.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 50);
   if (sorted.length === 0) return null;
 
   const total = sorted.reduce((sum, [, w]) => sum + w, 0);
-  return sorted.map(([tag, weight]) => ({ tag, pct: Math.round((weight / total) * 100) }));
+  return sorted.map(([tag, weight]) => ({
+    tag,
+    pct: Math.round((weight / total) * 100),
+  }));
 }
 
 export async function executeTasteServer(interaction: any): Promise<void> {
@@ -54,9 +62,14 @@ export async function executeTasteServer(interaction: any): Promise<void> {
 
   if (!interaction.guildId || !interaction.guild) {
     const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`${E.reject} This command only works in servers.`)
+      new TextDisplayBuilder().setContent(
+        `${E.reject} This command only works in servers.`,
+      ),
     );
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
     return;
   }
 
@@ -69,21 +82,36 @@ export async function executeTasteServer(interaction: any): Promise<void> {
     include: { members: { include: { user: true } } },
   });
 
-  const linkedMembers = server?.members.filter(m => m.user.lastfmUsername) ?? [];
+  const linkedMembers =
+    server?.members.filter((m) => m.user.lastfmUsername) ?? [];
   if (linkedMembers.length === 0) {
     const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`${E.reject} No members have linked their Last.fm yet. Use ${cmdMention('link')} to get started.`)
+      new TextDisplayBuilder().setContent(
+        `${E.reject} No members have linked their Last.fm yet. Use ${cmdMention("link")} to get started.`,
+      ),
     );
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
     return;
   }
 
-  const allGenres = await fetchServerTasteData(interaction.guildId, period, apiKey);
+  const allGenres = await fetchServerTasteData(
+    interaction.guildId,
+    period,
+    apiKey,
+  );
   if (!allGenres) {
     const container = new ContainerBuilder().addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`${E.reject} Couldn't determine genre data for this server.`)
+      new TextDisplayBuilder().setContent(
+        `${E.reject} Couldn't determine genre data for this server.`,
+      ),
     );
-    await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
     return;
   }
 
@@ -91,25 +119,64 @@ export async function executeTasteServer(interaction: any): Promise<void> {
   const title = `${guildName}'s Taste Profile`;
 
   const buffers = await Promise.all(
-    Array.from({ length: totalPages }, (_, i) => buildTasteCanvas(allGenres, title, periodLabel, i))
+    Array.from({ length: totalPages }, (_, i) =>
+      buildTasteCanvas(allGenres, title, periodLabel, i),
+    ),
   );
   const urls = await Promise.all(
-    buffers.map((buf, i) => uploadToSupabase(buf, 'taste-cache', `server_${interaction.guildId}_${period}_${i}.png`))
+    buffers.map((buf, i) =>
+      uploadToSupabase(
+        buf,
+        "taste-cache",
+        `server_${interaction.guildId}_${period}_${i}.png`,
+      ),
+    ),
   );
 
   await (prisma as any).tasteServerCache.upsert({
     where: { guildId_period: { guildId: interaction.guildId, period } },
-    create: { guildId: interaction.guildId, period, urls, totalPages, expiresAt: new Date(Date.now() + TTL_MS) },
+    create: {
+      guildId: interaction.guildId,
+      period,
+      urls,
+      totalPages,
+      expiresAt: new Date(Date.now() + TTL_MS),
+    },
     update: { urls, totalPages, expiresAt: new Date(Date.now() + TTL_MS) },
   });
 
   const memberCount = linkedMembers.length;
   await (prisma as any).tasteServerCache.upsert({
     where: { guildId_period: { guildId: interaction.guildId, period } },
-    create: { guildId: interaction.guildId, period, urls, totalPages, memberCount, expiresAt: new Date(Date.now() + TTL_MS) },
-    update: { urls, totalPages, memberCount, expiresAt: new Date(Date.now() + TTL_MS) },
+    create: {
+      guildId: interaction.guildId,
+      period,
+      urls,
+      totalPages,
+      memberCount,
+      expiresAt: new Date(Date.now() + TTL_MS),
+    },
+    update: {
+      urls,
+      totalPages,
+      memberCount,
+      expiresAt: new Date(Date.now() + TTL_MS),
+    },
   });
 
-  const container = buildTasteServerContainer(allGenres, null, guildName, periodLabel, 0, interaction.guildId, period, urls[0]!, memberCount);
-  await interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+  const container = buildTasteServerContainer(
+    allGenres,
+    null,
+    guildName,
+    periodLabel,
+    0,
+    interaction.guildId,
+    period,
+    urls[0]!,
+    memberCount,
+  );
+  await interaction.editReply({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+  });
 }
