@@ -9,6 +9,7 @@ import { executeDevLookup } from "./sub/lookup.js";
 import { executeDevEval } from "./sub/eval.js";
 import { executeDevTestCanvas } from "./sub/testcanvas.js";
 import { executeDevBotStats } from "./sub/botstats.js";
+import { executeDevKiss } from "./sub/kiss.js";
 import type { Command } from "../../index.js";
 
 export const devCommand: Command = {
@@ -62,15 +63,30 @@ export const devCommand: Command = {
       s
         .setName("testcanvas")
         .setDescription("Render a test leaderboard canvas"),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("kiss")
+        .setDescription("Kiss someone (for testing purposes)")
+        .addUserOption((o) =>
+          o.setName("user").setDescription("User to kiss").setRequired(true),
+        ),
     ),
 
   async execute(interaction) {
+    const sub = interaction.options.getSubcommand();
+
+    // Kiss command is public and available to everyone
+    if (sub === "kiss") {
+      await interaction.deferReply();
+      return executeDevKiss(interaction);
+    }
+
+    // All other dev commands require developer access
     if (await denyIfNotDev(interaction)) return;
 
     // Defer immediately so slow subcommands don't hit the 3s Discord timeout
     await interaction.deferReply({ ephemeral: true });
-
-    const sub = interaction.options.getSubcommand();
 
     if (sub === "stats") return executeDevStats(interaction);
     if (sub === "botstats") return executeDevBotStats(interaction);
