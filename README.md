@@ -36,6 +36,9 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 | `/personality` | Discover your music personality type |
 | `/streak` | Your top listening streaks over the last 90 days |
 | `/wrapped` | Your personalized Scrobbler Wrapped |
+| `/rec artists` | Get personalized artist recommendations |
+| `/rec tracks` | Get personalized track recommendations |
+| `/rec albums` | Get personalized album recommendations |
 | `/wk artist` | Who has listened to this artist the most |
 | `/wk album` | Who has listened to this album the most |
 | `/wk track` | Who has listened to this track the most |

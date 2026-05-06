@@ -2,6 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
+import { getCache, setCache } from "../cache.js";
 
 const {
   SlashCommandBuilder,
@@ -14,6 +15,29 @@ const {
 
 import type { Command } from "../index.js";
 import { cmdMention } from "../utils.js";
+
+interface CachedStreak {
+  artistStreaks: Array<{
+    name: string;
+    days: number;
+    active: boolean;
+    daysAgo: number;
+  }>;
+  trackStreaks: Array<{
+    name: string;
+    artist: string;
+    days: number;
+    active: boolean;
+    daysAgo: number;
+  }>;
+  albumStreaks: Array<{
+    name: string;
+    artist: string;
+    days: number;
+    active: boolean;
+    daysAgo: number;
+  }>;
+}
 
 const MEDALS = ["1.", "2.", "3."];
 
@@ -108,6 +132,116 @@ export const streakCommand: Command = {
     const targetDiscordUser =
       interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
+
+    // Check cache first
+    const cacheKey = `streak_${targetDiscordUser.id}`;
+    const cached = await getCache<CachedStreak>(cacheKey);
+
+    if (cached) {
+      // Rebuild container from cached data
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `### ${E.streak} Listening Streaks — ${targetDiscordUser.username}`,
+          ),
+          new TextDisplayBuilder().setContent(
+            `-# Your longest consecutive listening streaks`,
+          ),
+        )
+        .addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(true)
+            .setSpacing(SeparatorSpacingSize.Small),
+        );
+
+      // Artist streaks
+      if (cached.artistStreaks.length > 0) {
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `**${E.artists} Top Artist Streaks**`,
+          ),
+        );
+        cached.artistStreaks.forEach((streak, idx) => {
+          const medal = MEDALS[idx] ?? `${idx + 1}.`;
+          const status = streak.active
+            ? "🔥 Active"
+            : `Ended ${streak.daysAgo} days ago`;
+          container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `${medal} **${streak.name}** — ${streak.days} days\n-# ${status}`,
+            ),
+          );
+        });
+        container.addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(false)
+            .setSpacing(SeparatorSpacingSize.Small),
+        );
+      }
+
+      // Track streaks
+      if (cached.trackStreaks.length > 0) {
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `**${E.tracks} Top Track Streaks**`,
+          ),
+        );
+        cached.trackStreaks.forEach((streak, idx) => {
+          const medal = MEDALS[idx] ?? `${idx + 1}.`;
+          const status = streak.active
+            ? "🔥 Active"
+            : `Ended ${streak.daysAgo} days ago`;
+          container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `${medal} **${streak.name}** by ${streak.artist} — ${streak.days} days\n-# ${status}`,
+            ),
+          );
+        });
+        container.addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(false)
+            .setSpacing(SeparatorSpacingSize.Small),
+        );
+      }
+
+      // Album streaks
+      if (cached.albumStreaks.length > 0) {
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `**${E.albums} Top Album Streaks**`,
+          ),
+        );
+        cached.albumStreaks.forEach((streak, idx) => {
+          const medal = MEDALS[idx] ?? `${idx + 1}.`;
+          const status = streak.active
+            ? "🔥 Active"
+            : `Ended ${streak.daysAgo} days ago`;
+          container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `${medal} **${streak.name}** by ${streak.artist} — ${streak.days} days\n-# ${status}`,
+            ),
+          );
+        });
+      }
+
+      container
+        .addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(true)
+            .setSpacing(SeparatorSpacingSize.Small),
+        )
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `-# Powered by Last.fm • ${E.music} Scrobbler`,
+          ),
+        );
+
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+      return;
+    }
 
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordUser.id },
@@ -308,6 +442,46 @@ export const streakCommand: Command = {
           `-# Based on last 90 days of scrobbles • up to 2,000 tracks analyzed`,
         ),
       );
+
+    // Save to cache
+    const today = todayStr();
+    const cacheData: CachedStreak = {
+      artistStreaks: artistStreaks.map((s) => {
+        const daysAgo = daysBetween(s.lastDay, today);
+        const isActive = daysAgo <= 3;
+        return {
+          name: s.name,
+          days: s.days,
+          active: isActive,
+          daysAgo,
+        };
+      }),
+      trackStreaks: trackStreaks.map((s) => {
+        const daysAgo = daysBetween(s.lastDay, today);
+        const isActive = daysAgo <= 3;
+        const parts = s.name.split("|||");
+        return {
+          name: parts[0] ?? s.name,
+          artist: parts[1] ?? "",
+          days: s.days,
+          active: isActive,
+          daysAgo,
+        };
+      }),
+      albumStreaks: albumStreaks.map((s) => {
+        const daysAgo = daysBetween(s.lastDay, today);
+        const isActive = daysAgo <= 3;
+        const parts = s.name.split("|||");
+        return {
+          name: parts[0] ?? s.name,
+          artist: parts[1] ?? "",
+          days: s.days,
+          active: isActive,
+          daysAgo,
+        };
+      }),
+    };
+    await setCache(cacheKey, cacheData, 30);
 
     await interaction.editReply({
       components: [container],

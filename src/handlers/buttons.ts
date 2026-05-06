@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { prisma } from "../db.js";
+import { getCache } from "../cache.js";
 import {
   ContainerBuilder,
   TextDisplayBuilder,
@@ -86,10 +87,13 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const currentPage = parseInt(parts[2]);
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).statsScrobblesCache.findUnique({
-      where: { guildId },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    const cacheKey = `stats_scrobbles_${guildId}`;
+    const cache = await getCache<{
+      imageUrls: string[];
+      pageCount: number;
+      memberCount: number;
+    }>(cacheKey);
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -101,14 +105,12 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages, footerText, memberCount } = cache;
-    const footer = footerText
-      ? `-# ${pageStr(newPage, totalPages)} • ${memberCount ?? ""} members • ${footerText}`
-      : `-# ${pageStr(newPage, totalPages)} • ${memberCount ?? ""} members`;
+    const { imageUrls, pageCount, memberCount } = cache;
+    const footer = `-# ${pageStr(newPage, pageCount)} • ${memberCount} members`;
     const container = urlContainer(
-      urls[newPage],
+      imageUrls[newPage]!,
       newPage,
-      totalPages,
+      pageCount,
       footer,
       `stats_prev_${newPage}_${clickerId}`,
       `stats_next_${newPage}_${clickerId}`,
@@ -130,10 +132,28 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     await interaction.deferUpdate();
 
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
-    const cache = await (prisma as any).recentCache.findUnique({
-      where: { discordId: targetDiscordId },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+
+    const cacheKey = `recent_${targetDiscordId}`;
+    const cache = await getCache<{
+      tracks: Array<{
+        name: string;
+        artist: string;
+        url: string | null;
+        timeAgo: string;
+        timestamp: number | null;
+      }>;
+      headerTrack: {
+        name: string;
+        artist: string;
+        url: string | null;
+        isNowPlaying: boolean;
+      };
+      totalPages: number;
+      totalTracks: number;
+      uniqueArtists: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -149,12 +169,71 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       where: { discordId: targetDiscordId },
     });
     if (!dbUser?.lastfmUsername) return;
-    const container = buildRecentContainer(
-      cache.tracks as any[],
-      dbUser.lastfmUsername,
-      targetDiscordId,
-      newPage,
+
+    const lfmUsername = dbUser.lastfmUsername;
+    const PAGE_SIZE = 10;
+
+    const headerTrack = cache.headerTrack;
+    const summaryLine = headerTrack.isNowPlaying
+      ? `${E.musicalNote} Now playing: ${headerTrack.url ? `[**${headerTrack.name}**](${headerTrack.url})` : `**${headerTrack.name}**`} by **${headerTrack.artist}**`
+      : `${E.musicalNote} Last played: ${headerTrack.url ? `[**${headerTrack.name}**](${headerTrack.url})` : `**${headerTrack.name}**`} by **${headerTrack.artist}**`;
+
+    const pageTracks = cache.tracks.slice(
+      newPage * PAGE_SIZE,
+      (newPage + 1) * PAGE_SIZE,
     );
+
+    const lines = pageTracks.map((t) => {
+      const trackText = t.url ? `[**${t.name}**](${t.url})` : `**${t.name}**`;
+      return `${t.timeAgo} • ${trackText} by **${t.artist}**`;
+    });
+
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `## ${lfmUsername}'s Recent Tracks`,
+        ),
+        new TextDisplayBuilder().setContent(summaryLine),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(lines.join("\n")),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `-# ${cache.totalTracks} scrobbles • ${cache.uniqueArtists} unique artists • ${pageStr(newPage, cache.totalPages)}`,
+        ),
+      );
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`recent_prev_${newPage}_${targetDiscordId}`)
+        .setEmoji({
+          id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "rewind_prev",
+        })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(newPage === 0),
+      new ButtonBuilder()
+        .setCustomId(`recent_next_${newPage}_${targetDiscordId}`)
+        .setEmoji({
+          id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+          name: "rewind_next",
+        })
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(newPage >= cache.totalPages - 1),
+    );
+    container.addActionRowComponents(row as any);
+
     await interaction.editReply({ components: [container], flags: 32768 });
     return;
   }
@@ -175,10 +254,16 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const periodLabel = PERIOD_LABELS_TASTE[period] ?? "All time";
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).tasteUserCache.findUnique({
-      where: { discordId_period: { discordId: targetDiscordId, period } },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    const cacheKey = `taste_user_${targetDiscordId}_${period}`;
+    const cache = await getCache<{
+      imageUrls: string[];
+      genres: Array<{ name: string; percentage: number }>;
+      topThree: string[];
+      totalArtists: number;
+      totalPages: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -190,7 +275,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages } = cache;
+    const { imageUrls, totalPages } = cache;
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordId },
     });
@@ -209,7 +294,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       )
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL(urls[newPage]),
+          new MediaGalleryItemBuilder().setURL(imageUrls[newPage]!),
         ),
       )
       .addSeparatorComponents(
@@ -219,7 +304,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       )
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `-# ${pageStr(newPage, totalPages)} • ${periodLabel}`,
+          `-# ${pageStr(newPage, totalPages)} • ${cache.genres.length} genres`,
         ),
       )
       .addSeparatorComponents(
@@ -266,10 +351,17 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const periodLabel = PERIOD_LABELS_TASTE[period] ?? "All time";
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).tasteServerCache.findUnique({
-      where: { guildId_period: { guildId: storedGuildId, period } },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    const cacheKey = `taste_server_${storedGuildId}_${period}`;
+    const cache = await getCache<{
+      imageUrls: string[];
+      genres: Array<{ name: string; percentage: number }>;
+      topThree: string[];
+      totalArtists: number;
+      totalPages: number;
+      memberCount: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -281,7 +373,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages, memberCount } = cache;
+    const { imageUrls, totalPages, memberCount } = cache;
     const guildName = guild?.name ?? "Server";
     const memberStr = memberCount ? ` • ${memberCount} members` : "";
 
@@ -298,7 +390,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       )
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL(urls[newPage]),
+          new MediaGalleryItemBuilder().setURL(imageUrls[newPage]!),
         ),
       )
       .addSeparatorComponents(
@@ -308,7 +400,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       )
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `-# ${pageStr(newPage, totalPages)}${memberStr} • ${periodLabel}`,
+          `-# ${pageStr(newPage, totalPages)}${memberStr} • ${cache.genres.length} genres`,
         ),
       )
       .addSeparatorComponents(
@@ -353,10 +445,14 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const currentPage = parseInt(parts[3]);
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).statsArtistsCache.findUnique({
-      where: { guildId },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    const cacheKey = `stats_artists_${guildId}`;
+    const cache = await getCache<{
+      imageUrls: string[];
+      pageCount: number;
+      memberCount: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -368,12 +464,12 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages, memberCount } = cache;
+    const { imageUrls, pageCount, memberCount } = cache;
     const container = urlContainer(
-      urls[newPage],
+      imageUrls[newPage]!,
       newPage,
-      totalPages,
-      `-# ${pageStr(newPage, totalPages)} • ${memberCount} members`,
+      pageCount,
+      `-# ${pageStr(newPage, pageCount)} • ${memberCount} members`,
       `stats_artists_prev_${newPage}_${clickerId}`,
       `stats_artists_next_${newPage}_${clickerId}`,
     );
@@ -395,10 +491,14 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const currentPage = parseInt(parts[3]);
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).statsAlbumsCache.findUnique({
-      where: { guildId },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    const cacheKey = `stats_albums_${guildId}`;
+    const cache = await getCache<{
+      imageUrls: string[];
+      pageCount: number;
+      memberCount: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -410,12 +510,12 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages, memberCount } = cache;
+    const { imageUrls, pageCount, memberCount } = cache;
     const container = urlContainer(
-      urls[newPage],
+      imageUrls[newPage]!,
       newPage,
-      totalPages,
-      `-# ${pageStr(newPage, totalPages)} • ${memberCount} members`,
+      pageCount,
+      `-# ${pageStr(newPage, pageCount)} • ${memberCount} members`,
       `stats_albums_prev_${newPage}_${clickerId}`,
       `stats_albums_next_${newPage}_${clickerId}`,
     );
@@ -437,10 +537,14 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const currentPage = parseInt(parts[3]);
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).statsGenresCache.findUnique({
-      where: { guildId },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    const cacheKey = `stats_genres_${guildId}`;
+    const cache = await getCache<{
+      imageUrls: string[];
+      pageCount: number;
+      memberCount: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -452,12 +556,12 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages, memberCount } = cache;
+    const { imageUrls, pageCount, memberCount } = cache;
     const container = urlContainer(
-      urls[newPage],
+      imageUrls[newPage]!,
       newPage,
-      totalPages,
-      `-# ${pageStr(newPage, totalPages)} • ${memberCount} members`,
+      pageCount,
+      `-# ${pageStr(newPage, pageCount)} • ${memberCount} members`,
       `stats_genres_prev_${newPage}_${clickerId}`,
       `stats_genres_next_${newPage}_${clickerId}`,
     );
@@ -474,13 +578,31 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const [, type, dir, pageStr, storedGuildId, encodedKey] = match;
     const currentPage = parseInt(pageStr);
     const newPage = dir === "next" ? currentPage + 1 : currentPage - 1;
-    const cacheKey = `${type}:${decodeURIComponent(encodedKey)}`;
+    const decodedKey = decodeURIComponent(encodedKey);
     await interaction.deferUpdate();
 
-    const cache = await (prisma as any).wkCache.findUnique({
-      where: { guildId_key: { guildId: storedGuildId, key: cacheKey } },
-    });
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    // Build cache key based on type
+    let cacheKey: string;
+    if (type === "artist") {
+      cacheKey = `wk_artists_${storedGuildId}_${decodedKey}`;
+    } else if (type === "track") {
+      // Track format is "trackName_artistName"
+      cacheKey = `wk_tracks_${storedGuildId}_${decodedKey}`;
+    } else if (type === "album") {
+      // Album format is "albumName_artistName"
+      cacheKey = `wk_albums_${storedGuildId}_${decodedKey}`;
+    } else {
+      // genre
+      cacheKey = `wk_genres_${storedGuildId}_${decodedKey}`;
+    }
+
+    const cache = await getCache<{
+      imageUrls: string[];
+      pageCount: number;
+      memberCount: number;
+    }>(cacheKey);
+
+    if (!cache) {
       await interaction.editReply({
         components: [
           new ContainerBuilder().addTextDisplayComponents(
@@ -492,12 +614,12 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const { urls, totalPages, totalListeners } = cache;
+    const { imageUrls, pageCount, memberCount } = cache;
     const container = urlContainer(
-      urls[newPage],
+      imageUrls[newPage]!,
       newPage,
-      totalPages,
-      `-# ${pageStr(newPage, totalPages)} • ${totalListeners} listener${totalListeners === 1 ? "" : "s"} in this server`,
+      pageCount,
+      `-# ${pageStr(newPage, pageCount)} • ${memberCount} listener${memberCount === 1 ? "" : "s"} in this server`,
       `wk_${type}_prev_${newPage}_${storedGuildId}_${encodedKey}`,
       `wk_${type}_next_${newPage}_${storedGuildId}_${encodedKey}`,
     );
@@ -520,11 +642,28 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const TOTAL = 5;
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    const cache = await (prisma as any).wrappedCache.findUnique({
-      where: { discordId: targetDiscordId },
-    });
+    // Need to get period from somewhere - check all possible periods
+    let cache: { imageUrls: string[] } | null = null;
+    let period = "7day";
 
-    if (!cache || new Date(cache.expiresAt) < new Date()) {
+    for (const p of [
+      "7day",
+      "1month",
+      "3month",
+      "6month",
+      "12month",
+      "overall",
+    ]) {
+      const cacheKey = `wrapped_${targetDiscordId}_${p}`;
+      const c = await getCache<{ imageUrls: string[] }>(cacheKey);
+      if (c) {
+        cache = c;
+        period = p;
+        break;
+      }
+    }
+
+    if (!cache) {
       const container = new ContainerBuilder().addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
           `This wrapped session has expired. Please run ${cmdMention("wrapped")} again.`,
@@ -553,16 +692,14 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       return;
     }
 
-    const imageUrl = cache.urls[newPage - 1];
+    const imageUrl = cache.imageUrls[newPage - 1];
     if (!imageUrl) return;
 
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordId },
     });
     const username = dbUser?.lastfmUsername ?? "Unknown";
-    const { PERIOD_LABELS_WRAPPED: PL } =
-      await import("../commands/wrapped.js");
-    const periodLabel = PL[cache.period] ?? "Last 7 days";
+    const periodLabel = PERIOD_LABELS_WRAPPED[period] ?? "Last 7 days";
 
     const container = new ContainerBuilder()
       .addTextDisplayComponents(

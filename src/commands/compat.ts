@@ -3,6 +3,8 @@ import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
 import { createCanvas } from "@napi-rs/canvas";
+import { getCache, setCache } from "../cache.js";
+import { uploadToSupabase } from "../uploadToSupabase.js";
 
 const {
   SlashCommandBuilder,
@@ -18,6 +20,26 @@ const {
 
 import type { Command } from "../index.ts";
 import { cmdMention } from "../utils.js";
+
+interface CachedCompat {
+  imageUrl: string;
+  score: number;
+  label: string;
+  sharedArtists: string[];
+  user1ArtistCount: number;
+  user2ArtistCount: number;
+  sharedCount: number;
+  user1Name: string;
+  user2Name: string;
+  artistScore: number;
+  trackScore: number;
+  albumScore: number;
+  genreScore: number;
+  top3Artists: Array<{ name: string }>;
+  top3Tracks: Array<{ name: string; artist: string }>;
+  top3Albums: Array<{ name: string }>;
+  top3Genres: string[];
+}
 
 function compatLabel(score: number): string {
   if (score <= 20) return "Very Different 🎭";
@@ -137,6 +159,103 @@ export const compatCommand: Command = {
         flags: MessageFlags.IsComponentsV2,
       });
       return;
+    }
+
+    // Sort IDs alphabetically for consistent cache key
+    const [sortedId1, sortedId2] = [user1Discord.id, user2Final.id].sort();
+    const cacheKey = `compat_${sortedId1}_${sortedId2}_overall`;
+    const cached = await getCache<CachedCompat>(cacheKey);
+
+    if (cached) {
+      // Rebuild container from cached data using cached image URL
+      // Skip cache if imageUrl is invalid
+      if (!cached.imageUrl || cached.imageUrl.trim() === "") {
+        // Invalid cached imageUrl, regenerate
+        console.log("Cached imageUrl is invalid, skipping cache");
+      } else {
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `### Music Compatibility — ${cached.user1Name} & ${cached.user2Name}`,
+            ),
+            new TextDisplayBuilder().setContent(
+              `# ${cached.score}%\n${cached.label}`,
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addMediaGalleryComponents(
+            new MediaGalleryBuilder().addItems(
+              new MediaGalleryItemBuilder().setURL(cached.imageUrl),
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          );
+
+        const hasAny =
+          cached.top3Artists.length > 0 ||
+          cached.top3Tracks.length > 0 ||
+          cached.top3Albums.length > 0 ||
+          cached.top3Genres.length > 0;
+
+        if (!hasAny) {
+          container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              "No overlap found — you two are musical opposites!",
+            ),
+          );
+        } else {
+          const lines: string[] = [];
+
+          if (cached.top3Artists.length > 0)
+            lines.push(
+              `${E.top} **Artists:** ${cached.top3Artists.map((a) => a.name).join(" • ")}`,
+            );
+
+          if (cached.top3Tracks.length > 0)
+            lines.push(
+              `${E.musicalNote} **Tracks:** ${cached.top3Tracks.map((t) => `${t.name} — ${t.artist}`).join(" • ")}`,
+            );
+
+          if (cached.top3Albums.length > 0)
+            lines.push(
+              `${E.albums} **Albums:** ${cached.top3Albums.map((a) => a.name).join(" • ")}`,
+            );
+
+          if (cached.top3Genres.length > 0)
+            lines.push(
+              `${E.chart} **Genres:** ${cached.top3Genres.join(" • ")}`,
+            );
+
+          container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(lines.join("\n")),
+          );
+        }
+
+        container
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `-# Based on top 100 artists, tracks, albums & genres`,
+            ),
+          );
+
+        await interaction.editReply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+        return;
+      }
     }
 
     const [db1, db2] = await Promise.all([
@@ -332,9 +451,23 @@ export const compatCommand: Command = {
     ];
 
     const imageBuffer = await buildCompatCanvas(scoreRows);
-    const attachment = new AttachmentBuilder(imageBuffer, {
-      name: "compat.png",
-    });
+
+    // Upload to Supabase
+    let imageUrl = await uploadToSupabase(
+      imageBuffer,
+      "compat-cache",
+      `${sortedId1}_${sortedId2}_overall.png`,
+    );
+
+    console.log("Upload result:", imageUrl);
+
+    // Fallback to attachment if upload failed
+    const useAttachment = !imageUrl || imageUrl.trim() === "";
+    const attachment = useAttachment
+      ? new AttachmentBuilder(imageBuffer, {
+          name: "compat.png",
+        })
+      : null;
 
     const container = new ContainerBuilder()
       .addTextDisplayComponents(
@@ -352,7 +485,9 @@ export const compatCommand: Command = {
       )
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL("attachment://compat.png"),
+          new MediaGalleryItemBuilder().setURL(
+            useAttachment ? "attachment://compat.png" : imageUrl,
+          ),
         ),
       )
       .addSeparatorComponents(
@@ -417,8 +552,33 @@ export const compatCommand: Command = {
         ),
       );
 
+    // Save to cache
+    const cacheData: CachedCompat = {
+      imageUrl: useAttachment ? "" : imageUrl,
+      score: overall,
+      label: compatLabel(overall),
+      sharedArtists: sharedArtists.map((a) => a.name),
+      user1ArtistCount: artistSet1.size,
+      user2ArtistCount: artistSet2.size,
+      sharedCount: sharedArtists.length,
+      user1Name: lfm1,
+      user2Name: lfm2,
+      artistScore,
+      trackScore,
+      albumScore,
+      genreScore,
+      top3Artists: top3Artists.map((a) => ({ name: a.name })),
+      top3Tracks: top3Tracks.map((t: any) => ({
+        name: t.name,
+        artist: t.artist?.name ?? "",
+      })),
+      top3Albums: top3Albums.map((a: any) => ({ name: a.name })),
+      top3Genres,
+    };
+    await setCache(cacheKey, cacheData, 180);
+
     await interaction.editReply({
-      files: [attachment],
+      files: attachment ? [attachment] : [],
       components: [container],
       flags: MessageFlags.IsComponentsV2,
     });

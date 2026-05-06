@@ -3,6 +3,8 @@ import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
 import { createCanvas } from "@napi-rs/canvas";
+import { getCache, setCache } from "../cache.js";
+import { uploadToSupabase } from "../uploadToSupabase.js";
 
 const {
   SlashCommandBuilder,
@@ -18,6 +20,21 @@ const {
 
 import type { Command } from "../index.js";
 import { cmdMention } from "../utils.js";
+
+interface CachedDiscovery {
+  imageUrl: string;
+  undergroundScore: number;
+  label: string;
+  bar: string;
+  mostUnderground: {
+    name: string;
+    listeners: string;
+  };
+  mostMainstream: {
+    name: string;
+    listeners: string;
+  };
+}
 
 const PERIOD_LABELS: Record<string, string> = {
   "7day": "Last 7 days",
@@ -131,6 +148,72 @@ export const discoveryCommand: Command = {
       (interaction.options as any).getString("period") ?? "overall";
     const periodLabel = PERIOD_LABELS[period] ?? "All time";
 
+    // Check cache first
+    const cacheKey = `discovery_${targetDiscordUser.id}_${period}`;
+    const cached = await getCache<CachedDiscovery>(cacheKey);
+
+    if (cached) {
+      // Rebuild container from cached data using cached image URL
+      // Skip cache if imageUrl is invalid
+      if (!cached.imageUrl || cached.imageUrl.trim() === "") {
+        // Invalid cached imageUrl, regenerate
+        console.log("Cached imageUrl is invalid, skipping cache");
+      } else {
+        // Get username for display
+        const dbUser = await prisma.user.findUnique({
+          where: { discordId: targetDiscordUser.id },
+        });
+        const lfmUsername =
+          dbUser?.lastfmUsername ?? targetDiscordUser.username;
+
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `### Discovery Score — ${lfmUsername}`,
+            ),
+            new TextDisplayBuilder().setContent(
+              `# ${cached.undergroundScore}%\n${cached.label}`,
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addMediaGalleryComponents(
+            new MediaGalleryBuilder().addItems(
+              new MediaGalleryItemBuilder().setURL(cached.imageUrl),
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `${E.search} **Most Underground:** ${cached.mostUnderground.name} — ${cached.mostUnderground.listeners}\n${E.fm} **Most Mainstream:** ${cached.mostMainstream.name} — ${cached.mostMainstream.listeners}`,
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `-# Based on your top 100 artists • ${periodLabel}`,
+            ),
+          );
+
+        await interaction.editReply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+        return;
+      }
+    }
+
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordUser.id },
     });
@@ -211,15 +294,53 @@ export const discoveryCommand: Command = {
     const mostUnderground = sorted[0]!;
     const mostMainstream = sorted[sorted.length - 1]!;
 
+    // Create bar visualization
+    const filled = Math.round(undergroundScore / 5);
+    const empty = 20 - filled;
+    const bar = `${"█".repeat(filled)}${"░".repeat(empty)}`;
+
     const scoreRows = [
       { label: "Underground", score: undergroundScore, color: "#a78bfa" },
       { label: "Mainstream", score: mainstreamScore, color: "#f472b6" },
     ];
 
     const imageBuffer = await buildDiscoveryCanvas(scoreRows);
-    const attachment = new AttachmentBuilder(imageBuffer, {
-      name: "discovery.png",
-    });
+
+    // Upload to Supabase
+    let imageUrl = await uploadToSupabase(
+      imageBuffer,
+      "discovery-cache",
+      `${targetDiscordUser.id}_${period}.png`,
+    );
+
+    console.log("Upload result:", imageUrl);
+
+    // Fallback to attachment if upload failed
+    const useAttachment = !imageUrl || imageUrl.trim() === "";
+    const attachment = useAttachment
+      ? new AttachmentBuilder(imageBuffer, {
+          name: "discovery.png",
+        })
+      : null;
+
+    // Prepare data for caching
+    const cacheData: CachedDiscovery = {
+      imageUrl: useAttachment ? "" : imageUrl,
+      undergroundScore,
+      label,
+      bar,
+      mostUnderground: {
+        name: mostUnderground.name,
+        listeners: `${mostUnderground.listeners.toLocaleString("en-US")} listeners`,
+      },
+      mostMainstream: {
+        name: mostMainstream.name,
+        listeners: `${mostMainstream.listeners.toLocaleString("en-US")} listeners`,
+      },
+    };
+
+    // Save to cache (360 minutes TTL)
+    await setCache(cacheKey, cacheData, 360);
 
     const container = new ContainerBuilder()
       .addTextDisplayComponents(
@@ -235,7 +356,9 @@ export const discoveryCommand: Command = {
       )
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL("attachment://discovery.png"),
+          new MediaGalleryItemBuilder().setURL(
+            useAttachment ? "attachment://discovery.png" : imageUrl,
+          ),
         ),
       )
       .addSeparatorComponents(
@@ -260,7 +383,7 @@ export const discoveryCommand: Command = {
       );
 
     await interaction.editReply({
-      files: [attachment],
+      files: attachment ? [attachment] : [],
       components: [container],
       flags: MessageFlags.IsComponentsV2,
     });

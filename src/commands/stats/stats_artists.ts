@@ -5,6 +5,7 @@ import { E } from "../../emojis.js";
 import { cmdMention, pageStr } from "../../utils.js";
 import { buildLeaderboardCanvas } from "./canvas.js";
 import { uploadToSupabase } from "../../uploadToSupabase.js";
+import { getCache, setCache } from "../../cache.js";
 
 const {
   MessageFlags,
@@ -22,6 +23,12 @@ const {
 const PAGE_SIZE = 10;
 const TTL_MS = 10 * 60 * 1000;
 
+interface CachedStats {
+  imageUrls: string[];
+  pageCount: number;
+  memberCount: number;
+}
+
 export async function executeStatsArtists(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
 
@@ -31,6 +38,83 @@ export async function executeStatsArtists(interaction: any): Promise<void> {
         `${E.reject} This command only works in servers.`,
       ),
     );
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
+    return;
+  }
+
+  // Check cache first
+  const cacheKey = `stats_artists_${interaction.guildId}`;
+  const cached = await getCache<CachedStats>(cacheKey);
+
+  if (cached && cached.imageUrls && cached.imageUrls.length > 0) {
+    // Cache hit - skip all generation and member fetching
+    const callerDb = await prisma.user.findUnique({
+      where: { discordId: interaction.user.id },
+    });
+    const callerLfm = callerDb?.lastfmUsername;
+
+    const footerParts = [
+      `${cached.memberCount} members • Unique artists overall`,
+    ];
+
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `### ${E.artists} Server Artist Leaderboard — All time`,
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addMediaGalleryComponents(
+        new MediaGalleryBuilder().addItems(
+          new MediaGalleryItemBuilder().setURL(cached.imageUrls[0]!),
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `-# ${pageStr(0, cached.pageCount)} • ${footerParts.join(" • ")}`,
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(false)
+          .setSpacing(SeparatorSpacingSize.Small),
+      );
+
+    if (cached.pageCount > 1) {
+      const authorId = interaction.user.id;
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`stats_artists_prev_0_${authorId}`)
+          .setEmoji({
+            id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+            name: "scrobbler_prev",
+          })
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId(`stats_artists_next_0_${authorId}`)
+          .setEmoji({
+            id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+            name: "scrobbler_next",
+          })
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(false),
+      );
+      container.addActionRowComponents(row as any);
+    }
+
     await interaction.editReply({
       components: [container],
       flags: MessageFlags.IsComponentsV2,
@@ -131,22 +215,13 @@ export async function executeStatsArtists(interaction: any): Promise<void> {
     ),
   );
 
-  await (prisma as any).statsArtistsCache.upsert({
-    where: { guildId: interaction.guildId },
-    create: {
-      guildId: interaction.guildId,
-      urls,
-      totalPages,
-      memberCount,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-    update: {
-      urls,
-      totalPages,
-      memberCount,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-  });
+  // Save to generic cache
+  const cacheData: CachedStats = {
+    imageUrls: urls,
+    pageCount: totalPages,
+    memberCount,
+  };
+  await setCache(cacheKey, cacheData, 60);
 
   const footerParts = [`${memberCount} members • Unique artists overall`];
   if (callerRank > PAGE_SIZE && callerEntry)

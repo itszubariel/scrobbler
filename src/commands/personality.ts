@@ -3,6 +3,8 @@ import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
 import { createCanvas } from "@napi-rs/canvas";
+import { getCache, setCache } from "../cache.js";
+import { uploadToSupabase } from "../uploadToSupabase.js";
 
 const {
   SlashCommandBuilder,
@@ -18,6 +20,17 @@ const {
 
 import type { Command } from "../index.js";
 import { cmdMention } from "../utils.js";
+
+interface CachedPersonality {
+  imageUrl: string;
+  personalityType: string;
+  description: string;
+  dimensions: Array<{
+    name: string;
+    emoji: string;
+    score: number;
+  }>;
+}
 
 interface PersonalityType {
   name: string;
@@ -155,6 +168,62 @@ export const personalityCommand: Command = {
     const targetDiscordUser =
       interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
+
+    // Check cache first
+    const cacheKey = `personality_${targetDiscordUser.id}`;
+    const cached = await getCache<CachedPersonality>(cacheKey);
+
+    if (cached) {
+      // Rebuild container from cached data using cached image URL
+      // Skip cache if imageUrl is invalid
+      if (!cached.imageUrl || cached.imageUrl.trim() === "") {
+        // Invalid cached imageUrl, regenerate
+        console.log("Cached imageUrl is invalid, skipping cache");
+      } else {
+        // Get username for display
+        const dbUser = await prisma.user.findUnique({
+          where: { discordId: targetDiscordUser.id },
+        });
+        const lfmUsername =
+          dbUser?.lastfmUsername ?? targetDiscordUser.username;
+
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `### Music Personality — ${lfmUsername}`,
+            ),
+            new TextDisplayBuilder().setContent(
+              `# ${cached.personalityType}\n${cached.description}`,
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addMediaGalleryComponents(
+            new MediaGalleryBuilder().addItems(
+              new MediaGalleryItemBuilder().setURL(cached.imageUrl),
+            ),
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setDivider(true)
+              .setSpacing(SeparatorSpacingSize.Small),
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              `-# Based on your listening history • Scrobbler`,
+            ),
+          );
+
+        await interaction.editReply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+        return;
+      }
+    }
 
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordUser.id },
@@ -320,9 +389,38 @@ export const personalityCommand: Command = {
     ];
 
     const imageBuffer = await buildPersonalityCanvas(dimRows);
-    const attachment = new AttachmentBuilder(imageBuffer, {
-      name: "personality.png",
-    });
+
+    // Upload to Supabase
+    let imageUrl = await uploadToSupabase(
+      imageBuffer,
+      "personality-cache",
+      `${targetDiscordUser.id}.png`,
+    );
+
+    console.log("Upload result:", imageUrl);
+
+    // Fallback to attachment if upload failed
+    const useAttachment = !imageUrl || imageUrl.trim() === "";
+    const attachment = useAttachment
+      ? new AttachmentBuilder(imageBuffer, {
+          name: "personality.png",
+        })
+      : null;
+
+    // Prepare data for caching
+    const cacheData: CachedPersonality = {
+      imageUrl: useAttachment ? "" : imageUrl,
+      personalityType: personality.name,
+      description: personality.description,
+      dimensions: dimRows.map((row) => ({
+        name: row.label.split(" ")[1]!,
+        emoji: row.label.split(" ")[0]!,
+        score: row.score,
+      })),
+    };
+
+    // Save to cache (360 minutes TTL)
+    await setCache(cacheKey, cacheData, 360);
 
     const container = new ContainerBuilder()
       .addTextDisplayComponents(
@@ -340,7 +438,9 @@ export const personalityCommand: Command = {
       )
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems(
-          new MediaGalleryItemBuilder().setURL("attachment://personality.png"),
+          new MediaGalleryItemBuilder().setURL(
+            useAttachment ? "attachment://personality.png" : imageUrl,
+          ),
         ),
       )
       .addSeparatorComponents(
@@ -355,7 +455,7 @@ export const personalityCommand: Command = {
       );
 
     await interaction.editReply({
-      files: [attachment],
+      files: attachment ? [attachment] : [],
       components: [container],
       flags: MessageFlags.IsComponentsV2,
     });

@@ -3,6 +3,7 @@ import pkg from "discord.js";
 import { createHash } from "crypto";
 import { E } from "../emojis.js";
 import { prisma } from "../db.js";
+import { invalidateUserCache } from "../cache.js";
 
 const {
   SlashCommandBuilder,
@@ -100,6 +101,9 @@ async function pollForSession(
           where: { discordId },
           data: { lastfmUsername: lfmUsername, sessionKey },
         });
+
+        // Invalidate all user caches
+        await invalidateUserCache(discordId);
 
         // Clean up pending link
         await prisma.pendingLink

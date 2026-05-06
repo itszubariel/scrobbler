@@ -2,6 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
+import { invalidateUserCache } from "../cache.js";
 
 const {
   SlashCommandBuilder,
@@ -43,6 +44,9 @@ export const unlinkCommand: Command = {
       where: { discordId },
       data: { lastfmUsername: null },
     });
+
+    // Invalidate all user caches
+    await invalidateUserCache(discordId);
 
     const container = new ContainerBuilder().addTextDisplayComponents(
       new TextDisplayBuilder().setContent(

@@ -4,6 +4,8 @@ import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { buildGridCanvas } from "./canvas.js";
 import { cmdMention } from "../../utils.js";
+import { getCache, setCache } from "../../cache.js";
+import { uploadToSupabase } from "../../uploadToSupabase.js";
 
 const {
   MessageFlags,
@@ -15,6 +17,10 @@ const {
   MediaGalleryItemBuilder,
   AttachmentBuilder,
 } = pkg;
+
+interface CachedChart {
+  imageUrl: string;
+}
 
 export const PERIOD_LABELS: Record<string, string> = {
   "7day": "Last 7 days",
@@ -35,6 +41,8 @@ export const SIZE_MAP: Record<
 };
 
 export async function executeTopArtists(interaction: any): Promise<void> {
+  console.log("chart_artists execute called");
+
   const apiKey = process.env.LASTFM_API_KEY!;
   const targetDiscordUser =
     interaction.options.getUser("user") ?? interaction.user;
@@ -43,6 +51,51 @@ export async function executeTopArtists(interaction: any): Promise<void> {
   const periodLabel = PERIOD_LABELS[period] ?? "All time";
   const size = interaction.options.getString("size") ?? "3x3";
   const { cols, rows, count } = SIZE_MAP[size] ?? SIZE_MAP["3x3"]!;
+
+  // Check cache first
+  const cacheKey = `chart_artists_${targetDiscordUser.id}_${period}_${size}`;
+  const cached = await getCache<CachedChart>(cacheKey);
+
+  if (cached && cached.imageUrl) {
+    // Cache hit - skip all generation and send cached URL
+    const dbUser = await prisma.user.findUnique({
+      where: { discordId: targetDiscordUser.id },
+    });
+    const lfmUsername = dbUser?.lastfmUsername ?? targetDiscordUser.username;
+
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `### ${E.artists} ${lfmUsername}'s Top Artists — ${periodLabel}`,
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addMediaGalleryComponents(
+        new MediaGalleryBuilder().addItems(
+          new MediaGalleryItemBuilder().setURL(cached.imageUrl),
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `-# Top ${count} artists • ${size} • ${periodLabel}`,
+        ),
+      );
+
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
+    return;
+  }
 
   const dbUser = await prisma.user.findUnique({
     where: { discordId: targetDiscordUser.id },
@@ -122,7 +175,19 @@ export async function executeTopArtists(interaction: any): Promise<void> {
   });
 
   const buffer = await buildGridCanvas(items, cols, rows, count);
-  const attachment = new AttachmentBuilder(buffer, { name: "topartists.png" });
+
+  console.log("About to upload chart, buffer size:", buffer.length);
+
+  // Upload to Supabase
+  const imageUrl = await uploadToSupabase(
+    buffer,
+    "chart-cache",
+    `${targetDiscordUser.id}_artists_${period}_${size}.png`,
+  );
+
+  // Save to cache
+  const cacheData: CachedChart = { imageUrl };
+  await setCache(cacheKey, cacheData, 60);
 
   const container = new ContainerBuilder()
     .addTextDisplayComponents(
@@ -137,7 +202,7 @@ export async function executeTopArtists(interaction: any): Promise<void> {
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL("attachment://topartists.png"),
+        new MediaGalleryItemBuilder().setURL(imageUrl),
       ),
     )
     .addSeparatorComponents(
@@ -152,7 +217,6 @@ export async function executeTopArtists(interaction: any): Promise<void> {
     );
 
   await interaction.editReply({
-    files: [attachment],
     components: [container],
     flags: MessageFlags.IsComponentsV2,
   });

@@ -79,6 +79,23 @@ const sections = [
     ],
   },
   {
+    heading: "Recommendations",
+    commands: [
+      {
+        name: "rec artists",
+        desc: "Get artist recommendations based on your taste",
+      },
+      {
+        name: "rec tracks",
+        desc: "Get track recommendations based on your taste",
+      },
+      {
+        name: "rec albums",
+        desc: "Get album recommendations based on your taste",
+      },
+    ],
+  },
+  {
     heading: "Who Knows",
     commands: [
       { name: "wk artist", desc: "Who has listened to this artist the most" },
@@ -141,7 +158,7 @@ export const helpCommand: Command = {
     );
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# Made with ${E.heart} by Zubariel`,
+        `-# Made with ${E.heart} by Zubariel • 31 commands`,
       ),
     );
 

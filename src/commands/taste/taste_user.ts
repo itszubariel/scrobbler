@@ -4,6 +4,7 @@ import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { cmdMention } from "../../utils.js";
 import { uploadToSupabase } from "../../uploadToSupabase.js";
+import { getCache, setCache } from "../../cache.js";
 import {
   fetchTasteData,
   buildTasteCanvas,
@@ -27,6 +28,14 @@ const {
 
 const TTL_MS = 15 * 60 * 1000;
 
+interface CachedTasteUser {
+  imageUrls: string[];
+  genres: Array<{ name: string; percentage: number }>;
+  topThree: string[];
+  totalArtists: number;
+  totalPages: number;
+}
+
 export async function executeTasteUser(interaction: any): Promise<void> {
   const apiKey = process.env.LASTFM_API_KEY!;
   const targetDiscordUser =
@@ -34,6 +43,41 @@ export async function executeTasteUser(interaction: any): Promise<void> {
   const isOwnProfile = targetDiscordUser.id === interaction.user.id;
   const period = interaction.options.getString("period") ?? "overall";
   const periodLabel = PERIOD_LABELS_TASTE[period] ?? "All time";
+
+  // Check cache first
+  const cacheKey = `taste_user_${targetDiscordUser.id}_${period}`;
+  const cached = await getCache<CachedTasteUser>(cacheKey);
+
+  if (cached && cached.imageUrls && cached.imageUrls.length > 0) {
+    // Rebuild container from cached data with canvas image
+    const dbUser = await prisma.user.findUnique({
+      where: { discordId: targetDiscordUser.id },
+    });
+    const lfmUsername = dbUser?.lastfmUsername ?? targetDiscordUser.username;
+
+    // Reconstruct allGenres from cached data for buildTasteContainer
+    const allGenres = cached.genres.map((g) => ({
+      tag: g.name,
+      pct: g.percentage,
+    }));
+
+    const container = buildTasteContainer(
+      allGenres,
+      null,
+      lfmUsername,
+      periodLabel,
+      0,
+      targetDiscordUser.id,
+      period,
+      cached.imageUrls[0],
+    );
+
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
+    return;
+  }
 
   const dbUser = await prisma.user.findUnique({
     where: { discordId: targetDiscordUser.id },
@@ -89,17 +133,26 @@ export async function executeTasteUser(interaction: any): Promise<void> {
     ),
   );
 
-  await (prisma as any).tasteUserCache.upsert({
-    where: { discordId_period: { discordId: targetDiscordUser.id, period } },
-    create: {
-      discordId: targetDiscordUser.id,
-      period,
-      urls,
-      totalPages,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-    update: { urls, totalPages, expiresAt: new Date(Date.now() + TTL_MS) },
-  });
+  console.log("Upload results (taste_user):", urls);
+
+  // Save to generic cache
+  const topThree = allGenres
+    .slice(0, 3)
+    .map((g) => g.tag)
+    .filter(Boolean);
+  const cacheData: CachedTasteUser = {
+    imageUrls: urls,
+    genres: allGenres
+      .filter((g) => g.tag !== undefined && g.pct !== undefined)
+      .map((g) => ({
+        name: g.tag,
+        percentage: g.pct,
+      })),
+    topThree,
+    totalArtists: allGenres.length,
+    totalPages,
+  };
+  await setCache(cacheKey, cacheData, 120);
 
   const container = buildTasteContainer(
     allGenres,

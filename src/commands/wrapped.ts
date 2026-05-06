@@ -2,6 +2,7 @@ import "dotenv/config";
 import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
+import { getCache, setCache } from "../cache.js";
 import {
   buildCoverCard,
   buildArtistsCard,
@@ -27,6 +28,10 @@ const {
 
 import type { Command } from "../index.js";
 import { cmdMention } from "../utils.js";
+
+interface CachedWrapped {
+  imageUrls: string[];
+}
 
 export const PERIOD_LABELS_WRAPPED: Record<string, string> = {
   "7day": "Last 7 days",
@@ -397,6 +402,29 @@ export const wrappedCommand: Command = {
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
     const period = (interaction.options as any).getString("period") ?? "7day";
 
+    // Check cache first
+    const cacheKey = `wrapped_${targetDiscordUser.id}_${period}`;
+    const cached = await getCache<CachedWrapped>(cacheKey);
+
+    if (cached && cached.imageUrls && cached.imageUrls.length === 5) {
+      // Cache hit - skip all API calls and canvas generation
+      const periodLabel = PERIOD_LABELS_WRAPPED[period] ?? "Last 7 days";
+      const page = 1;
+      const container = buildWrappedContainer(
+        targetDiscordUser.username,
+        periodLabel,
+        page,
+        targetDiscordUser.id,
+        cached.imageUrls[0]!,
+      );
+
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+      return;
+    }
+
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordUser.id },
     });
@@ -444,22 +472,11 @@ export const wrappedCommand: Command = {
       ),
     );
 
-    // Cache URLs in DB (upsert so re-running /wrapped refreshes the cache)
-    const db = prisma as any;
-    await db.wrappedCache.upsert({
-      where: { discordId: targetDiscordUser.id },
-      update: {
-        urls,
-        period,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-      },
-      create: {
-        discordId: targetDiscordUser.id,
-        urls,
-        period,
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
+    // Save to generic cache
+    const cacheData: CachedWrapped = {
+      imageUrls: urls,
+    };
+    await setCache(cacheKey, cacheData, 120);
 
     const page = 1;
     const container = buildWrappedContainer(

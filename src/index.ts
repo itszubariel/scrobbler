@@ -67,6 +67,8 @@ import { streakCommand } from "./commands/streak.js";
 commands.set(streakCommand.data.name, streakCommand);
 import { wrappedCommand } from "./commands/wrapped.js";
 commands.set(wrappedCommand.data.name, wrappedCommand);
+import { recCommand } from "./commands/rec/rec.js";
+commands.set(recCommand.data.name, recCommand);
 import { devCommand } from "./commands/developer/dev.js";
 commands.set(devCommand.data.name, devCommand);
 

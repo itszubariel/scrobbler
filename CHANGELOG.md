@@ -4,6 +4,29 @@ All notable changes to scrobbler are documented here.
 
 ---
 
+## [1.3.0] — 2026-05-06
+
+### New Commands
+- `/rec artists` — Get personalized artist recommendations based on your listening history
+- `/rec tracks` — Get personalized track recommendations based on your listening history
+- `/rec albums` — Get personalized album recommendations based on your listening history
+
+### Improvements
+- All recommendation commands use Groq AI (llama-3.1-8b-instant) with JSON mode for reliable, contextual descriptions
+- Recommendations are cached for 6 hours per user per time period
+- Each recommendation includes a personalized reason referencing your actual top artists/tracks
+- Recommendations support all time periods: last 7 days, last month, 3 months, 6 months, last year, and all time
+- Recommendations can be generated for other users by using the optional `user` parameter
+
+### Internal
+- Implemented generic caching system with `Cache` model replacing all specific cache tables
+- Removed deprecated cache models: `WrappedCache`, `RecentCache`, `TasteUserCache`, `TasteServerCache`, `StatsScrobblesCache`, `StatsArtistsCache`, `StatsAlbumsCache`, `StatsGenresCache`, `WkCache`
+- All commands now use unified `getCache()` and `setCache()` utilities from `cache.ts`
+- Supabase Storage buckets continue to store images, Cache table stores URLs and metadata as JSON
+- Added cache invalidation on `/link` and `/unlink` to clear stale user data
+
+---
+
 ## [1.2.1] — 2026-05-05
 
 ### Improvements

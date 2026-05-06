@@ -3,6 +3,7 @@ import pkg from "discord.js";
 import { prisma } from "../db.js";
 import { E } from "../emojis.js";
 import { pageStr } from "../utils.js";
+import { getCache, setCache } from "../cache.js";
 
 const RECENT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -22,6 +23,25 @@ import type { Command } from "../index.ts";
 import { cmdMention } from "../utils.js";
 
 const PAGE_SIZE = 10;
+
+interface CachedRecent {
+  tracks: Array<{
+    name: string;
+    artist: string;
+    url: string | null;
+    timeAgo: string;
+    timestamp: number | null;
+  }>;
+  headerTrack: {
+    name: string;
+    artist: string;
+    url: string | null;
+    isNowPlaying: boolean;
+  };
+  totalPages: number;
+  totalTracks: number;
+  uniqueArtists: number;
+}
 
 export async function fetchRecentTracks(lfmUsername: string, apiKey: string) {
   const res = await fetch(
@@ -138,6 +158,88 @@ export const recentCommand: Command = {
       interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
 
+    // Check cache first
+    const cacheKey = `recent_${targetDiscordUser.id}`;
+    const cached = await getCache<CachedRecent>(cacheKey);
+
+    if (cached) {
+      // Rebuild from cache
+      const dbUser = await prisma.user.findUnique({
+        where: { discordId: targetDiscordUser.id },
+      });
+      const lfmUsername = dbUser?.lastfmUsername ?? targetDiscordUser.username;
+
+      const headerTrack = cached.headerTrack;
+      const summaryLine = headerTrack.isNowPlaying
+        ? `${E.musicalNote} Now playing: ${headerTrack.url ? `[**${headerTrack.name}**](${headerTrack.url})` : `**${headerTrack.name}**`} by **${headerTrack.artist}**`
+        : `${E.musicalNote} Last played: ${headerTrack.url ? `[**${headerTrack.name}**](${headerTrack.url})` : `**${headerTrack.name}**`} by **${headerTrack.artist}**`;
+
+      const page = 0;
+      const pageTracks = cached.tracks.slice(
+        page * PAGE_SIZE,
+        (page + 1) * PAGE_SIZE,
+      );
+
+      const lines = pageTracks.map((t) => {
+        const trackText = t.url ? `[**${t.name}**](${t.url})` : `**${t.name}**`;
+        return `${t.timeAgo} • ${trackText} by **${t.artist}**`;
+      });
+
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `## ${lfmUsername}'s Recent Tracks`,
+          ),
+          new TextDisplayBuilder().setContent(summaryLine),
+        )
+        .addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(true)
+            .setSpacing(SeparatorSpacingSize.Small),
+        )
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(lines.join("\n")),
+        )
+        .addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(true)
+            .setSpacing(SeparatorSpacingSize.Small),
+        )
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `-# ${cached.totalTracks} scrobbles • ${cached.uniqueArtists} unique artists • ${pageStr(page, cached.totalPages)}`,
+          ),
+        );
+
+      if (cached.totalPages > 1) {
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`recent_prev_${page}_${targetDiscordUser.id}`)
+            .setEmoji({
+              id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
+              name: "rewind_prev",
+            })
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(page === 0),
+          new ButtonBuilder()
+            .setCustomId(`recent_next_${page}_${targetDiscordUser.id}`)
+            .setEmoji({
+              id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
+              name: "rewind_next",
+            })
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(page >= cached.totalPages - 1),
+        );
+        container.addActionRowComponents(row as any);
+      }
+
+      await interaction.editReply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+      return;
+    }
+
     const dbUser = await prisma.user.findUnique({
       where: { discordId: targetDiscordUser.id },
     });
@@ -173,19 +275,35 @@ export const recentCommand: Command = {
       return;
     }
 
-    // Cache the tracks for pagination
-    await (prisma as any).recentCache.upsert({
-      where: { discordId: targetDiscordUser.id },
-      create: {
-        discordId: targetDiscordUser.id,
-        tracks: rawTracks,
-        expiresAt: new Date(Date.now() + RECENT_CACHE_TTL_MS),
+    // Build cache data
+    const headerTrack = rawTracks[0];
+    const listTracks = rawTracks.slice(1);
+    const totalPages = Math.ceil(listTracks.length / PAGE_SIZE);
+    const uniqueArtists = new Set(
+      rawTracks.map((t) => t.artist?.["#text"]).filter(Boolean),
+    ).size;
+
+    const cacheData: CachedRecent = {
+      tracks: listTracks.map((t) => ({
+        name: t.name ?? "Unknown Track",
+        artist: t.artist?.["#text"] ?? "Unknown Artist",
+        url: t.url ?? null,
+        timeAgo: t.date?.uts ? `<t:${t.date.uts}:R>` : "?",
+        timestamp: t.date?.uts ? parseInt(t.date.uts) : null,
+      })),
+      headerTrack: {
+        name: headerTrack?.name ?? "Unknown Track",
+        artist: headerTrack?.artist?.["#text"] ?? "Unknown Artist",
+        url: headerTrack?.url ?? null,
+        isNowPlaying: headerTrack?.["@attr"]?.nowplaying === "true",
       },
-      update: {
-        tracks: rawTracks,
-        expiresAt: new Date(Date.now() + RECENT_CACHE_TTL_MS),
-      },
-    });
+      totalPages,
+      totalTracks: rawTracks.length,
+      uniqueArtists,
+    };
+
+    // Save to cache (5 minutes TTL)
+    await setCache(cacheKey, cacheData, 5);
 
     const container = buildRecentContainer(
       rawTracks,

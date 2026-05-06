@@ -65,101 +65,6 @@ model PendingLink {
   createdAt        DateTime @default(now())
 }
 
-model WrappedCache {
-  id        String   @id @default(uuid())
-  discordId String   @unique
-  urls      String[]
-  period    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model RecentCache {
-  id        String   @id @default(uuid())
-  discordId String   @unique
-  tracks    Json
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model TasteUserCache {
-  id        String   @id @default(uuid())
-  discordId String
-  period    String
-  urls      String[]
-  totalPages Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@unique([discordId, period])
-}
-
-model TasteServerCache {
-  id          String   @id @default(uuid())
-  guildId     String
-  period      String
-  urls        String[]
-  totalPages  Int
-  memberCount Int      @default(0)
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
-
-  @@unique([guildId, period])
-}
-
-model StatsScrobblesCache {
-  id        String   @id @default(uuid())
-  guildId   String   @unique
-  urls      String[]
-  totalPages Int
-  footerText String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model StatsArtistsCache {
-  id        String   @id @default(uuid())
-  guildId   String   @unique
-  urls      String[]
-  totalPages Int
-  memberCount Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model StatsAlbumsCache {
-  id        String   @id @default(uuid())
-  guildId   String   @unique
-  urls      String[]
-  totalPages Int
-  memberCount Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model StatsGenresCache {
-  id        String   @id @default(uuid())
-  guildId   String   @unique
-  urls      String[]
-  totalPages Int
-  memberCount Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model WkCache {
-  id        String   @id @default(uuid())
-  guildId   String
-  key       String
-  urls      String[]
-  totalPages Int
-  totalListeners Int
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@unique([guildId, key])
-}
-
 model StatusRecord {
   id           String   @id @default(uuid())
   service      String
@@ -170,4 +75,11 @@ model StatusRecord {
 
   @@index([service, checkedAt])
   @@map("status_records")
+}
+
+model Cache {
+  key       String   @id
+  data      Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

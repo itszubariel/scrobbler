@@ -6,6 +6,7 @@ import { buildWkCanvas } from "./canvas.js";
 import { fetchNowPlaying } from "../../nowplaying.js";
 import { cmdMention, pageStr } from "../../utils.js";
 import { uploadToSupabase } from "../../uploadToSupabase.js";
+import { getCache, setCache } from "../../cache.js";
 
 const {
   MessageFlags,
@@ -150,24 +151,19 @@ export async function executeWkArtists(interaction: any): Promise<void> {
     ),
   );
 
-  await (prisma as any).wkCache.upsert({
-    where: { guildId_key: { guildId: interaction.guildId, key: cacheKey } },
-    create: {
-      guildId: interaction.guildId,
-      key: cacheKey,
-      urls,
-      totalPages,
-      totalListeners,
-      expiresAt: new Date(Date.now() + TTL_MS),
+  // Save to generic cache
+  const genericCacheKey = `wk_artists_${interaction.guildId}_${canonicalName}`;
+  await setCache(
+    genericCacheKey,
+    {
+      imageUrls: urls,
+      pageCount: totalPages,
+      memberCount: totalListeners,
     },
-    update: {
-      urls,
-      totalPages,
-      totalListeners,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-  });
+    60,
+  );
 
+  // Build container
   const callerDb = await prisma.user.findUnique({
     where: { discordId: interaction.user.id },
   });

@@ -48,7 +48,7 @@ app.use("/api/status", createStatusRouter(prisma, client));
 
 // Root route
 app.get("/", (_req: Request, res: Response) => {
-  res.json({ status: "ok", name: "scrobbler api", version: "1.1.1" });
+  res.json({ status: "ok", name: "scrobbler api", version: "1.3.0" });
 });
 
 // Start server

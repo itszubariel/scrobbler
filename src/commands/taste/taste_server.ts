@@ -4,6 +4,7 @@ import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { cmdMention } from "../../utils.js";
 import { uploadToSupabase } from "../../uploadToSupabase.js";
+import { getCache, setCache } from "../../cache.js";
 import {
   fetchTasteData,
   buildTasteCanvas,
@@ -133,36 +134,29 @@ export async function executeTasteServer(interaction: any): Promise<void> {
     ),
   );
 
-  await (prisma as any).tasteServerCache.upsert({
-    where: { guildId_period: { guildId: interaction.guildId, period } },
-    create: {
-      guildId: interaction.guildId,
-      period,
-      urls,
-      totalPages,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-    update: { urls, totalPages, expiresAt: new Date(Date.now() + TTL_MS) },
-  });
+  console.log("Upload results (taste_server):", urls);
 
   const memberCount = linkedMembers.length;
-  await (prisma as any).tasteServerCache.upsert({
-    where: { guildId_period: { guildId: interaction.guildId, period } },
-    create: {
-      guildId: interaction.guildId,
-      period,
-      urls,
-      totalPages,
-      memberCount,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-    update: {
-      urls,
-      totalPages,
-      memberCount,
-      expiresAt: new Date(Date.now() + TTL_MS),
-    },
-  });
+
+  // Save to generic cache
+  const cacheKey = `taste_server_${interaction.guildId}_${period}`;
+  const cacheData = {
+    imageUrls: urls,
+    genres: allGenres
+      .filter((g) => g.tag !== undefined && g.pct !== undefined)
+      .map((g) => ({
+        name: g.tag,
+        percentage: g.pct,
+      })),
+    topThree: allGenres
+      .slice(0, 3)
+      .map((g) => g.tag)
+      .filter(Boolean),
+    totalArtists: allGenres.length,
+    totalPages,
+    memberCount,
+  };
+  await setCache(cacheKey, cacheData, 120);
 
   const container = buildTasteServerContainer(
     allGenres,

@@ -3,6 +3,8 @@ import pkg from "discord.js";
 import { prisma } from "../../db.js";
 import { E } from "../../emojis.js";
 import { buildGridCanvas } from "./canvas.js";
+import { getCache, setCache } from "../../cache.js";
+import { uploadToSupabase } from "../../uploadToSupabase.js";
 
 const {
   MessageFlags,
@@ -16,6 +18,10 @@ const {
 } = pkg;
 
 import { PERIOD_LABELS, SIZE_MAP } from "./chart_artists.js";
+
+interface CachedChart {
+  imageUrl: string;
+}
 
 export async function executeChartServer(interaction: any): Promise<void> {
   if (!interaction.guildId || !interaction.guild) {
@@ -38,6 +44,49 @@ export async function executeChartServer(interaction: any): Promise<void> {
   const periodLabel = PERIOD_LABELS[period] ?? "All time";
   const { cols, rows, count } = SIZE_MAP[size] ?? SIZE_MAP["3x3"]!;
   const guildName = interaction.guild.name;
+
+  // Check cache first
+  const cacheKey = `chart_server_${interaction.guildId}_${type}_${period}_${size}`;
+  const cached = await getCache<CachedChart>(cacheKey);
+
+  if (cached && cached.imageUrl) {
+    // Cache hit - skip all generation and send cached URL
+    const typeLabel =
+      type === "artists" ? "Artists" : type === "albums" ? "Albums" : "Tracks";
+
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `### ${E.chart} ${guildName} — Top ${typeLabel} — ${periodLabel}`,
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addMediaGalleryComponents(
+        new MediaGalleryBuilder().addItems(
+          new MediaGalleryItemBuilder().setURL(cached.imageUrl),
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `-# ${size} chart • ${periodLabel}`,
+        ),
+      );
+
+    await interaction.editReply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+    });
+    return;
+  }
 
   const server = await prisma.server.findUnique({
     where: { guildId: interaction.guildId },
@@ -171,7 +220,17 @@ export async function executeChartServer(interaction: any): Promise<void> {
   });
 
   const buffer = await buildGridCanvas(items, cols, rows, count);
-  const attachment = new AttachmentBuilder(buffer, { name: "chart.png" });
+
+  // Upload to Supabase
+  const imageUrl = await uploadToSupabase(
+    buffer,
+    "chart-cache",
+    `${interaction.guildId}_${type}_${period}_${size}.png`,
+  );
+
+  // Save to cache
+  const cacheData: CachedChart = { imageUrl };
+  await setCache(cacheKey, cacheData, 60);
 
   const typeLabel =
     type === "artists" ? "Artists" : type === "albums" ? "Albums" : "Tracks";
@@ -188,7 +247,7 @@ export async function executeChartServer(interaction: any): Promise<void> {
     )
     .addMediaGalleryComponents(
       new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL("attachment://chart.png"),
+        new MediaGalleryItemBuilder().setURL(imageUrl),
       ),
     )
     .addSeparatorComponents(
@@ -203,7 +262,6 @@ export async function executeChartServer(interaction: any): Promise<void> {
     );
 
   await interaction.editReply({
-    files: [attachment],
     components: [container],
     flags: MessageFlags.IsComponentsV2,
   });
