@@ -178,53 +178,7 @@
         transform: none;
       }
       .bg-orbs {
-        position: fixed;
-        inset: -20vh -20vw;
-        z-index: 0;
-        pointer-events: none;
-        overflow: hidden;
-      }
-      body > :not(.bg-orbs) {
-        position: relative;
-        z-index: 1;
-      }
-      .bg-orbs span {
-        position: absolute;
-        width: min(520px, 42vw);
-        height: min(520px, 42vw);
-        border-radius: 999px;
-        filter: blur(40px);
-        opacity: 0.22;
-        background: radial-gradient(
-          circle at 30% 30%,
-          rgba(148, 104, 216, 0.95),
-          rgba(96, 64, 176, 0) 60%
-        );
-        animation: floaty 7.5s ease-in-out infinite;
-        mix-blend-mode: multiply;
-      }
-      .bg-orbs span:nth-child(1) {
-        top: 6vh;
-        left: 6vw;
-        animation-duration: 10.5s;
-      }
-      .bg-orbs span:nth-child(2) {
-        top: 28vh;
-        right: 10vw;
-        width: min(640px, 54vw);
-        height: min(640px, 54vw);
-        opacity: 0.18;
-        animation-duration: 12.5s;
-        animation-delay: -2s;
-      }
-      .bg-orbs span:nth-child(3) {
-        bottom: 6vh;
-        left: 18vw;
-        width: min(580px, 48vw);
-        height: min(580px, 48vw);
-        opacity: 0.16;
-        animation-duration: 13.5s;
-        animation-delay: -4s;
+        display: none;
       }
       .btn,
       .footer__cta {
@@ -266,9 +220,7 @@
           transform: none !important;
           animation: none !important;
         }
-        .bg-orbs span {
-          animation: none !important;
-        }
+
         .btn::before,
         .footer__cta::before {
           display: none !important;

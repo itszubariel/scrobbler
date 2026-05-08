@@ -162,53 +162,7 @@
         transform: none;
       }
       .bg-orbs {
-        position: fixed;
-        inset: -20vh -20vw;
-        z-index: 0;
-        pointer-events: none;
-        overflow: hidden;
-      }
-      body > :not(.bg-orbs) {
-        position: relative;
-        z-index: 1;
-      }
-      .bg-orbs span {
-        position: absolute;
-        width: min(520px, 42vw);
-        height: min(520px, 42vw);
-        border-radius: 999px;
-        filter: blur(40px);
-        opacity: 0.22;
-        background: radial-gradient(
-          circle at 30% 30%,
-          rgba(148, 104, 216, 0.95),
-          rgba(96, 64, 176, 0) 60%
-        );
-        animation: floaty 7.5s ease-in-out infinite;
-        mix-blend-mode: multiply;
-      }
-      .bg-orbs span:nth-child(1) {
-        top: 6vh;
-        left: 6vw;
-        animation-duration: 10.5s;
-      }
-      .bg-orbs span:nth-child(2) {
-        top: 28vh;
-        right: 10vw;
-        width: min(640px, 54vw);
-        height: min(640px, 54vw);
-        opacity: 0.18;
-        animation-duration: 12.5s;
-        animation-delay: -2s;
-      }
-      .bg-orbs span:nth-child(3) {
-        bottom: 6vh;
-        left: 18vw;
-        width: min(580px, 48vw);
-        height: min(580px, 48vw);
-        opacity: 0.16;
-        animation-duration: 13.5s;
-        animation-delay: -4s;
+        display: none;
       }
       .btn,
       .footer__cta {
@@ -250,9 +204,7 @@
           transform: none !important;
           animation: none !important;
         }
-        .bg-orbs span {
-          animation: none !important;
-        }
+
         .btn::before,
         .footer__cta::before {
           display: none !important;
@@ -808,11 +760,182 @@
         </div>
 
         <div class="timeline">
-          <!-- v1.1.1 -->
+          <!-- v1.3.0 -->
           <div class="release">
             <div class="release__header">
-              <span class="release__version">v1.1.1</span>
+              <span class="release__version">v1.3.0</span>
               <span class="release__latest">latest</span>
+              <span class="release__date">may 6, 2026</span>
+            </div>
+
+            <div class="release__groups">
+              <div>
+                <div class="group__label">new commands</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span
+                      ><code>/rec artists</code>
+                      <span class="item-desc"
+                        >— get personalized artist recommendations based on your
+                        listening history</span
+                      ></span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span
+                      ><code>/rec tracks</code>
+                      <span class="item-desc"
+                        >— get personalized track recommendations based on your
+                        listening history</span
+                      ></span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span
+                      ><code>/rec albums</code>
+                      <span class="item-desc"
+                        >— get personalized album recommendations based on your
+                        listening history</span
+                      ></span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="group__label">improvements</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >All recommendation commands use Groq AI
+                      (llama-3.1-8b-instant) with JSON mode for reliable,
+                      contextual descriptions</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Recommendations are cached for 6 hours per user per time
+                      period</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Each recommendation includes a personalized reason
+                      referencing your actual top artists/tracks</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Recommendations support all time periods: last 7 days,
+                      last month, 3 months, 6 months, last year, and all
+                      time</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Recommendations can be generated for other users by using
+                      the optional <code>user</code> parameter</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="group__label">internal</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Implemented generic caching system with
+                      <code>Cache</code> model replacing all specific cache
+                      tables</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Removed deprecated cache models:
+                      <code>WrappedCache</code>, <code>RecentCache</code>,
+                      <code>TasteUserCache</code>,
+                      <code>TasteServerCache</code>,
+                      <code>StatsScrobblesCache</code>,
+                      <code>StatsArtistsCache</code>,
+                      <code>StatsAlbumsCache</code>,
+                      <code>StatsGenresCache</code>, <code>WkCache</code></span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >All commands now use unified <code>getCache()</code> and
+                      <code>setCache()</code> utilities from
+                      <code>cache.ts</code></span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Supabase Storage buckets continue to store images, Cache
+                      table stores URLs and metadata as JSON</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Added cache invalidation on <code>/link</code> and
+                      <code>/unlink</code> to clear stale user data</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="release-divider" />
+
+          <!-- v1.2.1 -->
+          <div class="release">
+            <div class="release__header">
+              <span class="release__version">v1.2.1</span>
+              <span class="release__date">may 5, 2026</span>
+            </div>
+
+            <div class="release__groups">
+              <div>
+                <div class="group__label">improvements</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Status page degraded threshold changed from "any service
+                      degraded" to "majority of services degraded", minor issues
+                      no longer mark the entire status page as degraded</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Database health check timeout increased from 1.2s to 2.0s
+                      to better reflect acceptable response times and reduce
+                      false degraded states</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="group__label">internal</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Codebase-wide formatting pass across 65 files (no logic
+                      changes)</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="release-divider" />
+
+          <!-- v1.2.0 -->
+          <div class="release">
+            <div class="release__header">
+              <span class="release__version">v1.2.0</span>
               <span class="release__date">april 25, 2026</span>
             </div>
 
@@ -824,15 +947,15 @@
                     <span class="item-desc"
                       ><code>/stats</code>, <code>/wk</code>,
                       <code>/taste</code>, and <code>/recent</code> now cache
-                      all pages upfront — page navigation is instant with no API
-                      calls on button clicks</span
+                      all pages upfront on first run — page navigation is
+                      instant with no API calls on button clicks</span
                     >
                   </div>
                   <div class="group__item">
                     <span class="item-desc"
                       >Canvas images are pre-rendered and stored in Supabase
                       Storage (<code>stats-cache</code>, <code>wk-cache</code>,
-                      <code>taste-cache</code>) — same approach as
+                      <code>taste-cache</code> buckets) — same approach as
                       <code>/wrapped</code></span
                     >
                   </div>
@@ -840,19 +963,22 @@
                     <span class="item-desc"
                       ><code>/stats artists</code>, <code>/stats albums</code>,
                       <code>/stats genres</code> now show all linked members
-                      with full pagination (was capped at top 10)</span
+                      with full pagination (was incorrectly capped at top
+                      10)</span
                     >
                   </div>
                   <div class="group__item">
                     <span class="item-desc"
                       ><code>/stats</code> and <code>/wk</code> commands no
-                      longer require a minimum of 2 linked members</span
+                      longer require a minimum of 2 linked members — works with
+                      any number</span
                     >
                   </div>
                   <div class="group__item">
                     <span class="item-desc"
                       ><code>/taste server</code> footer now shows member count
-                      alongside page and period info</span
+                      (e.g.
+                      <code>Page 1 of 5 • 12 members • All time</code>)</span
                     >
                   </div>
                   <div class="group__item">
@@ -865,7 +991,20 @@
                   <div class="group__item">
                     <span class="item-desc"
                       >All command references in bot messages now use proper
-                      Discord command mentions instead of plain text</span
+                      Discord command mentions instead of plain text (e.g.
+                      <code>/link</code>)</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >Added <code>RecentCache</code>,
+                      <code>TasteUserCache</code>,
+                      <code>TasteServerCache</code>,
+                      <code>StatsScrobblesCache</code>,
+                      <code>StatsArtistsCache</code>,
+                      <code>StatsAlbumsCache</code>,
+                      <code>StatsGenresCache</code>, and
+                      <code>WkCache</code> Prisma models</span
                     >
                   </div>
                 </div>

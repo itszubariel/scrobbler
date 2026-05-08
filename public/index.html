@@ -1938,7 +1938,7 @@
             <div class="discord-mock__bar">
               <div class="discord-mock__avatar">
                 <img
-                  src="../assets/images/scrobbler_logo.png"
+                  src=""
                   alt="scrobbler"
                   style="
                     width: 100%;
@@ -2680,6 +2680,33 @@
           </div>
 
           <div>
+            <div class="cmdref__group-name">Recommendations</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Get artist recommendations based on your taste"
+                data-usage="/rec artists [period] [user]"
+                >/rec artists</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Get track recommendations based on your taste"
+                data-usage="/rec tracks [period] [user]"
+                >/rec tracks</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Get album recommendations based on your taste"
+                data-usage="/rec albums [period] [user]"
+                >/rec albums</span
+              >
+            </div>
+          </div>
+
+          <div>
             <div class="cmdref__group-name">Who Knows</div>
             <div class="cmdref__pills">
               <span
@@ -2731,7 +2758,7 @@
       <section id="stats" class="statsbar" aria-label="Key stats">
         <div class="statsbar__inner">
           <div class="stat-pill" data-animate>
-            <div class="stat-pill__val">20+</div>
+            <div class="stat-pill__val">30+</div>
             <div class="stat-pill__label">Slash Commands</div>
           </div>
           <div class="stat-pill" data-animate style="--d: 100ms">
@@ -2758,40 +2785,76 @@
         <div class="testimonials__grid">
           <div class="testimonial" data-animate>
             <p class="testimonial__quote">
-              The /whoknows command alone is worth it. My server has been in a
-              month-long war over who's the real fan of our favourite band.
+              bro the /wk command destroyed my friendship. turns out my friend
+              has 3x more scrobbles on our "shared favourite artist" than me. i
+              feel betrayed
             </p>
             <div class="testimonial__user">
-              <div class="testimonial__avatar">A</div>
+              <div class="testimonial__avatar">
+                <img
+                  src="assets/images/testimonial_ryancore.png"
+                  alt="ryancore"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
               <div>
-                <div class="testimonial__name">alex_listens</div>
+                <div class="testimonial__name">ryancore</div>
                 <div class="testimonial__handle">Discord user</div>
               </div>
             </div>
           </div>
+
           <div class="testimonial" data-animate style="--d: 120ms">
             <p class="testimonial__quote">
-              I've tried every music bot out there. scrobbler is the only one
-              that actually feels like it was made for people who care about
-              music.
+              finally a music bot that doesn't make me vote just to skip a song
+              or pay $5 a month to see my own stats. scrobbler actually just
+              works
             </p>
             <div class="testimonial__user">
-              <div class="testimonial__avatar">M</div>
+              <div class="testimonial__avatar">
+                <img
+                  src="assets/images/testimonial_sofialistens.png"
+                  alt="sofialistens"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
               <div>
-                <div class="testimonial__name">mayabeats</div>
+                <div class="testimonial__name">sofialistens</div>
                 <div class="testimonial__handle">Discord user</div>
               </div>
             </div>
           </div>
+
           <div class="testimonial" data-animate style="--d: 240ms">
             <p class="testimonial__quote">
-              The personality command is scarily accurate. It called me a
-              "late-night overthinker" and I've never felt so seen by a bot.
+              the wrapped feature is genuinely better than spotify wrapped. i
+              can run it any time and it actually shows me stuff i care about
             </p>
             <div class="testimonial__user">
-              <div class="testimonial__avatar">J</div>
+              <div class="testimonial__avatar">
+                <img
+                  src="assets/images/testimonial_kaito.wav.png"
+                  alt="kaito.wav"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                  "
+                />
+              </div>
               <div>
-                <div class="testimonial__name">jordanfm</div>
+                <div class="testimonial__name">kaito.wav</div>
                 <div class="testimonial__handle">Discord user</div>
               </div>
             </div>
@@ -3158,6 +3221,11 @@
       }
 
       function openDropdown(pill) {
+        // Close any previously active pill first
+        if (activePill && activePill !== pill) {
+          activePill.classList.remove("active");
+        }
+
         ddName.textContent = pill.textContent.trim();
         ddDesc.textContent = pill.dataset.desc || "";
         ddUsage.textContent = pill.dataset.usage || "";
