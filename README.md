@@ -54,7 +54,8 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 
 > [Invite scrobbler now](https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands)
 
-🌐 **Website:** [scrobbler.netlify.app](https://scrobbler.netlify.app)
+**Website:** [scrobbler.netlify.app](https://scrobbler.netlify.app)  
+**Dashboard:** [scrobbler-dashboard.netlify.app](https://scrobbler-dashboard.netlify.app)
 
 ---
 

@@ -336,6 +336,16 @@
         outline: none;
         opacity: 1;
       }
+      .btn-secondary {
+        background: var(--color-surface);
+        color: var(--purple-start);
+        border: 2px solid var(--color-surface-2);
+      }
+      .btn-secondary:hover {
+        background: var(--color-surface-2);
+        border-color: var(--purple-start);
+        opacity: 1;
+      }
       .section-label {
         display: inline-block;
         font-size: 11px;
@@ -1778,6 +1788,16 @@
       [data-theme="dark"] .btn:hover {
         box-shadow: 0 8px 20px rgba(139, 111, 212, 0.4);
       }
+      [data-theme="dark"] .btn-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e0d4f7;
+        border-color: rgba(139, 111, 212, 0.3);
+      }
+      [data-theme="dark"] .btn-secondary:hover {
+        background: rgba(139, 111, 212, 0.2);
+        border-color: #b89af0;
+        color: #fff;
+      }
     </style>
 
     <!-- Dark mode: apply before paint to avoid flash -->
@@ -1850,13 +1870,7 @@
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
             </svg>
           </button>
-          <a
-            class="btn"
-            href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
-            target="_blank"
-            rel="noopener noreferrer"
-            >add to discord</a
-          >
+          <a class="btn" href="/invite">add to discord</a>
           <button
             class="nav__hamburger"
             id="navHamburger"
@@ -1899,16 +1913,28 @@
           compare taste with friends, and discover who knows your favourite
           artists best.
         </p>
-        <a
-          class="btn"
-          href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-animate
-          style="--d: 360ms"
+        <div
+          style="
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+          "
         >
-          Add to Discord
-        </a>
+          <a class="btn" href="/invite" data-animate style="--d: 360ms">
+            Add to Discord
+          </a>
+          <a
+            class="btn btn-secondary"
+            href="https://scrobbler-dashboard.netlify.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-animate
+            style="--d: 420ms"
+          >
+            Dashboard
+          </a>
+        </div>
       </section>
 
       <!-- COMMANDS SHOWCASE -->
@@ -2967,14 +2993,7 @@
             A social music bot for Discord. Track your listening, compare taste,
             and discover who knows your favourite artists best.
           </p>
-          <a
-            class="footer__cta"
-            href="https://discord.com/oauth2/authorize?client_id=1493297305275863120&permissions=2147600384&integration_type=0&scope=bot+applications.commands"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Add to Discord →
-          </a>
+          <a class="footer__cta" href="/invite"> Add to Discord → </a>
           <div class="footer__social">
             <a
               href="https://github.com/itszubariel/scrobbler"
@@ -3011,20 +3030,41 @@
               </svg>
             </a>
             <a
-              href="https://twitter.com/"
+              href="https://scrobbler-dashboard.netlify.app"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Twitter"
+              aria-label="Dashboard"
             >
               <svg
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
-                fill="currentColor"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               >
-                <path
-                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                />
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </a>
+            <a href="/invite" aria-label="Add to Discord">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
               </svg>
             </a>
           </div>
@@ -3055,10 +3095,10 @@
             <a href="about.html">about</a>
             <a href="changelog.html">changelog</a>
             <a
-              href="https://www.last.fm"
+              href="https://scrobbler-dashboard.netlify.app"
               target="_blank"
               rel="noopener noreferrer"
-              >last.fm</a
+              >dashboard</a
             >
           </nav>
         </div>
