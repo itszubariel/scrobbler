@@ -281,6 +281,7 @@ export function buildWrappedContainer(
   page: number,
   targetDiscordId: string,
   imageUrl: string,
+  period: string,
 ) {
   const TOTAL = 5;
 
@@ -318,7 +319,7 @@ export function buildWrappedContainer(
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`wrapped_prev_${page}_${targetDiscordId}`)
+      .setCustomId(`wrapped_prev_${page}_${targetDiscordId}_${period}`)
       .setEmoji({
         id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
         name: "scrobbler_prev",
@@ -326,7 +327,7 @@ export function buildWrappedContainer(
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 1),
     new ButtonBuilder()
-      .setCustomId(`wrapped_next_${page}_${targetDiscordId}`)
+      .setCustomId(`wrapped_next_${page}_${targetDiscordId}_${period}`)
       .setEmoji({
         id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
         name: "scrobbler_next",
@@ -343,10 +344,11 @@ async function uploadToSupabase(
   buffer: Buffer,
   discordId: string,
   page: number,
+  period: string,
 ): Promise<string> {
   const supabaseUrl = process.env.SUPABASE_URL!;
   const serviceKey = process.env.SUPABASE_SERVICE_KEY!;
-  const filename = `${discordId}_${page}.png`;
+  const filename = `${discordId}_${period}_${page}.png`;
   const uploadUrl = `${supabaseUrl}/storage/v1/object/wrapped-cache/${filename}`;
 
   const res = await fetch(uploadUrl, {
@@ -416,6 +418,7 @@ export const wrappedCommand: Command = {
         page,
         targetDiscordUser.id,
         cached.imageUrls[0]!,
+        period,
       );
 
       await interaction.editReply({
@@ -468,7 +471,7 @@ export const wrappedCommand: Command = {
     // Upload all 5 to Supabase Storage in parallel
     const urls = await Promise.all(
       buffers.map((buf, i) =>
-        uploadToSupabase(buf, targetDiscordUser.id, i + 1),
+        uploadToSupabase(buf, targetDiscordUser.id, i + 1, period),
       ),
     );
 
@@ -485,6 +488,7 @@ export const wrappedCommand: Command = {
       page,
       targetDiscordUser.id,
       urls[0]!,
+      period,
     );
 
     await interaction.editReply({

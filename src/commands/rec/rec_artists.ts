@@ -331,8 +331,13 @@ export async function executeRecArtists(interaction: any): Promise<void> {
     score: scoreMap.get(name.toLowerCase()) ?? 0,
   }));
 
-  // Sort by score descending, take top 5
-  scored.sort((a, b) => b.score - a.score);
+  // Sort by score descending, then alphabetically ascending for deterministic order
+  scored.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
   const top5Recommendations = scored.slice(0, 5).map((s) => s.name);
 
   if (top5Recommendations.length === 0) {

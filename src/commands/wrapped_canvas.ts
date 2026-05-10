@@ -116,7 +116,7 @@ export async function buildCoverCard(
 
   ctx.fillStyle = TEXT_SECONDARY;
   ctx.font = "16px sans-serif";
-  ctx.fillText(tracked("SCROBBLES"), 40, 370);
+  ctx.fillText(tracked("TOTAL SCROBBLES"), 40, 370);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", {

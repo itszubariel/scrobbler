@@ -636,32 +636,16 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     const direction = parts[1] as "prev" | "next";
     const currentPage = parseInt(parts[2]);
     const targetDiscordId = parts[3];
+    const period = parts[4] || "7day"; // Extract period from customId
     if (clickerId !== targetDiscordId) return;
     await interaction.deferUpdate();
 
     const TOTAL = 5;
     const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
 
-    // Need to get period from somewhere - check all possible periods
-    let cache: { imageUrls: string[] } | null = null;
-    let period = "7day";
-
-    for (const p of [
-      "7day",
-      "1month",
-      "3month",
-      "6month",
-      "12month",
-      "overall",
-    ]) {
-      const cacheKey = `wrapped_${targetDiscordId}_${p}`;
-      const c = await getCache<{ imageUrls: string[] }>(cacheKey);
-      if (c) {
-        cache = c;
-        period = p;
-        break;
-      }
-    }
+    // Get cache for the specific period
+    const cacheKey = `wrapped_${targetDiscordId}_${period}`;
+    const cache = await getCache<{ imageUrls: string[] }>(cacheKey);
 
     if (!cache) {
       const container = new ContainerBuilder().addTextDisplayComponents(
@@ -671,7 +655,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
       );
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`wrapped_prev_${newPage}_${targetDiscordId}`)
+          .setCustomId(`wrapped_prev_${newPage}_${targetDiscordId}_${period}`)
           .setEmoji({
             id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
             name: "scrobbler_prev",
@@ -679,7 +663,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(true),
         new ButtonBuilder()
-          .setCustomId(`wrapped_next_${newPage}_${targetDiscordId}`)
+          .setCustomId(`wrapped_next_${newPage}_${targetDiscordId}_${period}`)
           .setEmoji({
             id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
             name: "scrobbler_next",
@@ -735,7 +719,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`wrapped_prev_${newPage}_${targetDiscordId}`)
+        .setCustomId(`wrapped_prev_${newPage}_${targetDiscordId}_${period}`)
         .setEmoji({
           id: E.prev.match(/:(\d+)>/)?.[1] ?? "0",
           name: "scrobbler_prev",
@@ -743,7 +727,7 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(newPage === 1),
       new ButtonBuilder()
-        .setCustomId(`wrapped_next_${newPage}_${targetDiscordId}`)
+        .setCustomId(`wrapped_next_${newPage}_${targetDiscordId}_${period}`)
         .setEmoji({
           id: E.next.match(/:(\d+)>/)?.[1] ?? "0",
           name: "scrobbler_next",
