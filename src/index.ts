@@ -142,7 +142,7 @@ client.once("clientReady", async (readyClient) => {
   let cachedTotalMembers = 0;
   const fetchStats = async () => {
     try {
-      const res = await fetch("https://api-scrobbler.netlify.app/stats");
+      const res = await fetch("https://api-scrobbler.vercel.app/stats");
       if (res.ok) {
         const data = (await res.json()) as any;
         cachedLinkedUsers = data.linkedUsers ?? cachedLinkedUsers;

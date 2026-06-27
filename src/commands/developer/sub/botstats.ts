@@ -2,7 +2,7 @@ import { MessageFlags, ContainerBuilder, TextDisplayBuilder } from "discord.js";
 import { client } from "../../../index.js";
 
 export async function executeDevBotStats(interaction: any): Promise<void> {
-  const res = await fetch("https://api-scrobbler.netlify.app/stats").catch(
+  const res = await fetch("https://api-scrobbler.vercel.app/stats").catch(
     () => null,
   );
   const data = res?.ok ? ((await res.json()) as any) : null;
