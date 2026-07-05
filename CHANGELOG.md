@@ -4,6 +4,24 @@ All notable changes to scrobbler are documented here.
 
 ---
 
+## [1.3.1] — 2026-07-06
+
+### New Commands
+- `/timeline artists` — Line chart of unique artists discovered per month
+- `/timeline albums` — Line chart of unique albums listened to per month
+- `/timeline tracks` — Line chart of total scrobbles per month
+- `/timeline genres` — Multi-line chart showing your top 3 genre trends over time
+- `/timeline server` — Server-wide combined scrobble trend per month
+
+### Improvements
+- All timeline commands support a `months` option (3, 6, or 12 months) and an optional `user` parameter
+- Timeline images cached for 60 minutes via Supabase Storage (`timeline-cache` bucket)
+
+### Internal
+- Built custom line chart canvas renderer with smooth bezier curves, area fill, grid lines, and multi-series legend support
+
+---
+
 ## [1.3.0] — 2026-05-06
 
 ### New Commands
