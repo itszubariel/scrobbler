@@ -71,6 +71,8 @@ import { recCommand } from "./commands/rec/rec.js";
 commands.set(recCommand.data.name, recCommand);
 import { devCommand } from "./commands/developer/dev.js";
 commands.set(devCommand.data.name, devCommand);
+import { timelineCommand } from "./commands/timeline/timeline.js";
+commands.set(timelineCommand.data.name, timelineCommand);
 
 export const commandIds = new Map<string, string>();
 
