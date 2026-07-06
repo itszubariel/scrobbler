@@ -256,7 +256,8 @@ export const bingoCommand: Command = {
       interaction.options.getUser("user") ?? interaction.user;
     const isOwnProfile = targetDiscordUser.id === interaction.user.id;
 
-    const cacheKey;
+    const cacheKey = `bingo_${targetDiscordUser.id}`;
+    const cached = await getCache<CachedBingo>(cacheKey);
 
     if (cached) {
       if (!cached.imageUrl || cached.imageUrl.trim() === "") {
