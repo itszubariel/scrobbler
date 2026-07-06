@@ -25,6 +25,11 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 | `/chart albums` | Grid chart of your top albums |
 | `/chart tracks` | Grid chart of your top tracks |
 | `/chart server` | Server-wide top artists, albums or tracks |
+| `/timeline artists` | Line chart of unique artists discovered over time |
+| `/timeline albums` | Line chart of unique albums listened to over time |
+| `/timeline tracks` | Line chart of total scrobbles over time |
+| `/timeline genres` | Your top genre trends over time |
+| `/timeline server` | Server-wide combined scrobble trend |
 | `/info artist` | Detailed info about an artist |
 | `/info album` | Detailed info about an album |
 | `/info track` | Detailed info about a track |
@@ -36,6 +41,9 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 | `/personality` | Discover your music personality type |
 | `/streak` | Your top listening streaks over the last 90 days |
 | `/wrapped` | Your personalized Scrobbler Wrapped |
+| `/era` | What's your current music era? |
+| `/milestone` | Your listening milestones and progress to the next one |
+| `/bingo` | Your music taste bingo card |
 | `/rec artists` | Get personalized artist recommendations |
 | `/rec tracks` | Get personalized track recommendations |
 | `/rec albums` | Get personalized album recommendations |
@@ -47,6 +55,7 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 | `/stats artists` | Who has listened to the most unique artists |
 | `/stats albums` | Who has listened to the most unique albums |
 | `/stats genres` | Who has the most diverse taste |
+| `/overlap` | Find music shared between you and up to 9 others |
 
 ---
 

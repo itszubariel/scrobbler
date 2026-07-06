@@ -49,6 +49,26 @@ const sections = [
     ],
   },
   {
+    heading: "Timelines",
+    commands: [
+      {
+        name: "timeline artists",
+        desc: "Line chart of unique artists discovered over time",
+      },
+      {
+        name: "timeline albums",
+        desc: "Line chart of unique albums listened to over time",
+      },
+      {
+        name: "timeline tracks",
+        desc: "Line chart of total scrobbles over time",
+      },
+      { name: "timeline genres", desc: "Your top genre trends over time" },
+      { name: "timeline server", desc: "Server-wide combined scrobble trend" },
+    ],
+  },
+
+  {
     heading: "Info",
     commands: [
       { name: "info artist", desc: "Detailed info about an artist" },
@@ -70,12 +90,18 @@ const sections = [
       { name: "personality", desc: "Discover your music personality type" },
       {
         name: "streak",
-        desc: "Your top artist, track and album streaks over 90 day",
+        desc: "Your top artist, track and album streaks over 90 days",
       },
       {
         name: "wrapped",
         desc: "Your personalized music recap with stats, charts and more",
       },
+      { name: "era", desc: "What's your current music era?" },
+      {
+        name: "milestone",
+        desc: "Your listening milestones and progress to the next one",
+      },
+      { name: "bingo", desc: "Your music taste bingo card" },
     ],
   },
   {
@@ -120,6 +146,10 @@ const sections = [
         desc: "Who has listened to the most unique albums",
       },
       { name: "stats genres", desc: "Who has the most diverse taste" },
+      {
+        name: "overlap",
+        desc: "Find music shared between you and up to 9 others",
+      },
     ],
   },
 ];
@@ -158,7 +188,7 @@ export const helpCommand: Command = {
     );
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# Made with ${E.heart} by Zubariel • 31 commands`,
+        `-# Made with ${E.heart} by Zubariel • 40 commands`,
       ),
     );
 
