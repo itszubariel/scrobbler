@@ -148,8 +148,8 @@ export const eraCommand: Command = {
 
     const lfmUsername = dbUser.lastfmUsername;
 
-    // Fetch top artists, top tracks, and user info in parallel
-    const [artistsRes, tracksRes, userInfoRes] = (await Promise.all([
+    // Fetch top artists and top track in parallel
+    const [artistsRes, tracksRes] = (await Promise.all([
       fetch(
         `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(lfmUsername)}&period=${period}&limit=50&api_key=${apiKey}&format=json`,
       )
@@ -157,11 +157,6 @@ export const eraCommand: Command = {
         .catch(() => null),
       fetch(
         `https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user=${encodeURIComponent(lfmUsername)}&period=${period}&limit=1&api_key=${apiKey}&format=json`,
-      )
-        .then((r) => r.json())
-        .catch(() => null),
-      fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lfmUsername)}&limit=1&api_key=${apiKey}&format=json`,
       )
         .then((r) => r.json())
         .catch(() => null),
