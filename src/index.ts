@@ -79,6 +79,8 @@ import { milestoneCommand } from "./commands/milestone.js";
 commands.set(milestoneCommand.data.name, milestoneCommand);
 import { overlapCommand } from "./commands/overlap.js";
 commands.set(overlapCommand.data.name, overlapCommand);
+import { bingoCommand } from "./commands/bingo.js";
+commands.set(bingoCommand.data.name, bingoCommand);
 
 export const commandIds = new Map<string, string>();
 
