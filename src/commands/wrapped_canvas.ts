@@ -444,7 +444,7 @@ export async function buildStatsCard(
   ctx.fillStyle = "#333333";
   ctx.font = "14px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Made with Scrobbler", W / 2, 410);
+  ctx.fillText("Made with scrobbler", W / 2, 410);
   ctx.textAlign = "left";
 
   await drawCardChrome(ctx);

@@ -450,7 +450,7 @@ export const personalityCommand: Command = {
       )
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `-# Based on your listening history • Scrobbler`,
+          `-# Based on your listening history • scrobbler`,
         ),
       );
 
