@@ -77,6 +77,8 @@ import { eraCommand } from "./commands/era.js";
 commands.set(eraCommand.data.name, eraCommand);
 import { milestoneCommand } from "./commands/milestone.js";
 commands.set(milestoneCommand.data.name, milestoneCommand);
+import { overlapCommand } from "./commands/overlap.js";
+commands.set(overlapCommand.data.name, overlapCommand);
 
 export const commandIds = new Map<string, string>();
 
