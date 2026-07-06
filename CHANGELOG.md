@@ -4,6 +4,16 @@ All notable changes to scrobbler are documented here.
 
 ---
 
+## [1.4.0] — 2026-07-06
+
+### New Commands
+- `/era` — Your current music era based on dominant genre, with top 3 artists and most played track for the period. Supports all time periods, defaults to last month
+- `/milestone` — Canvas progress card showing how close you are to the next milestone across scrobbles, artists, albums, and tracks
+- `/overlap` — Find music shared across you and up to 9 other users — shows artists, tracks, albums, and genres every single person has in common
+- `/bingo` — 3×3 music taste bingo card with 9 challenges checked against your real listening history. Each cell shows your actual stat so you can see how close you are
+
+---
+
 ## [1.3.1] — 2026-07-06
 
 ### New Commands

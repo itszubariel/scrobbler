@@ -760,11 +760,140 @@
         </div>
 
         <div class="timeline">
+          <!-- v1.4.0 -->
+          <div class="release">
+            <div class="release__header">
+              <span class="release__version">v1.4.0</span>
+              <span class="release__latest">latest</span>
+              <span class="release__date">july 6, 2026</span>
+            </div>
+
+            <div class="release__groups">
+              <div>
+                <div class="group__label">new commands</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span><code>/era</code>
+                      <span class="item-desc"
+                        >— your current music era based on dominant genre, with
+                        top 3 artists and most played track for the period.
+                        supports all time periods, defaults to last month</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/milestone</code>
+                      <span class="item-desc"
+                        >— canvas progress card showing how close you are to
+                        the next milestone across scrobbles, artists, albums,
+                        and tracks</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/overlap</code>
+                      <span class="item-desc"
+                        >— find music shared across you and up to 9 other
+                        users — shows artists, tracks, albums, and genres
+                        every single person has in common</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/bingo</code>
+                      <span class="item-desc"
+                        >— 3×3 music taste bingo card with 9 challenges
+                        checked against your real listening history. each cell
+                        shows your actual stat so you can see how close you are</span
+                      ></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="release-divider" />
+
+          <!-- v1.3.1 -->
+          <div class="release">
+            <div class="release__header">
+              <span class="release__version">v1.3.1</span>
+              <span class="release__date">july 6, 2026</span>
+            </div>
+
+            <div class="release__groups">
+              <div>
+                <div class="group__label">new commands</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span><code>/timeline artists</code>
+                      <span class="item-desc"
+                        >— line chart of unique artists discovered per month</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/timeline albums</code>
+                      <span class="item-desc"
+                        >— line chart of unique albums listened to per month</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/timeline tracks</code>
+                      <span class="item-desc"
+                        >— line chart of total scrobbles per month</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/timeline genres</code>
+                      <span class="item-desc"
+                        >— multi-line chart showing your top 3 genre trends over time</span
+                      ></span>
+                  </div>
+                  <div class="group__item">
+                    <span><code>/timeline server</code>
+                      <span class="item-desc"
+                        >— server-wide combined scrobble trend per month</span
+                      ></span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="group__label">improvements</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >all timeline commands support a <code>months</code> option
+                      (3, 6, or 12 months) and an optional <code>user</code>
+                      parameter</span
+                    >
+                  </div>
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >timeline images cached for 60 minutes via supabase storage
+                      (<code>timeline-cache</code> bucket)</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="group__label">internal</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span class="item-desc"
+                      >built custom line chart canvas renderer with smooth bezier
+                      curves, area fill, grid lines, and multi-series legend support</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="release-divider" />
+
           <!-- v1.3.0 -->
           <div class="release">
             <div class="release__header">
               <span class="release__version">v1.3.0</span>
-              <span class="release__latest">latest</span>
               <span class="release__date">may 6, 2026</span>
             </div>
 
