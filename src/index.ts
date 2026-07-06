@@ -75,6 +75,8 @@ import { timelineCommand } from "./commands/timeline/timeline.js";
 commands.set(timelineCommand.data.name, timelineCommand);
 import { eraCommand } from "./commands/era.js";
 commands.set(eraCommand.data.name, eraCommand);
+import { milestoneCommand } from "./commands/milestone.js";
+commands.set(milestoneCommand.data.name, milestoneCommand);
 
 export const commandIds = new Map<string, string>();
 
