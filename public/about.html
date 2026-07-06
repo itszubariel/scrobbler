@@ -703,7 +703,8 @@
           <div class="team-card" data-animate style="--d: 240ms">
             <div class="team-card__avatar">
               <img
-                src="https://images-ext-1.discordapp.net/external/I7JgSmVaZ5gt-Wy62tmMwpE4sBgtI0dI1Hlp12_AhrU/%3Fsize%3D2048/https/cdn.discordapp.com/avatars/1262410582812786700/a_4bfd918579197b66c5381bb50a1e5148.gif?width=375&height=375"
+                id="rivAvatar"
+                src="https://cdn.discordapp.com/avatars/1262410582812786700/f7e9866d40dcacc712ed01c7edc47275.webp?size=512"
                 alt="rivulose profile picture"
               />
             </div>
@@ -928,6 +929,27 @@
           localStorage.setItem("theme", "light");
         }
       });
+
+      // Fetch riv's avatar from API
+      (function () {
+        fetch("https://riv.idntt.fun/api/riv")
+          .then(function (response) {
+            if (!response.ok) throw new Error("Failed to fetch avatar");
+            return response.json();
+          })
+          .then(function (data) {
+            if (data && data.avatarUrl) {
+              var rivAvatar = document.getElementById("rivAvatar");
+              if (rivAvatar) {
+                rivAvatar.src = data.avatarUrl;
+              }
+            }
+          })
+          .catch(function (error) {
+            console.log("Using fallback avatar for riv:", error.message);
+            // Fallback is already in the HTML, so nothing to do
+          });
+      })();
     </script>
   </body>
 </html>
