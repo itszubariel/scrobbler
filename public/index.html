@@ -177,8 +177,13 @@
         will-change: opacity, transform;
       }
       [data-animate].is-visible {
-        animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        animation: fadeUp 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         animation-delay: var(--d, 0ms);
+      }
+      [data-animate].is-visible.animation-complete {
+        animation: none;
+        transform: none;
+        opacity: 1;
       }
       [data-animate="fade"].is-visible {
         animation-name: fadeIn;
@@ -235,34 +240,6 @@
         animation-delay: -4s;
       }
 
-      .btn,
-      .footer__cta {
-        position: relative;
-        overflow: hidden;
-      }
-      .btn::before,
-      .footer__cta::before {
-        content: "";
-        position: absolute;
-        top: -40%;
-        left: -30%;
-        width: 45%;
-        height: 180%;
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0),
-          rgba(255, 255, 255, 0.55),
-          rgba(255, 255, 255, 0)
-        );
-        transform: translateX(-120%) skewX(-20deg);
-        opacity: 0;
-        pointer-events: none;
-      }
-      .btn:hover::before,
-      .footer__cta:hover::before {
-        animation: shimmerSweep 0.9s ease-out;
-      }
-
       .discord-mock {
         transition:
           transform 0.25s ease,
@@ -302,6 +279,33 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
       }
+      .btn,
+      .footer__cta {
+        position: relative;
+        overflow: hidden;
+      }
+      .btn::before,
+      .footer__cta::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: -30%;
+        width: 45%;
+        height: 180%;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0.55),
+          rgba(255, 255, 255, 0)
+        );
+        transform: translateX(-120%) skewX(-20deg);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .btn:hover::before,
+      .footer__cta:hover::before {
+        animation: shimmerSweep 0.9s ease-out;
+      }
       .btn {
         display: inline-flex;
         align-items: center;
@@ -336,13 +340,14 @@
         outline: none;
         opacity: 1;
       }
-      .btn-secondary {
-        background: var(--color-surface);
-        color: var(--purple-start);
-        border: 2px solid var(--color-surface-2);
+      .btn--ghost {
+        background: transparent;
+        color: var(--color-charcoal);
+        border: 1px solid var(--color-mist);
+        box-shadow: none;
       }
-      .btn-secondary:hover {
-        background: var(--color-surface-2);
+      .btn--ghost:hover {
+        background: rgba(96, 64, 176, 0.06);
         border-color: var(--purple-start);
         opacity: 1;
       }
@@ -1783,19 +1788,20 @@
       }
       [data-theme="dark"] .btn {
         background: linear-gradient(135deg, #8b6fd4, #b89af0);
-        box-shadow: 0 4px 12px rgba(139, 111, 212, 0.3);
+        box-shadow: var(--shadow-sm);
       }
       [data-theme="dark"] .btn:hover {
-        box-shadow: 0 8px 20px rgba(139, 111, 212, 0.4);
+        opacity: 0.88;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
       }
-      [data-theme="dark"] .btn-secondary {
-        background: rgba(255, 255, 255, 0.08);
+      [data-theme="dark"] .btn--ghost {
+        background: transparent;
         color: #e0d4f7;
-        border-color: rgba(139, 111, 212, 0.3);
+        border-color: rgba(255, 255, 255, 0.15);
       }
-      [data-theme="dark"] .btn-secondary:hover {
-        background: rgba(139, 111, 212, 0.2);
-        border-color: #b89af0;
+      [data-theme="dark"] .btn--ghost:hover {
+        background: rgba(139, 111, 212, 0.15);
         color: #fff;
       }
     </style>
@@ -1925,7 +1931,7 @@
             Add to Discord
           </a>
           <a
-            class="btn btn-secondary"
+            class="btn btn--ghost"
             href="https://scrobbler-dashboard.netlify.app"
             target="_blank"
             rel="noopener noreferrer"
@@ -2551,13 +2557,6 @@
                 data-usage="/recent [user]"
                 >/recent</span
               >
-              <span
-                class="cmdref__pill"
-                tabindex="0"
-                data-desc="Show your current listening streak, how many consecutive days you've scrobbled at least one track."
-                data-usage="/streak [user]"
-                >/streak</span
-              >
             </div>
           </div>
 
@@ -2591,6 +2590,47 @@
                 data-desc="Show a combined chart of the most-played artists across your entire server."
                 data-usage="/chart server [period]"
                 >/chart server</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Timelines</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Line chart of unique artists discovered over time."
+                data-usage="/timeline artists [period]"
+                >/timeline artists</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Line chart of unique albums discovered over time."
+                data-usage="/timeline albums [period]"
+                >/timeline albums</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Line chart of total scrobbles over time."
+                data-usage="/timeline tracks [period]"
+                >/timeline tracks</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Line chart of your top genres and trends over time."
+                data-usage="/timeline genres [period]"
+                >/timeline genres</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Server-wide combined scrobble trends and genre growth over time."
+                data-usage="/timeline server [period]"
+                >/timeline server</span
               >
             </div>
           </div>
@@ -2635,6 +2675,82 @@
               <span
                 class="cmdref__pill"
                 tabindex="0"
+                data-desc="See your full genre breakdown as a colour-coded bar chart, paginated across 5 pages of 10 genres each."
+                data-usage="/taste user [period]"
+                >/taste user</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Compare genre taste across your whole server, see what genres dominate the room."
+                data-usage="/taste server [period]"
+                >/taste server</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Get an AI-generated music personality blurb based on your listening history and top artists."
+                data-usage="/personality [user]"
+                >/personality</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Discover new artists you might like based on your listening history, find what you haven't heard yet."
+                data-usage="/discovery [user]"
+                >/discovery</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Check compatibility between two users, a detailed breakdown of shared taste and common artists."
+                data-usage="/compat user1 user2"
+                >/compat</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Show your current listening streak, how many consecutive days you've scrobbled at least one track."
+                data-usage="/streak [user]"
+                >/streak</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Your personalized music recap with charts, stats, and listening milestones."
+                data-usage="/wrapped [period]"
+                >/wrapped</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Discover your current music era based on your listening habits and top artists."
+                data-usage="/era [user]"
+                >/era</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Track your listening milestones and progress to the next one."
+                data-usage="/milestone [user]"
+                >/milestone</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="Generate a music taste bingo card from your listening history."
+                data-usage="/bingo [user]"
+                >/bingo</span
+              >
+            </div>
+          </div>
+
+          <div>
+            <div class="cmdref__group-name">Server</div>
+            <div class="cmdref__pills">
+              <span
+                class="cmdref__pill"
+                tabindex="0"
                 data-desc="Server-wide scrobble leaderboard, see who has listened the most overall."
                 data-usage="/stats scrobbles"
                 >/stats scrobbles</span
@@ -2663,44 +2779,9 @@
               <span
                 class="cmdref__pill"
                 tabindex="0"
-                data-desc="See your full genre breakdown as a colour-coded bar chart, paginated across 5 pages of 10 genres each."
-                data-usage="/taste user [period]"
-                >/taste user</span
-              >
-              <span
-                class="cmdref__pill"
-                tabindex="0"
-                data-desc="Compare genre taste across your whole server, see what genres dominate the room."
-                data-usage="/taste server [period]"
-                >/taste server</span
-              >
-              <span
-                class="cmdref__pill"
-                tabindex="0"
-                data-desc="Your personal stats card, artists, tracks, albums, underground %, top genre, and daily average. Available any time, not just December."
-                data-usage="/wrapped [period]"
-                >/wrapped</span
-              >
-              <span
-                class="cmdref__pill"
-                tabindex="0"
-                data-desc="Get an AI-generated music personality blurb based on your listening history and top artists."
-                data-usage="/personality [user]"
-                >/personality</span
-              >
-              <span
-                class="cmdref__pill"
-                tabindex="0"
-                data-desc="Discover new artists you might like based on your listening history, find what you haven't heard yet."
-                data-usage="/discovery [user]"
-                >/discovery</span
-              >
-              <span
-                class="cmdref__pill"
-                tabindex="0"
-                data-desc="Check compatibility between two users, a detailed breakdown of shared taste and common artists."
-                data-usage="/compat user1 user2"
-                >/compat</span
+                data-desc="Find music shared between you and up to 9 other users."
+                data-usage="/overlap user1 user2..."
+                >/overlap</span
               >
             </div>
           </div>
@@ -2784,7 +2865,7 @@
       <section id="stats" class="statsbar" aria-label="Key stats">
         <div class="statsbar__inner">
           <div class="stat-pill" data-animate>
-            <div class="stat-pill__val">30+</div>
+            <div class="stat-pill__val">~40</div>
             <div class="stat-pill__label">Slash Commands</div>
           </div>
           <div class="stat-pill" data-animate style="--d: 100ms">
@@ -3152,6 +3233,7 @@
         if (reduced) {
           document.querySelectorAll("[data-animate]").forEach(function (el) {
             el.classList.add("is-visible");
+            el.classList.add("animation-complete");
           });
           return;
         }
@@ -3162,6 +3244,7 @@
         if (!("IntersectionObserver" in window)) {
           els.forEach(function (el) {
             el.classList.add("is-visible");
+            el.classList.add("animation-complete");
           });
           return;
         }
@@ -3171,6 +3254,13 @@
             entries.forEach(function (entry) {
               if (entry.isIntersecting) {
                 entry.target.classList.add("is-visible");
+                
+                // Add animation-complete class after animation finishes
+                var delay = parseFloat(getComputedStyle(entry.target).getPropertyValue('--d') || '0');
+                setTimeout(function() {
+                  entry.target.classList.add("animation-complete");
+                }, delay + 850); // 850ms is the animation duration
+                
                 io.unobserve(entry.target);
               }
             });
@@ -3272,7 +3362,7 @@
 
         // Position below the pill
         dropdown.classList.remove("visible");
-        document.body.appendChild(dropdown); // ensure it's at body level
+        document.body.appendChild(dropdown);
         var rect = pill.getBoundingClientRect();
         var scrollY = window.scrollY || window.pageYOffset;
         var scrollX = window.scrollX || window.pageXOffset;
