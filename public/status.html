@@ -370,88 +370,6 @@
         margin-bottom: 32px;
       }
 
-      /* ── Status banner ── */
-      .status-banner {
-        display: none;
-        align-items: center;
-        gap: 14px;
-        border-radius: var(--radius-md);
-        padding: 20px 24px;
-        margin-bottom: 40px;
-        border: 1px solid transparent;
-        transition:
-          background 0.3s,
-          border-color 0.3s;
-      }
-      .status-banner--operational {
-        background: var(--color-green-bg);
-        border-color: rgba(34, 197, 94, 0.25);
-      }
-      .status-banner--degraded {
-        background: var(--color-yellow-bg);
-        border-color: rgba(234, 179, 8, 0.25);
-      }
-      .status-banner--outage {
-        background: var(--color-red-bg);
-        border-color: rgba(239, 68, 68, 0.25);
-      }
-      .status-banner--unavailable {
-        background: var(--color-grey-bg);
-        border-color: rgba(156, 163, 175, 0.25);
-      }
-      .status-banner__dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        animation: pulse-dot 2.5s ease-in-out infinite;
-      }
-      .status-banner__dot--green {
-        background: var(--color-green);
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
-      }
-      .status-banner__dot--yellow {
-        background: var(--color-yellow);
-        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.2);
-      }
-      .status-banner__dot--red {
-        background: var(--color-red);
-        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
-      }
-      .status-banner__dot--grey {
-        background: var(--color-grey);
-        box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.2);
-        animation: none;
-      }
-      @keyframes pulse-dot {
-        0%,
-        100% {
-          box-shadow: 0 0 0 4px rgba(var(--pulse-rgb), 0.2);
-        }
-        50% {
-          box-shadow: 0 0 0 8px rgba(var(--pulse-rgb), 0.06);
-        }
-      }
-      .status-banner__dot--green {
-        --pulse-rgb: 34, 197, 94;
-      }
-      .status-banner__dot--yellow {
-        --pulse-rgb: 234, 179, 8;
-      }
-      .status-banner__dot--red {
-        --pulse-rgb: 239, 68, 68;
-      }
-      .status-banner__text {
-        font-size: 16px;
-        font-weight: 600;
-        text-transform: lowercase;
-      }
-      .status-banner__sub {
-        font-size: 13px;
-        opacity: 0.6;
-        margin-top: 2px;
-      }
-
       /* ── Section title ── */
       .section-title {
         font-size: 11px;
@@ -977,25 +895,6 @@
           live operational status of all scrobbler services.
         </p>
 
-        <!-- Overall banner -->
-        <div
-          id="statusBanner"
-          class="status-banner status-banner--unavailable"
-          role="status"
-          aria-live="polite"
-          data-animate
-          style="--d: 320ms"
-        >
-          <div
-            class="status-banner__dot status-banner__dot--grey"
-            aria-hidden="true"
-          ></div>
-          <div>
-            <div class="status-banner__text">loading status…</div>
-            <div class="status-banner__sub" id="bannerSub">fetching data</div>
-          </div>
-        </div>
-
         <!-- Service rows -->
         <div class="section-title" data-animate style="--d: 400ms">
           system status
@@ -1007,7 +906,59 @@
           data-animate
           style="--d: 480ms"
         >
-          <!-- populated by JS -->
+          <!-- Skeleton rows -->
+          <div class="service-row service-row--loading" role="listitem">
+            <div class="service-row__header">
+              <div>
+                <span class="service-row__title">loading services...</span>
+              </div>
+            </div>
+            <div class="bar-chart__bars" style="opacity: 0.1">
+              <div
+                class="bar-chart__seg bar-chart__seg--grey"
+                style="flex: 1"
+              ></div>
+            </div>
+          </div>
+          <div class="service-row service-row--loading" role="listitem">
+            <div class="service-row__header">
+              <div>
+                <span class="service-row__title">loading services...</span>
+              </div>
+            </div>
+            <div class="bar-chart__bars" style="opacity: 0.1">
+              <div
+                class="bar-chart__seg bar-chart__seg--grey"
+                style="flex: 1"
+              ></div>
+            </div>
+          </div>
+          <div class="service-row service-row--loading" role="listitem">
+            <div class="service-row__header">
+              <div>
+                <span class="service-row__title">loading services...</span>
+              </div>
+            </div>
+            <div class="bar-chart__bars" style="opacity: 0.1">
+              <div
+                class="bar-chart__seg bar-chart__seg--grey"
+                style="flex: 1"
+              ></div>
+            </div>
+          </div>
+          <div class="service-row service-row--loading" role="listitem">
+            <div class="service-row__header">
+              <div>
+                <span class="service-row__title">loading services...</span>
+              </div>
+            </div>
+            <div class="bar-chart__bars" style="opacity: 0.1">
+              <div
+                class="bar-chart__seg bar-chart__seg--grey"
+                style="flex: 1"
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -1284,44 +1235,6 @@
         return Math.round((sum / vals.length) * 10) / 10;
       }
 
-      // ── renderBanner ──
-      function renderBanner(overall, checkedAt) {
-        var banner = document.getElementById("statusBanner");
-        var sub = document.getElementById("bannerSub");
-        var dot = banner.querySelector(".status-banner__dot");
-        var text = banner.querySelector(".status-banner__text");
-
-        // hide banner entirely when operational
-        if (overall === "operational") {
-          banner.style.display = "none";
-          return;
-        }
-
-        banner.style.display = "flex";
-
-        // reset classes
-        banner.className = "status-banner";
-        dot.className = "status-banner__dot";
-
-        if (overall === "degraded") {
-          banner.classList.add("status-banner--degraded");
-          dot.classList.add("status-banner__dot--yellow");
-          text.textContent = "degraded performance";
-        } else if (overall === "outage") {
-          banner.classList.add("status-banner--outage");
-          dot.classList.add("status-banner__dot--red");
-          text.textContent = "major outage";
-        } else {
-          banner.classList.add("status-banner--unavailable");
-          dot.classList.add("status-banner__dot--grey");
-          text.textContent = "status unavailable";
-        }
-
-        sub.textContent = checkedAt
-          ? "last updated " + formatRelativeTime(checkedAt)
-          : "last updated unknown";
-      }
-
       // ── renderTooltip ──
       function renderTooltip(dayData) {
         if (
@@ -1561,16 +1474,24 @@
       // ── fetchStatus ──
       var lastCheckedAt = null;
 
+      function renderErrorRows() {
+        var card = document.getElementById("servicesCard");
+        card.innerHTML =
+          '<div class="service-row" style="text-align: center; opacity: 0.6;">' +
+          '<div class="service-row__title">unable to load service status</div>' +
+          '<div class="service-row__rt">please check back later</div>' +
+          "</div>";
+      }
+
       async function fetchStatus() {
         try {
           var res = await fetch(API_URL);
           if (!res.ok) throw new Error("non-200");
           var data = await res.json();
           lastCheckedAt = data.checkedAt;
-          renderBanner(data.overall, data.checkedAt);
           renderServiceRows(data.services || []);
         } catch (err) {
-          renderBanner(null, lastCheckedAt);
+          renderErrorRows();
         }
       }
 
