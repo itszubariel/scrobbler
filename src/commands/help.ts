@@ -34,6 +34,7 @@ const sections = [
     commands: [
       { name: "np", desc: "See what you're scrobbling right now" },
       { name: "recent", desc: "Your recently scrobbled tracks" },
+      { name: "loved", desc: "View your loved tracks" },
     ],
   },
   {
@@ -188,7 +189,7 @@ export const helpCommand: Command = {
     );
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `-# Made with ${E.heart} by Zubariel • 40 commands`,
+        `-# Made with ${E.heart} by Zubariel • 41 commands`,
       ),
     );
 
