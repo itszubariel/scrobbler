@@ -21,6 +21,7 @@ scrobbler connects your Last.fm account to Discord. Once linked, you can see wha
 | `/profile` | Your music profile with an AI-generated bio |
 | `/np` | See what you're scrobbling right now |
 | `/recent` | Your recently scrobbled tracks |
+| `/loved` | Your loved tracks from Last.fm |
 | `/chart artists` | Grid chart of your top artists |
 | `/chart albums` | Grid chart of your top albums |
 | `/chart tracks` | Grid chart of your top tracks |
