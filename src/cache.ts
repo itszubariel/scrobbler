@@ -1,9 +1,5 @@
 import { prisma } from "./db.js";
 
-/**
- * Get cached data by key
- * Returns null if not found or expired
- */
 export async function getCache<T>(key: string): Promise<T | null> {
   try {
     const cached = await prisma.cache.findUnique({
@@ -12,9 +8,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
 
     if (!cached) return null;
 
-    // Check if expired
     if (cached.expiresAt < new Date()) {
-      // Delete expired cache entry
       await prisma.cache.delete({ where: { key } }).catch(() => {});
       return null;
     }
@@ -25,9 +19,6 @@ export async function getCache<T>(key: string): Promise<T | null> {
   }
 }
 
-/**
- * Set cache data with TTL in minutes
- */
 export async function setCache(
   key: string,
   data: any,
@@ -53,21 +44,12 @@ export async function setCache(
   }
 }
 
-/**
- * Invalidate (delete) a specific cache entry
- */
 export async function invalidateCache(key: string): Promise<void> {
   try {
     await prisma.cache.delete({ where: { key } });
-  } catch {
-    // Ignore if key doesn't exist
-  }
+  } catch {}
 }
 
-/**
- * Invalidate all cache entries for a specific user
- * Used when user links/unlinks their Last.fm account
- */
 export async function invalidateUserCache(discordId: string): Promise<void> {
   try {
     await prisma.cache.deleteMany({
