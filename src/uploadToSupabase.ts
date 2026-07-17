@@ -35,7 +35,6 @@ export async function uploadToSupabase(
       `Supabase upload error [${bucket}/${filename}]:`,
       error instanceof Error ? error.message : String(error),
     );
-    // Return the URL anyway so the command doesn't fail completely
     return `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;
   }
 }
