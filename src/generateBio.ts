@@ -1,8 +1,8 @@
 import "dotenv/config";
 
 /**
- * Generates a short AI music personality bio using the Groq API.
- */
+ Generates a short AI music personality bio using the Groq API.
+**/
 export async function generateBio(
   topArtists: string[],
   topGenres: string[],
@@ -45,7 +45,6 @@ export async function generateBio(
     const text: string | null =
       data.choices?.[0]?.message?.content?.trim() ?? null;
     if (!text) return null;
-    // Hard cap at 120 chars, break at last space to avoid cutting mid-word
     if (text.length <= 120) return text;
     const truncated = text.slice(0, 120);
     const lastSpace = truncated.lastIndexOf(" ");
