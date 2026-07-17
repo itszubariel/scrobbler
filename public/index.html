@@ -79,7 +79,6 @@
         position: relative;
         overflow-x: hidden;
       }
-      /* Lowercase aesthetic */
       h1,
       h2,
       h3,
@@ -96,7 +95,6 @@
       .footer__section-title {
         text-transform: lowercase;
       }
-      /* Grain overlay */
       body::before {
         content: "";
         position: fixed;
@@ -116,7 +114,6 @@
         text-decoration: none;
       }
 
-      /* ── Motion system (scroll reveal + page load) ── */
       body {
         opacity: 0;
         transition: opacity 0.55s ease;
@@ -272,7 +269,6 @@
         }
       }
 
-      /* ── Utilities ── */
       .gradient-text {
         background: var(--gradient);
         -webkit-background-clip: text;
@@ -374,7 +370,6 @@
         }
       }
 
-      /* ── Nav ── */
       .nav {
         position: sticky;
         top: 0;
@@ -489,7 +484,6 @@
         transform: translateY(-7px) rotate(-45deg);
       }
 
-      /* ── Fullscreen mobile menu ── */
       .mobile-menu {
         display: none;
         position: fixed;
@@ -541,7 +535,6 @@
         }
       }
 
-      /* ── Hero ── */
       .hero {
         padding: 96px 48px 80px;
         max-width: 1200px;
@@ -603,7 +596,6 @@
           font-size: clamp(72px, 12vw, 92px);
         }
       }
-      /* ── Commands showcase ── */
       .commands {
         padding: 96px 0;
         background: rgba(255, 255, 255, 0.35);
@@ -665,7 +657,6 @@
         opacity: 0.7;
       }
 
-      /* Discord mock embed */
       .discord-mock {
         background: #f7f5ee;
         border-radius: var(--radius-md);
@@ -746,7 +737,6 @@
       .discord-embed__field-val {
         font-weight: 600;
       }
-      /* /np embed */
       .np-embed {
         overflow: hidden;
       }
@@ -820,7 +810,6 @@
         border-radius: var(--radius-sm);
       }
 
-      /* /chart artists embed — 3×3 grid */
       .chart-embed__title {
         font-size: 14px;
         font-weight: 700;
@@ -867,7 +856,6 @@
         text-align: center;
       }
 
-      /* /taste genre bars */
       .taste-embed__title {
         font-size: 14px;
         font-weight: 700;
@@ -954,7 +942,6 @@
         background: rgba(96, 64, 176, 0.18);
       }
 
-      /* /wk embed */
       .wk-embed__header {
         font-size: 14px;
         font-weight: 700;
@@ -1037,7 +1024,6 @@
         padding: 8px 16px 12px;
       }
 
-      /* /wrapped BY THE NUMBERS */
       .wrapped-card {
         background: rgba(96, 64, 176, 0.06);
         border-radius: var(--radius-sm);
@@ -1096,7 +1082,6 @@
         margin-top: 10px;
       }
 
-      /* Command reference — clickable pills with dropdown */
       .cmdref {
         padding: 96px 0;
       }
@@ -1164,7 +1149,6 @@
         box-shadow: 0 4px 12px rgba(96, 64, 176, 0.28);
       }
 
-      /* Dropdown panel — rendered outside pills, positioned by JS */
       .cmd-dropdown {
         position: fixed;
         background: #fff;
@@ -1232,7 +1216,6 @@
         }
       }
 
-      /* ── Stats bar ── */
       .statsbar {
         padding: 64px 48px;
         max-width: 1200px;
@@ -1304,7 +1287,6 @@
         }
       }
 
-      /* ── Testimonials ── */
       .testimonials {
         padding: 96px 0;
       }
@@ -1385,7 +1367,6 @@
         }
       }
 
-      /* ── FAQ ── */
       .faq {
         padding: 96px 0;
         background: rgba(255, 255, 255, 0.35);
@@ -1471,7 +1452,6 @@
         }
       }
 
-      /* ── Footer ── */
       footer {
         background: #2e2e2e;
         color: #f1f0e3;
@@ -1612,14 +1592,12 @@
         }
       }
 
-      /* ── Body transition ── */
       body {
         transition:
           background-color 0.3s ease,
           color 0.3s ease;
       }
 
-      /* ── Dark mode toggle button ── */
       .theme-toggle {
         width: 36px;
         height: 36px;
@@ -1656,7 +1634,6 @@
         display: none;
       }
 
-      /* ── Dark mode overrides ── */
       [data-theme="dark"] {
         --color-paper: #1f1f1f;
         --color-surface: #2a2a2a;
@@ -1806,7 +1783,6 @@
       }
     </style>
 
-    <!-- Dark mode: apply before paint to avoid flash -->
     <script>
       (function () {
         var saved = localStorage.getItem("theme");
@@ -1820,7 +1796,6 @@
     </script>
   </head>
   <body>
-    <!-- NAV -->
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <div class="nav__inner">
         <a href="index.html" class="nav__wordmark" aria-label="scrobbler home"
@@ -1891,7 +1866,6 @@
       </div>
     </nav>
 
-    <!-- Fullscreen mobile menu -->
     <div class="mobile-menu" id="mobileMenu">
       <a href="#hero" data-scroll="hero">home</a>
       <a href="#commands" data-scroll="commands">commands</a>
@@ -1901,7 +1875,6 @@
     </div>
 
     <main>
-      <!-- HERO -->
       <section id="hero" class="hero" aria-labelledby="hero-headline">
         <div class="hero__eyebrow" data-animate style="--d: 80ms">
           ✦ social music bot
@@ -1943,7 +1916,6 @@
         </div>
       </section>
 
-      <!-- COMMANDS SHOWCASE -->
       <section id="commands" class="commands" aria-labelledby="commands-title">
         <div class="commands__header container" data-animate>
           <span class="section-label">Commands</span>
@@ -2498,7 +2470,6 @@
         </div>
       </section>
 
-      <!-- FULL COMMAND REFERENCE -->
       <section id="cmdref" class="cmdref" aria-labelledby="cmdref-title">
         <div class="cmdref__header" data-animate>
           <span class="section-label">Reference</span>
@@ -2556,6 +2527,13 @@
                 data-desc="Show your recent scrobble history, the last tracks you've listened to in order."
                 data-usage="/recent [user]"
                 >/recent</span
+              >
+              <span
+                class="cmdref__pill"
+                tabindex="0"
+                data-desc="View a paginated list of your loved tracks from Last.fm."
+                data-usage="/loved [user]"
+                >/loved</span
               >
             </div>
           </div>
@@ -2848,8 +2826,6 @@
           </div>
         </div>
       </section>
-
-      <!-- Shared dropdown panel (moved by JS) -->
       <div
         class="cmd-dropdown"
         id="cmdDropdown"
@@ -2861,7 +2837,6 @@
         <div class="cmd-dropdown__usage" id="cmdDropdownUsage"></div>
       </div>
 
-      <!-- STATS BAR -->
       <section id="stats" class="statsbar" aria-label="Key stats">
         <div class="statsbar__inner">
           <div class="stat-pill" data-animate>
@@ -2879,7 +2854,6 @@
         </div>
       </section>
 
-      <!-- TESTIMONIALS -->
       <section
         id="testimonials"
         class="testimonials"
@@ -2969,7 +2943,6 @@
         </div>
       </section>
 
-      <!-- FAQ -->
       <section id="faq" class="faq" aria-labelledby="faq-title">
         <div class="faq__header" data-animate>
           <span class="section-label">FAQ</span>
@@ -3065,7 +3038,6 @@
       </section>
     </main>
 
-    <!-- FOOTER -->
     <footer role="contentinfo">
       <div class="footer__inner" data-animate>
         <div class="footer__brand">
@@ -3220,12 +3192,10 @@
     </footer>
 
     <script>
-      // Page load class for smooth fade-in
       window.addEventListener("DOMContentLoaded", function () {
         document.body.classList.add("is-loaded");
       });
 
-      // Scroll reveal
       (function () {
         var reduced =
           window.matchMedia &&
@@ -3254,13 +3224,14 @@
             entries.forEach(function (entry) {
               if (entry.isIntersecting) {
                 entry.target.classList.add("is-visible");
-                
-                // Add animation-complete class after animation finishes
-                var delay = parseFloat(getComputedStyle(entry.target).getPropertyValue('--d') || '0');
-                setTimeout(function() {
+
+                var delay = parseFloat(
+                  getComputedStyle(entry.target).getPropertyValue("--d") || "0",
+                );
+                setTimeout(function () {
                   entry.target.classList.add("animation-complete");
-                }, delay + 850); // 850ms is the animation duration
-                
+                }, delay + 850);
+
                 io.unobserve(entry.target);
               }
             });
@@ -3273,7 +3244,6 @@
         });
       })();
 
-      // Smooth scroll without URL hash
       function closeMenu() {
         var mobileMenu = document.getElementById("mobileMenu");
         var navHamburger = document.getElementById("navHamburger");
@@ -3295,7 +3265,6 @@
         });
       });
 
-      // FAQ accordion
       document.querySelectorAll(".faq-item__q").forEach(function (btn) {
         btn.addEventListener("click", function () {
           var item = this.closest(".faq-item");
@@ -3314,7 +3283,6 @@
         });
       });
 
-      // Hamburger menu toggle
       var navHamburger = document.getElementById("navHamburger");
       var mobileMenu = document.getElementById("mobileMenu");
 
@@ -3335,7 +3303,6 @@
         });
       }
 
-      // Command pill dropdown
       var dropdown = document.getElementById("cmdDropdown");
       var ddName = document.getElementById("cmdDropdownName");
       var ddDesc = document.getElementById("cmdDropdownDesc");
@@ -3351,7 +3318,6 @@
       }
 
       function openDropdown(pill) {
-        // Close any previously active pill first
         if (activePill && activePill !== pill) {
           activePill.classList.remove("active");
         }
@@ -3360,7 +3326,6 @@
         ddDesc.textContent = pill.dataset.desc || "";
         ddUsage.textContent = pill.dataset.usage || "";
 
-        // Position below the pill
         dropdown.classList.remove("visible");
         document.body.appendChild(dropdown);
         var rect = pill.getBoundingClientRect();
@@ -3369,7 +3334,6 @@
         var left = rect.left + scrollX;
         var top = rect.bottom + scrollY + 8;
 
-        // Clamp so it doesn't overflow right edge
         var maxLeft = window.innerWidth + scrollX - 316;
         if (left > maxLeft) left = maxLeft;
         if (left < scrollX + 8) left = scrollX + 8;
@@ -3380,7 +3344,6 @@
 
         pill.classList.add("active");
         activePill = pill;
-        // Trigger transition
         requestAnimationFrame(function () {
           dropdown.classList.add("visible");
         });
@@ -3411,7 +3374,6 @@
         if (e.key === "Escape") closeDropdown();
       });
 
-      // Dark mode toggle - handle both mobile and desktop buttons
       function toggleTheme() {
         var html = document.documentElement;
         var currentTheme = html.getAttribute("data-theme");
