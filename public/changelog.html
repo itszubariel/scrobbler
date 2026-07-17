@@ -95,7 +95,6 @@
         text-decoration: none;
       }
 
-      /* ── Motion system (scroll reveal + page load) ── */
       body {
         opacity: 0;
         transition: opacity 0.55s ease;
@@ -214,7 +213,6 @@
         flex: 1;
       }
 
-      /* Nav */
       .nav {
         position: sticky;
         top: 0;
@@ -297,7 +295,6 @@
         }
       }
 
-      /* Page */
       .page {
         max-width: 760px;
         margin: 0 auto;
@@ -339,7 +336,6 @@
         opacity: 0.6;
       }
 
-      /* Timeline */
       .timeline {
         position: relative;
       }
@@ -362,7 +358,6 @@
         margin-bottom: 0;
       }
 
-      /* Dot on timeline */
       .release::before {
         content: "";
         position: absolute;
@@ -412,7 +407,6 @@
         margin-left: auto;
       }
 
-      /* Category groups */
       .release__groups {
         display: flex;
         flex-direction: column;
@@ -471,14 +465,12 @@
         opacity: 0.75;
       }
 
-      /* Divider between releases */
       .release-divider {
         border: none;
         border-top: 1px solid var(--color-mist);
         margin-bottom: 72px;
       }
 
-      /* Footer */
       footer {
         background: #2e2e2e;
         color: #f1f0e3;
@@ -620,7 +612,6 @@
         }
       }
 
-      /* Dark mode */
       [data-theme="dark"] {
         --color-paper: #1f1f1f;
         --color-surface: #2a2a2a;
@@ -760,11 +751,39 @@
         </div>
 
         <div class="timeline">
+          <!-- v1.4.1 -->
+          <div class="release">
+            <div class="release__header">
+              <span class="release__version">v1.4.1</span>
+              <span class="release__latest">latest</span>
+              <span class="release__date">july 17, 2026</span>
+            </div>
+
+            <div class="release__groups">
+              <div>
+                <div class="group__label">new commands</div>
+                <div class="group__items">
+                  <div class="group__item">
+                    <span
+                      ><code>/loved</code>
+                      <span class="item-desc"
+                        >— view your paginated list of loved tracks from
+                        last.fm, complete with cached pages and discord native
+                        timestamps</span
+                      ></span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="release-divider" />
+
           <!-- v1.4.0 -->
           <div class="release">
             <div class="release__header">
               <span class="release__version">v1.4.0</span>
-              <span class="release__latest">latest</span>
               <span class="release__date">july 6, 2026</span>
             </div>
 
@@ -773,36 +792,44 @@
                 <div class="group__label">new commands</div>
                 <div class="group__items">
                   <div class="group__item">
-                    <span><code>/era</code>
+                    <span
+                      ><code>/era</code>
                       <span class="item-desc"
                         >— your current music era based on dominant genre, with
                         top 3 artists and most played track for the period.
                         supports all time periods, defaults to last month</span
-                      ></span>
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/milestone</code>
+                    <span
+                      ><code>/milestone</code>
                       <span class="item-desc"
-                        >— canvas progress card showing how close you are to
-                        the next milestone across scrobbles, artists, albums,
-                        and tracks</span
-                      ></span>
+                        >— canvas progress card showing how close you are to the
+                        next milestone across scrobbles, artists, albums, and
+                        tracks</span
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/overlap</code>
+                    <span
+                      ><code>/overlap</code>
                       <span class="item-desc"
-                        >— find music shared across you and up to 9 other
-                        users — shows artists, tracks, albums, and genres
-                        every single person has in common</span
-                      ></span>
+                        >— find music shared across you and up to 9 other users
+                        — shows artists, tracks, albums, and genres every single
+                        person has in common</span
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/bingo</code>
+                    <span
+                      ><code>/bingo</code>
                       <span class="item-desc"
-                        >— 3×3 music taste bingo card with 9 challenges
-                        checked against your real listening history. each cell
-                        shows your actual stat so you can see how close you are</span
-                      ></span>
+                        >— 3×3 music taste bingo card with 9 challenges checked
+                        against your real listening history. each cell shows
+                        your actual stat so you can see how close you are</span
+                      ></span
+                    >
                   </div>
                 </div>
               </div>
@@ -823,34 +850,47 @@
                 <div class="group__label">new commands</div>
                 <div class="group__items">
                   <div class="group__item">
-                    <span><code>/timeline artists</code>
+                    <span
+                      ><code>/timeline artists</code>
                       <span class="item-desc"
-                        >— line chart of unique artists discovered per month</span
-                      ></span>
+                        >— line chart of unique artists discovered per
+                        month</span
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/timeline albums</code>
+                    <span
+                      ><code>/timeline albums</code>
                       <span class="item-desc"
-                        >— line chart of unique albums listened to per month</span
-                      ></span>
+                        >— line chart of unique albums listened to per
+                        month</span
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/timeline tracks</code>
+                    <span
+                      ><code>/timeline tracks</code>
                       <span class="item-desc"
                         >— line chart of total scrobbles per month</span
-                      ></span>
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/timeline genres</code>
+                    <span
+                      ><code>/timeline genres</code>
                       <span class="item-desc"
-                        >— multi-line chart showing your top 3 genre trends over time</span
-                      ></span>
+                        >— multi-line chart showing your top 3 genre trends over
+                        time</span
+                      ></span
+                    >
                   </div>
                   <div class="group__item">
-                    <span><code>/timeline server</code>
+                    <span
+                      ><code>/timeline server</code>
                       <span class="item-desc"
                         >— server-wide combined scrobble trend per month</span
-                      ></span>
+                      ></span
+                    >
                   </div>
                 </div>
               </div>
@@ -860,15 +900,15 @@
                 <div class="group__items">
                   <div class="group__item">
                     <span class="item-desc"
-                      >all timeline commands support a <code>months</code> option
-                      (3, 6, or 12 months) and an optional <code>user</code>
-                      parameter</span
+                      >all timeline commands support a
+                      <code>months</code> option (3, 6, or 12 months) and an
+                      optional <code>user</code> parameter</span
                     >
                   </div>
                   <div class="group__item">
                     <span class="item-desc"
-                      >timeline images cached for 60 minutes via supabase storage
-                      (<code>timeline-cache</code> bucket)</span
+                      >timeline images cached for 60 minutes via supabase
+                      storage (<code>timeline-cache</code> bucket)</span
                     >
                   </div>
                 </div>
@@ -879,8 +919,9 @@
                 <div class="group__items">
                   <div class="group__item">
                     <span class="item-desc"
-                      >built custom line chart canvas renderer with smooth bezier
-                      curves, area fill, grid lines, and multi-series legend support</span
+                      >built custom line chart canvas renderer with smooth
+                      bezier curves, area fill, grid lines, and multi-series
+                      legend support</span
                     >
                   </div>
                 </div>
@@ -1655,12 +1696,10 @@
     </footer>
 
     <script>
-      // Page load class for smooth fade-in
       window.addEventListener("DOMContentLoaded", function () {
         document.body.classList.add("is-loaded");
       });
 
-      // Auto-tag key sections for reveal (keeps HTML tidy)
       (function () {
         var blocks = [".page__header", ".release", ".footer__inner"];
         blocks.forEach(function (sel) {
@@ -1681,7 +1720,6 @@
         });
       })();
 
-      // Scroll reveal
       (function () {
         var reduced =
           window.matchMedia &&
