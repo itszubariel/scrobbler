@@ -49,6 +49,8 @@ import { tasteCommand } from "./commands/taste/taste.js";
 commands.set(tasteCommand.data.name, tasteCommand);
 import { recentCommand } from "./commands/recent.js";
 commands.set(recentCommand.data.name, recentCommand);
+import { lovedCommand } from "./commands/loved.js";
+commands.set(lovedCommand.data.name, lovedCommand);
 import { statsCommand } from "./commands/stats/stats.js";
 commands.set(statsCommand.data.name, statsCommand);
 import { chartCommand } from "./commands/charts/chart.js";
@@ -96,14 +98,12 @@ async function deployCommands() {
   const rest = new REST({ version: "10" }).setToken(token);
   const isDev = process.env.NODE_ENV === "development";
 
-  // Separate dev commands from regular commands
   const devCommandData = [devCommand.data.toJSON()];
   const globalCommandData = commands
     .filter((cmd) => cmd !== devCommand)
     .map((cmd) => cmd.data.toJSON());
 
   if (isDev && guildId) {
-    // In dev: register everything to the guild
     const allCommandData = commands.map((cmd) => cmd.data.toJSON());
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: allCommandData,
@@ -128,7 +128,6 @@ async function deployCommands() {
     )) as any[];
     for (const cmd of registeredGlobal) commandIds.set(cmd.name, cmd.id);
 
-    // Always register dev command as guild-only (requires DISCORD_DEV_GUILD_ID in prod too)
     if (guildId) {
       await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
         body: devCommandData,
@@ -158,9 +157,7 @@ client.once("clientReady", async (readyClient) => {
         cachedLinkedUsers = data.linkedUsers ?? cachedLinkedUsers;
         cachedTotalMembers = data.totalMembers ?? cachedTotalMembers;
       }
-    } catch {
-      /* keep last known values */
-    }
+    } catch {}
   };
   await fetchStats();
   setInterval(fetchStats, 5 * 60 * 1000);
