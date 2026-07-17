@@ -238,7 +238,56 @@ export async function handleButtonInteraction(interaction: any): Promise<void> {
     return;
   }
 
-  // ─── Taste user pagination ─────────────────────────────────────────────────────
+  if (
+    customId.startsWith("loved_prev_") ||
+    customId.startsWith("loved_next_")
+  ) {
+    const parts = customId.split("_");
+    const direction = parts[1] as "prev" | "next";
+    const currentPage = parseInt(parts[2]);
+    const targetDiscordId = parts[3];
+    if (clickerId !== targetDiscordId) return;
+    await interaction.deferUpdate();
+
+    const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
+
+    const dbUser = await prisma.user.findUnique({
+      where: { discordId: targetDiscordId },
+    });
+    if (!dbUser?.lastfmUsername) return;
+
+    const apiKey = process.env.LASTFM_API_KEY!;
+    const lovedData = await fetchLovedTracks(
+      dbUser.lastfmUsername,
+      apiKey,
+      newPage,
+    );
+
+    if (!lovedData) {
+      await interaction.editReply({
+        components: [
+          new ContainerBuilder().addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(EXPIRED_MSG("loved")),
+          ),
+        ],
+        flags: 32768,
+      });
+      return;
+    }
+
+    const { buildLovedContainer, fetchLovedTracks } =
+      await import("../commands/loved.js");
+    const container = buildLovedContainer(
+      lovedData,
+      dbUser.lastfmUsername,
+      targetDiscordId,
+      newPage,
+    );
+
+    await interaction.editReply({ components: [container], flags: 32768 });
+    return;
+  }
+
   if (
     customId.startsWith("taste_prev_") ||
     customId.startsWith("taste_next_")
