@@ -32,7 +32,6 @@ export async function fetchNowPlaying(
       const tags: any[] = info?.track?.toptags?.tag ?? [];
       topGenre = tags[0]?.name ?? null;
     } catch {
-      /* skip */
     }
 
     return { trackName, artistName, albumName, topGenre };
