@@ -82,7 +82,6 @@
           background-color 0.3s ease,
           color 0.3s ease;
       }
-      /* Lowercase aesthetic */
       h1,
       h2,
       h3,
@@ -110,7 +109,6 @@
         text-decoration: none;
       }
 
-      /* ── Motion system (scroll reveal + page load) ── */
       body {
         opacity: 0;
         transition: opacity 0.55s ease;
@@ -226,7 +224,6 @@
         }
       }
 
-      /* Nav */
       .nav {
         position: sticky;
         top: 0;
@@ -307,7 +304,6 @@
         }
       }
 
-      /* Main */
       main {
         flex: 1;
       }
@@ -414,7 +410,6 @@
         }
       }
 
-      /* Footer */
       footer {
         background: #2e2e2e;
         color: #f1f0e3;
@@ -558,7 +553,6 @@
         }
       }
 
-      /* Dark mode */
       [data-theme="dark"] {
         --color-paper: #1f1f1f;
         --color-surface: #2a2a2a;
@@ -703,8 +697,8 @@
           <div class="team-card" data-animate style="--d: 240ms">
             <div class="team-card__avatar">
               <img
-                id="rivAvatar"
-                src="https://cdn.discordapp.com/avatars/1262410582812786700/f7e9866d40dcacc712ed01c7edc47275.webp?size=512"
+                id="avatarURL"
+                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
                 alt="rivulose profile picture"
               />
             </div>
@@ -930,24 +924,23 @@
         }
       });
 
-      // Fetch riv's avatar from API
+      // Fetch riv's avatar from his API
       (function () {
-        fetch("https://riv.idntt.fun/api/riv")
+        fetch("https://riv.2social.top/api/riv")
           .then(function (response) {
             if (!response.ok) throw new Error("Failed to fetch avatar");
             return response.json();
           })
           .then(function (data) {
-            if (data && data.avatarUrl) {
-              var rivAvatar = document.getElementById("rivAvatar");
+            if (data && data.avatarURL) {
+              var rivAvatar = document.getElementById("avatarURL");
               if (rivAvatar) {
-                rivAvatar.src = data.avatarUrl;
+                rivAvatar.src = data.avatarURL;
               }
             }
           })
           .catch(function (error) {
             console.log("Using fallback avatar for riv:", error.message);
-            // Fallback is already in the HTML, so nothing to do
           });
       })();
     </script>
