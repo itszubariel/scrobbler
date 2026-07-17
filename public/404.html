@@ -104,7 +104,6 @@
         text-decoration: none;
       }
 
-      /* ── Motion system (scroll reveal + page load) ── */
       body {
         opacity: 0;
         transition: opacity 0.55s ease;
@@ -233,7 +232,6 @@
         }
       }
 
-      /* ── Nav ── */
       .nav {
         position: sticky;
         top: 0;
@@ -307,7 +305,6 @@
         }
       }
 
-      /* ── Main ── */
       main {
         flex: 1;
         display: flex;
@@ -422,7 +419,6 @@
         opacity: 1;
       }
 
-      /* ── Footer ── */
       footer {
         background: #2e2e2e;
         color: #f1f0e3;
@@ -566,7 +562,6 @@
         }
       }
 
-      /* ── Dark mode ── */
       [data-theme="dark"] {
         --color-paper: #1f1f1f;
         --color-surface: #2a2a2a;
@@ -846,12 +841,10 @@
     </footer>
 
     <script>
-      // Page load class for smooth fade-in
       window.addEventListener("DOMContentLoaded", function () {
         document.body.classList.add("is-loaded");
       });
 
-      // Scroll reveal
       (function () {
         var reduced =
           window.matchMedia &&
